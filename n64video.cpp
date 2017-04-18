@@ -68,8 +68,10 @@ UINT32 ptr_onstart = 0;
 
 extern FILE* zeldainfo;
 
-UINT32 internal_vi_v_current_line = 0;
-UINT32 old_vi_origin = 0;
+UINT32 prevvicurrent = 0;
+int emucontrolsvicurrent = -1;
+int prevserrate = 0;
+int oldlowerfield = 0;
 INT32 oldvstart = 1337;
 UINT32 oldhstart = 0;
 UINT32 oldsomething = 0;
@@ -484,7 +486,7 @@ INLINE void tcdiv_persp(INT32 ss, INT32 st, INT32 sw, INT32* sss, INT32* sst);
 INLINE void tcdiv_nopersp(INT32 ss, INT32 st, INT32 sw, INT32* sss, INT32* sst);
 STRICTINLINE void tclod_4x17_to_15(INT32 scurr, INT32 snext, INT32 tcurr, INT32 tnext, INT32 previous, INT32* lod);
 STRICTINLINE void tclod_tcclamp(INT32* sss, INT32* sst);
-STRICTINLINE void lodfrac_lodtile_signals(int lodclamp, INT32 lod, UINT32* l_tile, UINT32* magnify, UINT32* distant);
+STRICTINLINE void lodfrac_lodtile_signals(int lodclamp, INT32 lod, UINT32* l_tile, UINT32* magnify, UINT32* distant, INT32* lfdst);
 STRICTINLINE void tclod_1cycle_current(INT32* sss, INT32* sst, INT32 nexts, INT32 nextt, INT32 s, INT32 t, INT32 w, INT32 dsinc, INT32 dtinc, INT32 dwinc, INT32 scanline, INT32 prim_tile, INT32* t1, SPANSIGS* sigs);
 STRICTINLINE void tclod_1cycle_current_simple(INT32* sss, INT32* sst, INT32 s, INT32 t, INT32 w, INT32 dsinc, INT32 dtinc, INT32 dwinc, INT32 scanline, INT32 prim_tile, INT32* t1, SPANSIGS* sigs);
 STRICTINLINE void tclod_1cycle_next(INT32* sss, INT32* sst, INT32 s, INT32 t, INT32 w, INT32 dsinc, INT32 dtinc, INT32 dwinc, INT32 scanline, INT32 prim_tile, INT32* t1, SPANSIGS* sigs, INT32* prelodfrac);
@@ -610,7 +612,7 @@ typedef struct{
 	UINT8 cvbit;
 	UINT8 xoff;
 	UINT8 yoff;
-}CVtcmaskDERIVATIVE;
+} CVtcmaskDERIVATIVE;
 
 UINT32 gamma_table[0x100];
 UINT32 gamma_dither_table[0x4000];
@@ -896,22 +898,23 @@ STRICTINLINE void tcshift_copy(INT32* S, INT32* T, UINT32 num)
 }
 
 
+
 STRICTINLINE void tcclamp_cycle(INT32* S, INT32* T, INT32* SFRAC, INT32* TFRAC, INT32 maxs, INT32 maxt, INT32 num)
 {
+
+
 
 	INT32 locs = *S, loct = *T;
 	if (tile[num].f.clampens)
 	{
-		if (!(locs & 0x10000))
+		
+		if (maxs)
 		{
-			if (!maxs)
-				*S = (locs >> 5);
-			else
-			{
-				*S = tile[num].f.clampdiffs;
-				*SFRAC = 0;
-			}
+			*S = tile[num].f.clampdiffs;
+			*SFRAC = 0;
 		}
+		else if (!(locs & 0x10000))
+			*S = locs >> 5;
 		else
 		{
 			*S = 0;
@@ -923,16 +926,13 @@ STRICTINLINE void tcclamp_cycle(INT32* S, INT32* T, INT32* SFRAC, INT32* TFRAC, 
 
 	if (tile[num].f.clampent)
 	{
-		if (!(loct & 0x10000))
+		if (maxt)
 		{
-			if (!maxt)
-				*T = (loct >> 5);
-			else
-			{
-				*T = tile[num].f.clampdifft;
-				*TFRAC = 0;
-			}
+			*T = tile[num].f.clampdifft;
+			*TFRAC = 0;
 		}
+		else if (!(loct & 0x10000))
+			*T = loct >> 5;
 		else
 		{
 			*T = 0;
@@ -949,13 +949,10 @@ STRICTINLINE void tcclamp_cycle_light(INT32* S, INT32* T, INT32 maxs, INT32 maxt
 	INT32 locs = *S, loct = *T;
 	if (tile[num].f.clampens)
 	{
-		if (!(locs & 0x10000))
-		{
-			if (!maxs)
-				*S = (locs >> 5);
-			else
-				*S = tile[num].f.clampdiffs;
-		}
+		if (maxs)
+			*S = tile[num].f.clampdiffs;
+		else if (!(locs & 0x10000))
+			*S = locs >> 5;
 		else
 			*S = 0;
 	}
@@ -964,13 +961,10 @@ STRICTINLINE void tcclamp_cycle_light(INT32* S, INT32* T, INT32 maxs, INT32 maxt
 
 	if (tile[num].f.clampent)
 	{
-		if (!(loct & 0x10000))
-		{
-			if (!maxt)
-				*T = (loct >> 5);
-			else
-				*T = tile[num].f.clampdifft;
-		}
+		if (maxt)
+			*T = tile[num].f.clampdifft;
+		else if (!(loct & 0x10000))
+			*T = loct >> 5;
 		else
 			*T = 0;
 	}
@@ -1181,7 +1175,11 @@ int rdp_update()
 	
 	
 	
+	
+	
 
+	
+	
 	
 	
 	
@@ -1198,11 +1196,34 @@ int rdp_update()
 	
 	
 	int validinterlace = (vitype & 2) && serration_pulses;
-	if (!validinterlace)
-		internal_vi_v_current_line = 0;
-	int lowerfield = validinterlace && !(internal_vi_v_current_line & 1);
+	if (validinterlace && prevserrate && emucontrolsvicurrent < 0)
+		emucontrolsvicurrent = (vi_v_current_line & 1) != prevvicurrent ? 1 : 0;
+
+	int lowerfield = 0;
 	if (validinterlace)
-		internal_vi_v_current_line ^= 1;
+	{
+		if (emucontrolsvicurrent == 1)
+			lowerfield = (vi_v_current_line & 1) ^ 1;
+		else if (!emucontrolsvicurrent)
+		{
+			if (v_start == oldvstart)
+				lowerfield = oldlowerfield ^ 1;
+			else
+				lowerfield = v_start < oldvstart ? 1 : 0;
+		}
+	}
+
+	oldlowerfield = lowerfield;
+	
+	
+	if (validinterlace)
+	{
+		prevserrate = 1;
+		prevvicurrent = vi_v_current_line & 1;
+		oldvstart = v_start;
+	}
+	else
+		prevserrate = 0;
 
 	
 	
@@ -1219,14 +1240,22 @@ int rdp_update()
 	int lineshifter = serration_pulses ? 0 : 1;
 	int twolines = serration_pulses ? 1 : 0;
 
-	oldvstart = v_start;
+	INT32 vstartoffset = ispal ? 44 : 34;
+	v_start = (v_start - vstartoffset) / 2;
+	
+	
 
-	v_start = (v_start - (ispal ? 47 : 37)) >> 1;
 	
 	
-	
+
+	UINT32 y_start = (vi_y_scale >> 16) & 0xfff;
+	UINT32 y_add = vi_y_scale & 0xfff;
+
 	if (v_start < 0)
+	{
+		y_start += (y_add * (UINT32)(-v_start));
 		v_start = 0;
+	}
 
 	int hres_clamped = 0;
 
@@ -1248,7 +1277,7 @@ int rdp_update()
 	INT32 h_end = hres + h_start;
 	INT32 hrightblank = PRESCALE_WIDTH - h_end;
 
-	int vactivelines = (vi_v_sync & 0x3ff) - (ispal ? 47 : 37);
+	int vactivelines = (vi_v_sync & 0x3ff) - vstartoffset;
 	if (vactivelines > PRESCALE_HEIGHT)
 		fatalerror("VI_V_SYNC_REG too big");
 	if (vactivelines < 0)
@@ -1266,8 +1295,6 @@ int rdp_update()
 	CCVG color, nextcolor, scancolor, scannextcolor;
 	int r = 0, g = 0, b = 0;
 	int xfrac = 0, yfrac = 0; 
-	UINT32 y_start = (vi_y_scale >> 16) & 0xfff;
-	UINT32 y_add = vi_y_scale & 0xfff;
 	int vi_width_low = vi_width & 0xfff;
 	int line_x = 0, next_line_x = 0, prev_line_x = 0, far_line_x = 0;
 	int cache_marker = 0, cache_next_marker = 0, divot_cache_marker = 0, divot_cache_next_marker = 0;
@@ -1735,8 +1762,6 @@ int rdp_update()
 	}
 
 	
-
-	
 	return 0;
 }
 
@@ -1945,6 +1970,21 @@ STRICTINLINE void combiner_1cycle(int adseed, UINT32* curpixel_cvg)
 	
 	if (combiner_rgbmul_r[1] != &zero_color)
 	{
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
 		
 		combined_color.r = color_combiner_equation(*combiner_rgbsub_a_r[1],*combiner_rgbsub_b_r[1],*combiner_rgbmul_r[1],*combiner_rgbadd_r[1]);
 		combined_color.g = color_combiner_equation(*combiner_rgbsub_a_g[1],*combiner_rgbsub_b_g[1],*combiner_rgbmul_g[1],*combiner_rgbadd_g[1]);
@@ -2646,7 +2686,8 @@ STRICTINLINE int blender_2cycle(UINT32* fr, UINT32* fg, UINT32* fb, int dith, UI
 
 INLINE void fetch_texel(COLOR *color, int s, int t, UINT32 tilenum)
 {
-	UINT32 tbase = tile[tilenum].line * t + tile[tilenum].tmem;
+	UINT32 tbase = tile[tilenum].line * (t & 0xff) + tile[tilenum].tmem;
+	
 	
 
 	UINT32 tpal	= tile[tilenum].palette;
@@ -2742,7 +2783,7 @@ INLINE void fetch_texel(COLOR *color, int s, int t, UINT32 tilenum)
 
 			save = u = TMEM[taddr & 0x7ff];
 
-			u = (u - 0x80) & 0x1ff;
+			u = u - 0x80;
 
 			color->r = u;
 			color->g = u;
@@ -2769,8 +2810,8 @@ INLINE void fetch_texel(COLOR *color, int s, int t, UINT32 tilenum)
 			u = c >> 8;
 			v = c & 0xff;
 
-			u = (u - 0x80) & 0x1ff;
-			v = (v - 0x80) & 0x1ff;
+			u = u - 0x80;
+			v = v - 0x80;
 			
 			
 
@@ -2968,7 +3009,7 @@ INLINE void fetch_texel(COLOR *color, int s, int t, UINT32 tilenum)
 
 INLINE void fetch_texel_entlut(COLOR *color, int s, int t, UINT32 tilenum)
 {
-	UINT32 tbase = tile[tilenum].line * t + tile[tilenum].tmem;
+	UINT32 tbase = tile[tilenum].line * (t & 0xff) + tile[tilenum].tmem;
 	UINT32 tpal	= tile[tilenum].palette << 4;
 	UINT16 *tc16 = (UINT16*)TMEM;
 	UINT32 taddr = 0;
@@ -3071,8 +3112,8 @@ INLINE void fetch_texel_entlut(COLOR *color, int s, int t, UINT32 tilenum)
 INLINE void fetch_texel_quadro(COLOR *color0, COLOR *color1, COLOR *color2, COLOR *color3, int s0, int s1, int t0, int t1, UINT32 tilenum)
 {
 
-	UINT32 tbase0 = tile[tilenum].line * t0 + tile[tilenum].tmem;
-	UINT32 tbase2 = tile[tilenum].line * t1 + tile[tilenum].tmem;
+	UINT32 tbase0 = tile[tilenum].line * (t0 & 0xff) + tile[tilenum].tmem;
+	UINT32 tbase2 = tile[tilenum].line * (t1 & 0xff) + tile[tilenum].tmem;
 	UINT32 tpal	= tile[tilenum].palette;
 	UINT32 xort = 0, ands = 0;
 
@@ -3282,13 +3323,13 @@ INLINE void fetch_texel_quadro(COLOR *color0, COLOR *color1, COLOR *color2, COLO
 			INT32 u0, u1, u2, u3, save0, save1, save2, save3;
 
 			save0 = u0 = TMEM[taddr0 & 0x7ff];
-			u0 = (u0 - 0x80) & 0x1ff;
+			u0 = u0 - 0x80;
 			save1 = u1 = TMEM[taddr1 & 0x7ff];
-			u1 = (u1 - 0x80) & 0x1ff;
+			u1 = u1 - 0x80;
 			save2 = u2 = TMEM[taddr2 & 0x7ff];
-			u2 = (u2 - 0x80) & 0x1ff;
+			u2 = u2 - 0x80;
 			save3 = u3 = TMEM[taddr3 & 0x7ff];
-			u3 = (u3 - 0x80) & 0x1ff;
+			u3 = u3 - 0x80;
 
 			color0->r = u0;
 			color0->g = u0;
@@ -3363,14 +3404,14 @@ INLINE void fetch_texel_quadro(COLOR *color0, COLOR *color1, COLOR *color2, COLO
 			u3 = c3 >> 8;
 			v3 = c3 & 0xff;
 
-			u0 = (u0 - 0x80) & 0x1ff;
-			v0 = (v0 - 0x80) & 0x1ff;
-			u1 = (u1 - 0x80) & 0x1ff;
-			v1 = (v1 - 0x80) & 0x1ff;
-			u2 = (u2 - 0x80) & 0x1ff;
-			v2 = (v2 - 0x80) & 0x1ff;
-			u3 = (u3 - 0x80) & 0x1ff;
-			v3 = (v3 - 0x80) & 0x1ff;
+			u0 = u0 - 0x80;
+			v0 = v0 - 0x80;
+			u1 = u1 - 0x80;
+			v1 = v1 - 0x80;
+			u2 = u2 - 0x80;
+			v2 = v2 - 0x80;
+			u3 = u3 - 0x80;
+			v3 = v3 - 0x80;
 
 			color0->r = u0;
 			color0->g = v0;
@@ -3911,8 +3952,8 @@ INLINE void fetch_texel_quadro(COLOR *color0, COLOR *color1, COLOR *color2, COLO
 
 INLINE void fetch_texel_entlut_quadro(COLOR *color0, COLOR *color1, COLOR *color2, COLOR *color3, int s0, int s1, int t0, int t1, UINT32 tilenum)
 {
-	UINT32 tbase0 = tile[tilenum].line * t0 + tile[tilenum].tmem;
-	UINT32 tbase2 = tile[tilenum].line * t1 + tile[tilenum].tmem;
+	UINT32 tbase0 = tile[tilenum].line * (t0 & 0xff) + tile[tilenum].tmem;
+	UINT32 tbase2 = tile[tilenum].line * (t1 & 0xff) + tile[tilenum].tmem;
 	UINT32 tpal	= tile[tilenum].palette << 4;
 	UINT32 xort = 0, ands = 0;
 
@@ -4508,7 +4549,7 @@ void fetch_qword_copy(UINT32* hidword, UINT32* lowdword, INT32 ssss, INT32 ssst,
 
 STRICTINLINE void texture_pipeline_cycle(COLOR* TEX, COLOR* prev, INT32 SSS, INT32 SST, UINT32 tilenum, UINT32 cycle)											
 {
-#define TRELATIVE(x, y) 	((x) - ((y) << 3));
+#define TRELATIVE(x, y) 	((x) - ((y) << 3))
 
 
 #define UPPER ((sfrac + tfrac) & 0x20)
@@ -4519,6 +4560,8 @@ STRICTINLINE void texture_pipeline_cycle(COLOR* TEX, COLOR* prev, INT32 SSS, INT
 	INT32 maxs, maxt, invt0r, invt0g, invt0b, invt0a;
 	INT32 sfrac, tfrac, invsf, invtf;
 	int upper = 0;
+
+	
 	int bilerp = cycle ? other_modes.bi_lerp1 : other_modes.bi_lerp0;
 	int convert = other_modes.convert_one && cycle;
 	COLOR t0, t1, t2, t3;
@@ -4529,8 +4572,10 @@ STRICTINLINE void texture_pipeline_cycle(COLOR* TEX, COLOR* prev, INT32 SSS, INT
 
 	tcshift_cycle(&sss1, &sst1, &maxs, &maxt, tilenum);
 
+
 	sss1 = TRELATIVE(sss1, tile[tilenum].sl);
 	sst1 = TRELATIVE(sst1, tile[tilenum].tl);
+
 
 	if (other_modes.sample_type)
 	{	
@@ -4574,17 +4619,10 @@ STRICTINLINE void texture_pipeline_cycle(COLOR* TEX, COLOR* prev, INT32 SSS, INT
 				fetch_texel_entlut_quadro(&t0, &t1, &t2, &t3, sss1, sss2, sst1, sst2, tilenum);
 
 			
-			if (tile[tilenum].format == FORMAT_YUV)
-			{
-				t0.r = SIGN(t0.r, 9); 
-				t0.g = SIGN(t0.g, 9); 
-				t1.r = SIGN(t1.r, 9); 
-				t1.g = SIGN(t1.g, 9);
-				t2.r = SIGN(t2.r, 9); 
-				t2.g = SIGN(t2.g, 9);
-				t3.r = SIGN(t3.r, 9); 
-				t3.g = SIGN(t3.g, 9);
-			}
+
+			
+			
+			
 
 			if (!other_modes.mid_texel || sfrac != 0x10 || tfrac != 0x10)
 			{
@@ -4658,12 +4696,6 @@ STRICTINLINE void texture_pipeline_cycle(COLOR* TEX, COLOR* prev, INT32 SSS, INT
 			if (convert)
 				t0 = *prev;
 
-			if (tile[tilenum].format == FORMAT_YUV)
-			{
-				t0.r = SIGN(t0.r, 9);
-				t0.g = SIGN(t0.g, 9);
-			}
-
 			
 			TEX->r = t0.b + ((k0_tf * t0.g + 0x80) >> 8);
 			TEX->g = t0.b + ((k1_tf * t0.r + k2_tf * t0.g + 0x80) >> 8);
@@ -4697,7 +4729,12 @@ STRICTINLINE void texture_pipeline_cycle(COLOR* TEX, COLOR* prev, INT32 SSS, INT
 		if (bilerp)
 		{
 			if (!convert)
-				*TEX = t0;
+			{
+				TEX->r = t0.r & 0x1ff;
+				TEX->g = t0.g & 0x1ff;
+				TEX->b = t0.b;
+				TEX->a = t0.a;
+			}
 			else
 				TEX->r = TEX->g = TEX->b = TEX->a = prev->b;
 		}
@@ -4705,12 +4742,6 @@ STRICTINLINE void texture_pipeline_cycle(COLOR* TEX, COLOR* prev, INT32 SSS, INT
 		{
 			if (convert)
 				t0 = *prev;
-
-			if (tile[tilenum].format == FORMAT_YUV)
-			{
-				t0.r = SIGN(t0.r, 9); 
-				t0.g = SIGN(t0.g, 9);
-			}
 
 			TEX->r = t0.b + ((k0_tf * t0.g + 0x80) >> 8);
 			TEX->g = t0.b + ((k1_tf * t0.r + k2_tf * t0.g + 0x80) >> 8);
@@ -4843,7 +4874,7 @@ void render_spans_1cycle_complete(int start, int end, int tilenum, int flip)
 	int sss = 0, sst = 0;
 	INT32 prelodfrac;
 	int curpixel = 0;
-	int x, length, scdiff;
+	int x, length, scdiff, lodlength;
 	UINT32 fir, fig, fib;
 					
 	for (i = start; i <= end; i++)
@@ -4879,15 +4910,14 @@ void render_spans_1cycle_complete(int start, int end, int tilenum, int flip)
 			scdiff = xendsc - xend;
 			compute_cvg_flip(i);
 		}
-		
-		sigs.longspan = (length > 7);
-		sigs.midspan = (length == 7);
-		sigs.onelessthanmid = (length == 6);
 
 		
 		
 		if (scdiff)
 		{
+			
+			
+			scdiff &= 0xfff;
 			r += (drinc * scdiff);
 			g += (dginc * scdiff);
 			b += (dbinc * scdiff);
@@ -4897,6 +4927,13 @@ void render_spans_1cycle_complete(int start, int end, int tilenum, int flip)
 			t += (dtinc * scdiff);
 			w += (dwinc * scdiff);
 		}
+
+		lodlength = length + scdiff;
+
+		sigs.longspan = (lodlength > 7);
+		sigs.midspan = (lodlength == 7);
+		sigs.onelessthanmid = (lodlength == 6);
+
 		sigs.startspan = 1;
 
 		for (j = 0; j <= length; j++)
@@ -5046,7 +5083,7 @@ void render_spans_1cycle_notexel1(int start, int end, int tilenum, int flip)
 	int xstart, xend, xendsc;
 	int sss = 0, sst = 0;
 	int curpixel = 0;
-	int x, length, scdiff;
+	int x, length, scdiff, lodlength;
 	UINT32 fir, fig, fib;
 					
 	for (i = start; i <= end; i++)
@@ -5083,11 +5120,9 @@ void render_spans_1cycle_notexel1(int start, int end, int tilenum, int flip)
 			compute_cvg_flip(i);
 		}
 
-		sigs.longspan = (length > 7);
-		sigs.midspan = (length == 7);
-
 		if (scdiff)
 		{
+			scdiff &= 0xfff;
 			r += (drinc * scdiff);
 			g += (dginc * scdiff);
 			b += (dbinc * scdiff);
@@ -5097,6 +5132,11 @@ void render_spans_1cycle_notexel1(int start, int end, int tilenum, int flip)
 			t += (dtinc * scdiff);
 			w += (dwinc * scdiff);
 		}
+
+		lodlength = length + scdiff;
+
+		sigs.longspan = (lodlength > 7);
+		sigs.midspan = (lodlength == 7);
 
 		for (j = 0; j <= length; j++)
 		{
@@ -5238,6 +5278,7 @@ void render_spans_1cycle_notex(int start, int end, int tilenum, int flip)
 
 		if (scdiff)
 		{
+			scdiff &= 0xfff;
 			r += (drinc * scdiff);
 			g += (dginc * scdiff);
 			b += (dbinc * scdiff);
@@ -5399,6 +5440,7 @@ void render_spans_2cycle_complete(int start, int end, int tilenum, int flip)
 
 		if (scdiff)
 		{
+			scdiff &= 0xfff;
 			r += (drinc * scdiff);
 			g += (dginc * scdiff);
 			b += (dbinc * scdiff);
@@ -5597,6 +5639,7 @@ void render_spans_2cycle_notexelnext(int start, int end, int tilenum, int flip)
 
 		if (scdiff)
 		{
+			scdiff &= 0xfff;
 			r += (drinc * scdiff);
 			g += (dginc * scdiff);
 			b += (dbinc * scdiff);
@@ -5765,6 +5808,7 @@ void render_spans_2cycle_notexel1(int start, int end, int tilenum, int flip)
 
 		if (scdiff)
 		{
+			scdiff &= 0xfff;
 			r += (drinc * scdiff);
 			g += (dginc * scdiff);
 			b += (dbinc * scdiff);
@@ -5917,6 +5961,7 @@ void render_spans_2cycle_notex(int start, int end, int tilenum, int flip)
 
 		if (scdiff)
 		{
+			scdiff &= 0xfff;
 			r += (drinc * scdiff);
 			g += (dginc * scdiff);
 			b += (dbinc * scdiff);
@@ -6480,6 +6525,8 @@ static void edgewalker_for_prims(INT32* ewdata)
 	xm = SIGN(ewdata[6], 28);
 	
 	dxldy = SIGN(ewdata[3], 30);
+
+	
 	
 	dxhdy = SIGN(ewdata[5], 30);
 	dxmdy = SIGN(ewdata[7], 30);
@@ -6610,22 +6657,19 @@ static void edgewalker_for_prims(INT32* ewdata)
 
 
 		
-		dsdiff = dsdeh - dsdyh;
-		dsdiff -= (dsdiff >> 2);
-		dtdiff = dtdeh - dtdyh;
-		dtdiff -= (dtdiff >> 2);
-		dwdiff = dwdeh - dwdyh;
-		dwdiff -= (dwdiff >> 2);
-		drdiff = drdeh - drdyh;
-		drdiff -= (drdiff >> 2);
-		dgdiff = dgdeh - dgdyh;
-		dgdiff -= (dgdiff >> 2);
-		dbdiff = dbdeh - dbdyh;
-		dbdiff -= (dbdiff >> 2);
-		dadiff = dadeh - dadyh;
-		dadiff -= (dadiff >> 2);
-		dzdiff = dzdeh - dzdyh;
-		dzdiff -= (dzdiff >> 2);
+		
+		
+		
+		
+		dsdiff = dsdeh - (dsdeh >> 2) - dsdyh + (dsdyh >> 2);
+		dtdiff = dtdeh - (dtdeh >> 2) - dtdyh + (dtdyh >> 2);
+		dwdiff = dwdeh - (dwdeh >> 2) - dwdyh + (dwdyh >> 2);
+		drdiff = drdeh - (drdeh >> 2) - drdyh + (drdyh >> 2);
+		dgdiff = dgdeh - (dgdeh >> 2) - dgdyh + (dgdyh >> 2);
+		dbdiff = dbdeh - (dbdeh >> 2) - dbdyh + (dbdyh >> 2);
+		dadiff = dadeh - (dadeh >> 2) - dadyh + (dadyh >> 2);
+		dzdiff = dzdeh - (dzdeh >> 2) - dzdyh + (dzdyh >> 2);
+		
 	}
 	else
 		dsdiff = dtdiff = dwdiff = drdiff = dgdiff = dbdiff = dadiff = dzdiff = 0;
@@ -6747,7 +6791,10 @@ static void edgewalker_for_prims(INT32* ewdata)
 
 			stickybit = ((xright >> 1) & 0x1fff) > 0;
 			xrsc = ((xright >> 13) & 0x1ffe) | stickybit;
-			curunder = ((xright & 0x8000000) || xrsc < clipxhshift); 
+
+			
+			curunder = ((xright & 0x8000000) || (xrsc < clipxhshift && !(xright & 0x4000000))); 
+
 			xrsc = curunder ? clipxhshift : (((xright >> 13) & 0x3ffe) | stickybit);
 			curover = ((xrsc & 0x2000) || (xrsc & 0x1fff) >= clipxlshift);
 			xrsc = curover ? clipxlshift : xrsc;
@@ -6757,7 +6804,7 @@ static void edgewalker_for_prims(INT32* ewdata)
 
 			stickybit = ((xleft >> 1) & 0x1fff) > 0;
 			xlsc = ((xleft >> 13) & 0x1ffe) | stickybit;
-			curunder = ((xleft & 0x8000000) || xlsc < clipxhshift);
+			curunder = ((xleft & 0x8000000) || (xlsc < clipxhshift && !(xleft & 0x4000000)));
 			xlsc = curunder ? clipxhshift : (((xleft >> 13) & 0x3ffe) | stickybit);
 			curover = ((xlsc & 0x2000) || (xlsc & 0x1fff) >= clipxlshift);
 			xlsc = curover ? clipxlshift : xlsc;
@@ -6782,7 +6829,11 @@ static void edgewalker_for_prims(INT32* ewdata)
 			
 			if (spix == ldflag)
 			{
-				span[j].unscrx = xright >> 16;
+				
+				
+				
+				
+				span[j].unscrx = SIGN(xright >> 16, 12);
 				xfrac = (xright >> 8) & 0xff;
 				ADJUST_ATTR_PRIM();
 			}
@@ -6803,6 +6854,8 @@ static void edgewalker_for_prims(INT32* ewdata)
 			ADDVALUES_PRIM();
 		}
 
+		
+		
 		xleft += xleft_inc;
 		xright += xright_inc;
 
@@ -6835,7 +6888,7 @@ static void edgewalker_for_prims(INT32* ewdata)
 
 			stickybit = ((xright >> 1) & 0x1fff) > 0;
 			xrsc = ((xright >> 13) & 0x1ffe) | stickybit;
-			curunder = ((xright & 0x8000000) || xrsc < clipxhshift); 
+			curunder = ((xright & 0x8000000) || (xrsc < clipxhshift && !(xright & 0x4000000))); 
 			xrsc = curunder ? clipxhshift : (((xright >> 13) & 0x3ffe) | stickybit);
 			curover = ((xrsc & 0x2000) || (xrsc & 0x1fff) >= clipxlshift);
 			xrsc = curover ? clipxlshift : xrsc;
@@ -6845,7 +6898,7 @@ static void edgewalker_for_prims(INT32* ewdata)
 
 			stickybit = ((xleft >> 1) & 0x1fff) > 0;
 			xlsc = ((xleft >> 13) & 0x1ffe) | stickybit;
-			curunder = ((xleft & 0x8000000) || xlsc < clipxhshift);
+			curunder = ((xleft & 0x8000000) || (xlsc < clipxhshift && !(xleft & 0x4000000)));
 			xlsc = curunder ? clipxhshift : (((xleft >> 13) & 0x3ffe) | stickybit);
 			curover = ((xlsc & 0x2000) || (xlsc & 0x1fff) >= clipxlshift);
 			xlsc = curover ? clipxlshift : xlsc;
@@ -6867,7 +6920,7 @@ static void edgewalker_for_prims(INT32* ewdata)
 
 			if (spix == ldflag)
 			{
-				span[j].unscrx  = xright >> 16;
+				span[j].unscrx  = SIGN(xright >> 16, 12);
 				xfrac = (xright >> 8) & 0xff;
 				ADJUST_ATTR_PRIM();
 			}
@@ -7517,7 +7570,15 @@ static void rdp_tri_tex_z(UINT32 w1, UINT32 w2)
 	memset(&ewdata[8], 0, 16 * sizeof(INT32));
 	memcpy(&ewdata[24], &rdp_cmd_data[rdp_cmd_cur + 8], 16 * sizeof(INT32));
 	memcpy(&ewdata[40], &rdp_cmd_data[rdp_cmd_cur + 24], 4 * sizeof(INT32));
+
+	
+	
+	
+	
+	
 	edgewalker_for_prims(ewdata);
+
+	
 }
 
 static void rdp_tri_shade(UINT32 w1, UINT32 w2)
@@ -7550,7 +7611,13 @@ static void rdp_tri_texshade_z(UINT32 w1, UINT32 w2)
 	INT32 ewdata[44];
 	memcpy(&ewdata[0], &rdp_cmd_data[rdp_cmd_cur], 44 * sizeof(INT32));
 
+	
+	
+	
+
 	edgewalker_for_prims(ewdata);
+
+	
 }
 
 static void rdp_tex_rect(UINT32 w1, UINT32 w2)
@@ -7617,7 +7684,7 @@ static void rdp_tex_rect_flip(UINT32 w1, UINT32 w2)
 {
 	UINT32 w3 = rdp_cmd_data[rdp_cmd_cur+2];
 	UINT32 w4 = rdp_cmd_data[rdp_cmd_cur+3];
-	
+
 	
 	UINT32 tilenum	= (w2 >> 24) & 0x7;
 	UINT32 xl = (w1 >> 12) & 0xfff;
@@ -7694,6 +7761,7 @@ static void rdp_sync_full(UINT32 w1, UINT32 w2)
 	
 	
 
+	
 	
 	
 	
@@ -9284,10 +9352,14 @@ STRICTINLINE int finalize_spanalpha(UINT32 blend_en, UINT32 curpixel_cvg, UINT32
 		{
 			finalcvg = curpixel_cvg + curpixel_memcvg;
 		}
+
+		
+		
 		if (!(finalcvg & 8))
 			finalcvg &= 7;
 		else
 			finalcvg = 7;
+
 		break;
 	case CVG_WRAP:
 		finalcvg = (curpixel_cvg + curpixel_memcvg) & 7;
@@ -9315,8 +9387,8 @@ STRICTINLINE INT32 normalize_dzpix(INT32 sum)
 
 	for(int count = 0x2000; count > 0; count >>= 1)
     {
-      if (sum & count)
-        return(count << 1);
+		if (sum & count)
+			return(count << 1);
     }
 	fatalerror("normalize_dzpix: invalid codepath taken");
 	return 0;
@@ -10228,7 +10300,7 @@ INLINE void clearscreen(UINT32 x0, UINT32 y0, UINT32 x1, UINT32 y1, UINT32 white
 	memset(&ddbltfx, 0, sizeof(DDBLTFX));
 	ddbltfx.dwSize = sizeof(DDBLTFX);
 	ddbltfx.dwFillColor = 0;
-	res = IDirectDrawSurface_Blt(lpddsback, 0, lpddsprimary, 0, DDBLT_WAIT | DDBLT_COLORFILL, &ddbltfx);
+	res = IDirectDrawSurface_Blt(lpddsprimary, &bltrect, 0, 0, DDBLT_WAIT | DDBLT_COLORFILL, &ddbltfx);
 	if (res != DD_OK)
 		fatalerror("clearscreen: Blt failed.");
 }
@@ -10372,10 +10444,13 @@ STRICTINLINE void tclod_2cycle_current(INT32* sss, INT32* sst, INT32 nexts, INT3
 		
 
 		
-		tclod_4x17_to_15(inits, nexts, initt, nextt, 0, &lod);
-		tclod_4x17_to_15(inits, nextys, initt, nextyt, lod, &lod);
+		if (!lodclamp)
+		{
+			tclod_4x17_to_15(inits, nexts, initt, nextt, 0, &lod);
+			tclod_4x17_to_15(inits, nextys, initt, nextyt, lod, &lod);
+		}
 
-		lodfrac_lodtile_signals(lodclamp, lod, &l_tile, &magnify, &distant);
+		lodfrac_lodtile_signals(lodclamp, lod, &l_tile, &magnify, &distant, &lod_frac);
 
 		
 		if (other_modes.tex_lod_en)
@@ -10433,10 +10508,13 @@ STRICTINLINE void tclod_2cycle_current_simple(INT32* sss, INT32* sst, INT32 s, I
 
 		lodclamp = (initt & 0x60000) || (nextt & 0x60000) || (inits & 0x60000) || (nexts & 0x60000) || (nextys & 0x60000) || (nextyt & 0x60000);
 
-		tclod_4x17_to_15(inits, nexts, initt, nextt, 0, &lod);
-		tclod_4x17_to_15(inits, nextys, initt, nextyt, lod, &lod);
+		if (!lodclamp)
+		{
+			tclod_4x17_to_15(inits, nexts, initt, nextt, 0, &lod);
+			tclod_4x17_to_15(inits, nextys, initt, nextyt, lod, &lod);
+		}
 
-		lodfrac_lodtile_signals(lodclamp, lod, &l_tile, &magnify, &distant);
+		lodfrac_lodtile_signals(lodclamp, lod, &l_tile, &magnify, &distant, &lod_frac);
 	
 		if (other_modes.tex_lod_en)
 		{
@@ -10493,10 +10571,13 @@ STRICTINLINE void tclod_2cycle_current_notexel1(INT32* sss, INT32* sst, INT32 s,
 
 		lodclamp = (initt & 0x60000) || (nextt & 0x60000) || (inits & 0x60000) || (nexts & 0x60000) || (nextys & 0x60000) || (nextyt & 0x60000);
 
-		tclod_4x17_to_15(inits, nexts, initt, nextt, 0, &lod);
-		tclod_4x17_to_15(inits, nextys, initt, nextyt, lod, &lod);
+		if (!lodclamp)
+		{
+			tclod_4x17_to_15(inits, nexts, initt, nextt, 0, &lod);
+			tclod_4x17_to_15(inits, nextys, initt, nextyt, lod, &lod);
+		}
 
-		lodfrac_lodtile_signals(lodclamp, lod, &l_tile, &magnify, &distant);
+		lodfrac_lodtile_signals(lodclamp, lod, &l_tile, &magnify, &distant, &lod_frac);
 	
 		if (other_modes.tex_lod_en)
 		{
@@ -10537,35 +10618,13 @@ STRICTINLINE void tclod_2cycle_next(INT32* sss, INT32* sst, INT32 s, INT32 t, IN
 	
 		lodclamp = (initt & 0x60000) || (nextt & 0x60000) || (inits & 0x60000) || (nexts & 0x60000) || (nextys & 0x60000) || (nextyt & 0x60000);
 
-		tclod_4x17_to_15(inits, nexts, initt, nextt, 0, &lod);
-		tclod_4x17_to_15(inits, nextys, initt, nextyt, lod, &lod);
-
-		
-		if ((lod & 0x4000) || lodclamp)
-			lod = 0x7fff;
-		else if (lod < min_level)
-			lod = min_level;
-						
-		magnify = (lod < 32) ? 1: 0;
-		l_tile =  log2table[(lod >> 5) & 0xff];
-		distant = ((lod & 0x6000) || (l_tile >= max_level)) ? 1 : 0;
-
-		*prelodfrac = ((lod << 3) >> l_tile) & 0xff;
-
-		
-		if(!other_modes.sharpen_tex_en && !other_modes.detail_tex_en)
+		if (!lodclamp)
 		{
-			if (distant)
-				*prelodfrac = 0xff;
-			else if (magnify)
-				*prelodfrac = 0;
+			tclod_4x17_to_15(inits, nexts, initt, nextt, 0, &lod);
+			tclod_4x17_to_15(inits, nextys, initt, nextyt, lod, &lod);
 		}
 
-		
-		
-
-		if(other_modes.sharpen_tex_en && magnify)
-			*prelodfrac |= 0x100;
+		lodfrac_lodtile_signals(lodclamp, lod, &l_tile, &magnify, &distant, prelodfrac);
 
 		if (other_modes.tex_lod_en)
 		{
@@ -10656,9 +10715,10 @@ STRICTINLINE void tclod_1cycle_current(INT32* sss, INT32* sst, INT32 nexts, INT3
 		
 
 		
-		tclod_4x17_to_15(nexts, fars, nextt, fart, 0, &lod);
+		if (!lodclamp)
+			tclod_4x17_to_15(nexts, fars, nextt, fart, 0, &lod);
 
-		lodfrac_lodtile_signals(lodclamp, lod, &l_tile, &magnify, &distant);
+		lodfrac_lodtile_signals(lodclamp, lod, &l_tile, &magnify, &distant, &lod_frac);
 	
 		if (other_modes.tex_lod_en)
 		{
@@ -10736,9 +10796,10 @@ STRICTINLINE void tclod_1cycle_current_simple(INT32* sss, INT32* sst, INT32 s, I
 
 		lodclamp = (fart & 0x60000) || (nextt & 0x60000) || (fars & 0x60000) || (nexts & 0x60000);
 
-		tclod_4x17_to_15(nexts, fars, nextt, fart, 0, &lod);
+		if (!lodclamp)
+			tclod_4x17_to_15(nexts, fars, nextt, fart, 0, &lod);
 
-		lodfrac_lodtile_signals(lodclamp, lod, &l_tile, &magnify, &distant);
+		lodfrac_lodtile_signals(lodclamp, lod, &l_tile, &magnify, &distant, &lod_frac);
 	
 		if (other_modes.tex_lod_en)
 		{
@@ -10805,23 +10866,34 @@ STRICTINLINE void tclod_1cycle_next(INT32* sss, INT32* sst, INT32 s, INT32 t, IN
 			}
 			else
 			{
-				if (!sigs->onelessthanmid)
+				
+				
+				
+				
+				
+				
+
+				
+				
+				if (sigs->longspan)
 				{
-				
-				
-				
-				
-					nextt = span[nextscan].t + dtinc;
-					nexts = span[nextscan].s + dsinc;
-					nextsw = span[nextscan].w + dwinc;
-					fart = (nextt + dtinc) >> 16; 
-					fars = (nexts + dsinc) >> 16; 
-					farsw = (nextsw + dwinc) >> 16;
-					nextt >>= 16;
-					nexts >>= 16;
-					nextsw >>= 16;
+					nextt = (span[nextscan].t + dtinc) >> 16;
+					nexts = (span[nextscan].s + dsinc) >> 16;
+					nextsw = (span[nextscan].w + dwinc) >> 16;
+					fart = (span[nextscan].t + (dtinc << 1)) >> 16; 
+					fars = (span[nextscan].s + (dsinc << 1)) >> 16; 
+					farsw = (span[nextscan].w  + (dwinc << 1)) >> 16;
 				}
-				else
+				else if (sigs->midspan)
+				{
+					nextt = span[nextscan].t >> 16;
+					nexts = span[nextscan].s >> 16;
+					nextsw = span[nextscan].w >> 16;
+					fart = (span[nextscan].t + dtinc) >> 16; 
+					fars = (span[nextscan].s + dsinc) >> 16; 
+					farsw = (span[nextscan].w  + dwinc) >> 16;
+				}
+				else if (sigs->onelessthanmid)
 				{
 					nextsw = (w + dwinc) >> 16;
 					nexts = (s + dsinc) >> 16;
@@ -10829,6 +10901,15 @@ STRICTINLINE void tclod_1cycle_next(INT32* sss, INT32* sst, INT32 s, INT32 t, IN
 					farsw = (w - dwinc) >> 16;
 					fars = (s - dsinc) >> 16;
 					fart = (t - dtinc) >> 16;
+				}
+				else
+				{
+					nextt = (t + dtinc) >> 16;
+					nexts = (s + dsinc) >> 16;
+					nextsw = (w + dwinc) >> 16;
+					fart = (t + (dtinc << 1)) >> 16; 
+					fars = (s + (dsinc << 1)) >> 16; 
+					farsw = (w + (dwinc << 1)) >> 16;
 				}
 			}
 		}
@@ -10848,31 +10929,11 @@ STRICTINLINE void tclod_1cycle_next(INT32* sss, INT32* sst, INT32 s, INT32 t, IN
 		lodclamp = (fart & 0x60000) || (nextt & 0x60000) || (fars & 0x60000) || (nexts & 0x60000);
 		
 		
-		tclod_4x17_to_15(nexts, fars, nextt, fart, 0, &lod);
 
-		
-		if ((lod & 0x4000) || lodclamp)
-			lod = 0x7fff;
-		else if (lod < min_level)
-			lod = min_level;
-					
-		magnify = (lod < 32) ? 1: 0;
-		l_tile =  log2table[(lod >> 5) & 0xff];
-		distant = ((lod & 0x6000) || (l_tile >= max_level)) ? 1 : 0;
+		if (!lodclamp)
+			tclod_4x17_to_15(nexts, fars, nextt, fart, 0, &lod);
 
-		*prelodfrac = ((lod << 3) >> l_tile) & 0xff;
-
-		
-		if(!other_modes.sharpen_tex_en && !other_modes.detail_tex_en)
-		{
-			if (distant)
-				*prelodfrac = 0xff;
-			else if (magnify)
-				*prelodfrac = 0;
-		}
-
-		if(other_modes.sharpen_tex_en && magnify)
-			*prelodfrac |= 0x100;
+		lodfrac_lodtile_signals(lodclamp, lod, &l_tile, &magnify, &distant, prelodfrac);
 
 		if (other_modes.tex_lod_en)
 		{
@@ -10916,19 +10977,34 @@ STRICTINLINE void tclod_copy(INT32* sss, INT32* sst, INT32 s, INT32 t, INT32 w, 
 
 		lodclamp = (fart & 0x60000) || (nextt & 0x60000) || (fars & 0x60000) || (nexts & 0x60000);
 
-		tclod_4x17_to_15(nexts, fars, nextt, fart, 0, &lod);
+		if (!lodclamp)
+			tclod_4x17_to_15(nexts, fars, nextt, fart, 0, &lod);
 
 		if ((lod & 0x4000) || lodclamp)
-			lod = 0x7fff;
-		else if (lod < min_level)
-			lod = min_level;
-						
-		magnify = (lod < 32) ? 1: 0;
-		l_tile =  log2table[(lod >> 5) & 0xff];
-		distant = ((lod & 0x6000) || (l_tile >= max_level)) ? 1 : 0;
+		{
+			
 
-		if (distant)
+			magnify = 0;
 			l_tile = max_level;
+		}
+		else if (lod < 32)
+		{
+			magnify = 1;
+			l_tile = 0;
+		}
+		else
+		{
+			magnify = 0;
+			l_tile =  log2table[(lod >> 5) & 0xff];
+
+			if (max_level)
+				distant = ((lod & 0x6000) || (l_tile >= max_level)) ? 1 : 0;
+			else
+				distant = 1;
+
+			if (distant)
+				l_tile = max_level;
+		}
 	
 		if (!other_modes.detail_tex_en || magnify)
 			*t1 = (prim_tile + l_tile) & 7;
@@ -11055,42 +11131,90 @@ STRICTINLINE void tclod_tcclamp(INT32* sss, INT32* sst)
 }
 
 
-STRICTINLINE void lodfrac_lodtile_signals(int lodclamp, INT32 lod, UINT32* l_tile, UINT32* magnify, UINT32* distant)
+STRICTINLINE void lodfrac_lodtile_signals(int lodclamp, INT32 lod, UINT32* l_tile, UINT32* magnify, UINT32* distant, INT32* lfdst)
 {
 	UINT32 ltil, dis, mag;
 	INT32 lf;
 
 	
 	if ((lod & 0x4000) || lodclamp)
-		lod = 0x7fff;
-	else if (lod < min_level)
-		lod = min_level;
-						
-	mag = (lod < 32) ? 1: 0;
-	ltil=  log2table[(lod >> 5) & 0xff];
-	dis = ((lod & 0x6000) || (ltil >= max_level)) ? 1 : 0;
-						
-	lf = ((lod << 3) >> ltil) & 0xff;
-
-	
-	if(!other_modes.sharpen_tex_en && !other_modes.detail_tex_en)
 	{
-		if (dis)
-			lf = 0xff;
-		else if (mag)
-			lf = 0;
+		
+		
+		mag = 0;
+		ltil = 7;
+		dis = 1;
+		lf = 0xff;
 	}
+	else if (lod < min_level)
+	{
+		
 
-	
-	
+		mag = 1;
+		ltil = 0;
+		dis = max_level ? 0 : 1;
 
-	if(other_modes.sharpen_tex_en && mag)
-		lf |= 0x100;
+		if(!other_modes.sharpen_tex_en && !other_modes.detail_tex_en)
+		{
+			if (dis)
+				lf = 0xff;
+			else
+				lf = 0;
+		}
+		else
+		{
+			lf = min_level << 3;
+			if (other_modes.sharpen_tex_en)
+				lf |= 0x100;
+		}
+	}
+	else if (lod < 32)
+	{
+		mag = 1;
+		ltil = 0;
+		dis = max_level ? 0 : 1;
+
+		if(!other_modes.sharpen_tex_en && !other_modes.detail_tex_en)
+		{
+			if (dis)
+				lf = 0xff;
+			else
+				lf = 0;
+		}
+		else
+		{
+			lf = lod << 3;
+			if (other_modes.sharpen_tex_en)
+				lf |= 0x100;
+		}
+	}
+	else
+	{
+		mag = 0;
+		ltil =  log2table[(lod >> 5) & 0xff];
+
+		if (max_level)
+			dis = ((lod & 0x6000) || (ltil >= max_level)) ? 1 : 0;
+		else
+			dis = 1;
+
+		
+		if(!other_modes.sharpen_tex_en && !other_modes.detail_tex_en && dis)
+			lf = 0xff;
+		else
+			lf = ((lod << 3) >> ltil) & 0xff;
+
+		
+		
+
+		
+		
+	}
 
 	*distant = dis;
 	*l_tile = ltil;
 	*magnify = mag;
-	lod_frac = lf;
+	*lfdst = lf;
 }
 
 
@@ -11183,18 +11307,7 @@ const char *aAText[] =
   "SHADE",			"ENV",		"1",				"0",
 };
 
-if (other_modes.cycle_type != CYCLE_TYPE_1 && other_modes.cycle_type != CYCLE_TYPE_2)
-{
-	popmessage("show_combiner_equation not implemented for cycle type %d",other_modes.cycle_type);
-	return;
-}
-
-if (other_modes.cycle_type == CYCLE_TYPE_1)
-	popmessage("Combiner equation of the 2nd cycle is (%s - %s) * %s + %s | (%s - %s) * %s + %s",saRGBText[combine.sub_a_rgb1],
-	sbRGBText[combine.sub_b_rgb1],mRGBText[combine.mul_rgb1],aRGBText[combine.add_rgb1],
-	saAText[combine.sub_a_a1],sbAText[combine.sub_b_a1],mAText[combine.mul_a1],aAText[combine.add_a1]);
-else if (other_modes.cycle_type == CYCLE_TYPE_2)
-	popmessage("Combiner equations are (%s - %s) * %s + %s | (%s - %s) * %s + %s \n (%s - %s) * %s + %s | (%s - %s) * %s + %s",
+	popmessage("Note that the 2nd-cycle equations are used in one-cycle mode.\nCombiner equations are (%s - %s) * %s + %s | (%s - %s) * %s + %s \n (%s - %s) * %s + %s | (%s - %s) * %s + %s",
 	saRGBText[combine.sub_a_rgb0],sbRGBText[combine.sub_b_rgb0],mRGBText[combine.mul_rgb0],
 	aRGBText[combine.add_rgb0],saAText[combine.sub_a_a0],sbAText[combine.sub_b_a0],
 	mAText[combine.mul_a0],aAText[combine.add_a0],
@@ -11271,7 +11384,7 @@ void showtile(UINT32 tilenum, int stop, int clamped)
 	if (nominalwidth > 619)
 		fatalerror("showtile: too large");
 
-	clearscreen(492,0,620,479,1);
+	clearscreen(492, 0, 620, 479, 1);
 
 	UINT32 y = 0;
 	INT32* d = 0;
@@ -11499,7 +11612,7 @@ endi8:
 		fatalerror("showtile: Unlock failed.");
 
 	src.bottom = 480;
-	res = IDirectDrawSurface_Blt(lpddsprimary, &dst, lpddsback,&src,DDBLT_WAIT,0);
+	res = IDirectDrawSurface_Blt(lpddsprimary, &dst, lpddsback, &src, DDBLT_WAIT, 0);
 	if (res != DD_OK)
 		fatalerror("showtile: Blt failed.");
 
