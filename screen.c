@@ -4,12 +4,12 @@
 
 #include <ddraw.h>
 
-LPDIRECTDRAW7 lpdd = 0;
-LPDIRECTDRAWSURFACE7 lpddsprimary;
-LPDIRECTDRAWSURFACE7 lpddsback;
-DDSURFACEDESC2 ddsd;
-HRESULT res;
-RECT dst, src;
+static LPDIRECTDRAW7 lpdd = 0;
+static LPDIRECTDRAWSURFACE7 lpddsprimary;
+static LPDIRECTDRAWSURFACE7 lpddsback;
+static DDSURFACEDESC2 ddsd;
+static HRESULT res;
+static RECT dst, src;
 
 extern GFX_INFO gfx;
 
