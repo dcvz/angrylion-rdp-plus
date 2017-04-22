@@ -40,7 +40,7 @@ EXPORT void CALL GetDllInfo(PLUGIN_INFO* PluginInfo)
 {
     PluginInfo->Version = 0x0103;
     PluginInfo->Type  = PLUGIN_TYPE_GFX;
-    sprintf (PluginInfo->Name, "My little plugin");
+    sprintf(PluginInfo->Name, "angrylion's RDP");
 
     PluginInfo->NormalMemory = TRUE;
     PluginInfo->MemoryBswaped = TRUE;
