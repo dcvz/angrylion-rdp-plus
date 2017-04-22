@@ -13,6 +13,9 @@
       <UniqueIdentifier>{142a5325-573c-4fde-9d8f-af10cb6e28e5}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe</Extensions>
     </Filter>
+    <Filter Include="Source Files\rdp">
+      <UniqueIdentifier>{fd3bafd5-9691-4325-8678-5e7977f423a6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.c">
@@ -29,6 +32,9 @@
     </ClCompile>
     <ClCompile Include="memutil.c">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="rdp\vi.c">
+      <Filter>Source Files\rdp</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
