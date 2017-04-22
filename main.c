@@ -1,4 +1,4 @@
-#include "z64.h"
+#include "rdp.h"
 #include "Gfx #1.3.h"
 
 extern const int screen_width = 1024, screen_height = 768;

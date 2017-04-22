@@ -18,7 +18,7 @@
     <ClCompile Include="main.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="n64video.c">
+    <ClCompile Include="rdp.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -29,7 +29,7 @@
     <ClInclude Include="tctables.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="z64.h">
+    <ClInclude Include="rdp.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
