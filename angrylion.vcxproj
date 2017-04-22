@@ -111,10 +111,12 @@
     <ClCompile Include="main.c" />
     <ClCompile Include="msg.c" />
     <ClCompile Include="rdp.c" />
+    <ClCompile Include="screen.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="gfx_1.3.h" />
     <ClInclude Include="msg.h" />
+    <ClInclude Include="screen.h" />
     <ClInclude Include="tctables.h" />
     <ClInclude Include="rdp.h" />
   </ItemGroup>

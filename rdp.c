@@ -3,6 +3,7 @@
 #include "gfx_1.3.h"
 #include "tctables.h"
 #include "msg.h"
+#include "screen.h"
 
 extern GFX_INFO gfx;
 
@@ -646,14 +647,6 @@ struct onetime
 	int nolerp, copymstrangecrashes, fillmcrashes, fillmbitcrashes, syncfullcrash, vbusclock;
 } onetimewarnings;
 
-extern INT32 pitchindwords;
-extern HRESULT res;
-extern LPDIRECTDRAW7 lpdd;
-extern LPDIRECTDRAWSURFACE7 lpddsprimary; 
-extern LPDIRECTDRAWSURFACE7 lpddsback;
-extern DDSURFACEDESC2 ddsd;
-extern RECT src, dst;
-
 UINT32 z64gl_command = 0;
 UINT32 command_counter = 0;
 int SaveLoaded = 0;
@@ -1217,7 +1210,7 @@ int rdp_update()
 	
 	
 
-	int linecount = serration_pulses ? (pitchindwords << 1) : pitchindwords;
+
 	int lineshifter = serration_pulses ? 0 : 1;
 	int twolines = serration_pulses ? 1 : 0;
 
@@ -1296,7 +1289,6 @@ int rdp_update()
 
 	INT32 *d = 0;
 
-	UINT32 prescale_ptr = v_start * linecount + h_start + (lowerfield ? pitchindwords : 0);
 	
 
 	
@@ -1324,26 +1316,11 @@ int rdp_update()
 		return 0;
 	}
 
-	
-	
-	res = IDirectDrawSurface_Lock(lpddsback, 0, &ddsd, DDLOCK_SURFACEMEMORYPTR | DDLOCK_NOSYSLOCK, 0);
-	if (res == DDERR_SURFACELOST)
-	{
-		while(1){
-		res = IDirectDrawSurface_Restore(lpddsback);
-		if (res != DD_OK)
-			msg_error("Restore failed with DirectDraw error %x", res);
-		res = IDirectDrawSurface_Lock(lpddsback, 0, &ddsd, DDLOCK_SURFACEMEMORYPTR | DDLOCK_NOSYSLOCK, 0);
-		if (res != DDERR_SURFACELOST)
-			break;
-		};
-	}
-	else if (res != DD_OK)
-		msg_error("Lock failed with DirectDraw error %x", res);
+	int pitchindwords;
+	screen_lock(&PreScale, &pitchindwords);
 
-	PreScale = (INT32*)ddsd.lpSurface;
-
-	
+	int linecount = serration_pulses ? (pitchindwords << 1) : pitchindwords;
+	UINT32 prescale_ptr = v_start * linecount + h_start + (lowerfield ? pitchindwords : 0);
 	
 	
 	
@@ -1713,34 +1690,10 @@ int rdp_update()
         default:    msg_warning("Unknown framebuffer format %d\n", vi_control & 0x3);
 	}
 
-	res = IDirectDrawSurface_Unlock(lpddsback, 0);
-	if (res != DD_OK && res != DDERR_GENERIC && res != DDERR_SURFACELOST)
-		msg_error("Couldn't unlock the offscreen surface with DirectDraw error %x", res);
-	
-	
+    screen_unlock();
 
-	int visiblelines = (ispal ? 576 : 480) >> lineshifter;
-
-	src.bottom = visiblelines;
-
-	if (dst.left < dst.right && dst.top < dst.bottom)
-	{
-		res = IDirectDrawSurface_Blt(lpddsprimary, &dst, lpddsback, &src, DDBLT_WAIT, 0);
-		if (res == DDERR_SURFACELOST)
-		{
-			while(1){
-			res = IDirectDraw4_RestoreAllSurfaces(lpdd);
-			if (res != DD_OK)
-				msg_error("RestoreAllSurfaces failed with DirectDraw error %x", res);
-			res = IDirectDrawSurface_Blt(lpddsprimary, &dst, lpddsback, &src, DDBLT_WAIT, 0);		
-			if (res != DDERR_SURFACELOST)
-				break;
-			}
-		}
-		else if (res != DD_OK && res != DDERR_GENERIC && res != DDERR_OUTOFMEMORY)
-			msg_error("Scaled blit failed with DirectDraw error %x", res);
-		
-	}
+    int visiblelines = (ispal ? 576 : 480) >> lineshifter;
+    screen_swap(visiblelines);
 
 	
 	return 0;

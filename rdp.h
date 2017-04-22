@@ -8,7 +8,6 @@
 
 #ifdef WIN32
 #include <windows.h>
-#include <ddraw.h>
 #endif
 
 #if defined (_MSC_VER) && (_MSC_VER >= 1300)
