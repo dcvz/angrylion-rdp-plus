@@ -19,11 +19,6 @@ extern UINT32 command_counter;
 
 extern GFX_INFO gfx;
 
-int rdp_init();
-int rdp_close();
-int rdp_update();
-void rdp_process_list(void);
-
  
 EXPORT void CALL CaptureScreen ( char * Directory )
 {
