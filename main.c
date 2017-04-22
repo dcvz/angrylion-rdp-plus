@@ -4,11 +4,12 @@
 #include "screen.h"
 
 #include <stdio.h>
+#include <stdbool.h>
 
 static const int screen_width = 1024;
 static const int screen_height = 768;
 
-int ProcessDListShown = 0;
+static bool warnHLE = false;
 
 EXPORT void CALL CaptureScreen(char* Directory)
 {
@@ -70,10 +71,9 @@ EXPORT void CALL MoveScreen(int xpos, int ypos)
 
 EXPORT void CALL ProcessDList(void)
 {
-    if (!ProcessDListShown)
-    {
-        msg_warning("ProcessDList");
-        ProcessDListShown = 1;
+    if (!warnHLE) {
+        msg_warning("Please disable 'Graphic HLE' in the plugin settings.");
+        warnHLE = true;
     }
 }
 
