@@ -109,10 +109,12 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.c" />
+    <ClCompile Include="msg.c" />
     <ClCompile Include="rdp.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="gfx_1.3.h" />
+    <ClInclude Include="msg.h" />
     <ClInclude Include="tctables.h" />
     <ClInclude Include="rdp.h" />
   </ItemGroup>

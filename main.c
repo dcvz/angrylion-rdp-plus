@@ -1,5 +1,6 @@
 #include "rdp.h"
 #include "gfx_1.3.h"
+#include "msg.h"
 
 extern const int screen_width = 1024, screen_height = 768;
 
@@ -22,8 +23,6 @@ int rdp_init();
 int rdp_close();
 int rdp_update();
 void rdp_process_list(void);
-extern INLINE void popmessage(const char* err, ...);
-extern INLINE void fatalerror(const char* err, ...);
 
  
 EXPORT void CALL CaptureScreen ( char * Directory )
@@ -44,13 +43,13 @@ EXPORT void CALL CloseDLL (void)
  
 EXPORT void CALL DllAbout ( HWND hParent )
 {
-	popmessage("angrylion's RDP, unpublished beta. MESS source code used.");
+	msg_warning("angrylion's RDP, unpublished beta. MESS source code used.");
 }
 
  
 EXPORT void CALL DllConfig ( HWND hParent )
 {
-	popmessage("Nothing to configure");
+	msg_warning("Nothing to configure");
 }
 
  
@@ -117,7 +116,7 @@ EXPORT void CALL ProcessDList(void)
 {
 	if (!ProcessDListShown)
 	{
-		popmessage("ProcessDList");
+		msg_warning("ProcessDList");
 		ProcessDListShown = 1;
 	}
 }
@@ -181,10 +180,10 @@ EXPORT void CALL RomOpen (void)
 
 	res = DirectDrawCreateEx(0, (LPVOID*)&lpdd, &IID_IDirectDraw7, 0);
 	if(res != DD_OK) 
-		fatalerror("Couldn't create a DirectDraw object");
+		msg_error("Couldn't create a DirectDraw object");
 	res = IDirectDraw_SetCooperativeLevel(lpdd, gfx.hWnd, DDSCL_NORMAL);
 	if(res != DD_OK) 
-		fatalerror("Couldn't set a cooperative level. Error code %x", res);
+		msg_error("Couldn't set a cooperative level. Error code %x", res);
 
 	memset(&ddsd, 0, sizeof(ddsd));
 	ddsd.dwSize = sizeof(ddsd);
@@ -194,7 +193,7 @@ EXPORT void CALL RomOpen (void)
 	
 	res = IDirectDraw_CreateSurface(lpdd, &ddsd, &lpddsprimary, 0);
 	if(res != DD_OK)
-		fatalerror("CreateSurface for a primary surface failed. Error code %x", res);
+		msg_error("CreateSurface for a primary surface failed. Error code %x", res);
 
 	
 	ddsd.dwFlags = DDSD_CAPS | DDSD_HEIGHT | DDSD_WIDTH | DDSD_PIXELFORMAT;
@@ -211,28 +210,28 @@ EXPORT void CALL RomOpen (void)
 	ddsd.ddpfPixelFormat = ftpixel;
 	res = IDirectDraw_CreateSurface(lpdd, &ddsd, &lpddsback, 0);
 	if (res == DDERR_INVALIDPIXELFORMAT)
-		fatalerror("ARGB8888 is not supported. You can try changing desktop color depth to 32-bit, but most likely that won't help.");
+		msg_error("ARGB8888 is not supported. You can try changing desktop color depth to 32-bit, but most likely that won't help.");
 	else if(res != DD_OK)
-		fatalerror("CreateSurface for a secondary surface failed. Error code %x", res);
+		msg_error("CreateSurface for a secondary surface failed. Error code %x", res);
 
 	
 	res = IDirectDrawSurface_GetSurfaceDesc(lpddsback, &ddsd);
 	if (res != DD_OK)
-		fatalerror("GetSurfaceDesc failed.");
+		msg_error("GetSurfaceDesc failed.");
 	if ((ddsd.lPitch & 3) || ddsd.lPitch < (PRESCALE_WIDTH << 2))
-		fatalerror("Pitch of a secondary surface is either not 32 bit aligned or two small.");
+		msg_error("Pitch of a secondary surface is either not 32 bit aligned or two small.");
 	pitchindwords = ddsd.lPitch >> 2;
 
 	
 	res = IDirectDraw_CreateClipper(lpdd, 0, &lpddcl, 0);
 	if (res != DD_OK)
-		fatalerror("Couldn't create a clipper.");
+		msg_error("Couldn't create a clipper.");
 	res = IDirectDrawClipper_SetHWnd(lpddcl, 0, gfx.hWnd);
 	if (res != DD_OK)
-		fatalerror("Couldn't register a windows handle as a clipper.");
+		msg_error("Couldn't register a windows handle as a clipper.");
 	res = IDirectDrawSurface_SetClipper(lpddsprimary, lpddcl);
 	if (res != DD_OK)
-		fatalerror("Couldn't attach a clipper to a surface.");
+		msg_error("Couldn't attach a clipper to a surface.");
 
 	
 	src.top = src.left = 0; 

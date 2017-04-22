@@ -21,6 +21,9 @@
     <ClCompile Include="rdp.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="msg.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="tctables.h">
@@ -30,6 +33,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="gfx_1.3.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="msg.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

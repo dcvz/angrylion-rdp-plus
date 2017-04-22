@@ -2,7 +2,7 @@
 #include "rdp.h"
 #include "gfx_1.3.h"
 #include "tctables.h"
-#include <stdarg.h>
+#include "msg.h"
 
 extern GFX_INFO gfx;
 
@@ -25,35 +25,6 @@ extern GFX_INFO gfx;
 #define GET_LOW_RGBA16_TMEM(x)	(replicated_rgba[((x) >> 1) & 0x1f])
 #define GET_MED_RGBA16_TMEM(x)	(replicated_rgba[((x) >> 6) & 0x1f])
 #define GET_HI_RGBA16_TMEM(x)	(replicated_rgba[(x) >> 11])
-
-INLINE void fatalerror(const char * err, ...)
-{
-	char VsprintfBuffer[200];
-	va_list arg;
-	va_start(arg, err);
-	vsprintf(VsprintfBuffer, err, arg);
-#ifdef _WIN32
-	MessageBoxA(0,VsprintfBuffer,"RDP: fatal error",MB_OK);
-#else
-	printf(VsprintfBuffer);
-#endif
-	va_end(arg);
-	exit(0);
-}
-
-INLINE void popmessage(const char* err, ...)
-{
-	char VsprintfBuffer[200];
-	va_list arg;
-	va_start(arg, err);
-	vsprintf(VsprintfBuffer, err, arg);
-#ifdef _WIN32
-	MessageBoxA(0,VsprintfBuffer,"RDP: warning",MB_OK);
-#else
-	printf(VsprintfBuffer);
-#endif
-	va_end(arg);
-}
 
 
 #define LOG_RDP_EXECUTION 0
@@ -1112,7 +1083,7 @@ int rdp_update()
 	int gamma_and_dither = (gamma << 1) | gamma_dither;
 	if (((vi_control >> 5) & 1) && !onetimewarnings.vbusclock)
 	{
-		popmessage("rdp_update: vbus_clock_enable bit set in VI_CONTROL_REG register. Never run this code on your N64! It's rumored that turning this bit on\
+		msg_warning("rdp_update: vbus_clock_enable bit set in VI_CONTROL_REG register. Never run this code on your N64! It's rumored that turning this bit on\
 					will result in permanent damage to the hardware! Emulation will now continue.\n");
 		onetimewarnings.vbusclock = 1;
 	}
@@ -1156,7 +1127,7 @@ int rdp_update()
 	
 	if (!lerp_en && vitype == 2 && !onetimewarnings.nolerp && h_start < 0x80 && x_add <= 0x200)
 	{
-		popmessage("Disabling VI interpolation in 16-bit color modes causes glitches on hardware if h_start is less than 128 pixels and x_scale is less or equal to 0x200.");
+		msg_warning("Disabling VI interpolation in 16-bit color modes causes glitches on hardware if h_start is less than 128 pixels and x_scale is less or equal to 0x200.");
 		onetimewarnings.nolerp = 1;
 	}
 
@@ -1281,7 +1252,7 @@ int rdp_update()
 	if ((vres + v_start) > PRESCALE_HEIGHT)
 	{
 		vres = PRESCALE_HEIGHT - v_start;
-		popmessage("vres = %d v_start = %d v_video_start = %d", vres, v_start, (vi_v_start >> 16) & 0x3ff);
+		msg_warning("vres = %d v_start = %d v_video_start = %d", vres, v_start, (vi_v_start >> 16) & 0x3ff);
 	}
 
 	INT32 h_end = hres + h_start;
@@ -1289,7 +1260,7 @@ int rdp_update()
 
 	int vactivelines = (vi_v_sync & 0x3ff) - vstartoffset;
 	if (vactivelines > PRESCALE_HEIGHT)
-		fatalerror("VI_V_SYNC_REG too big");
+		msg_error("VI_V_SYNC_REG too big");
 	if (vactivelines < 0)
 		return 0;
 	vactivelines >>= lineshifter;
@@ -1361,14 +1332,14 @@ int rdp_update()
 		while(1){
 		res = IDirectDrawSurface_Restore(lpddsback);
 		if (res != DD_OK)
-			fatalerror("Restore failed with DirectDraw error %x", res);
+			msg_error("Restore failed with DirectDraw error %x", res);
 		res = IDirectDrawSurface_Lock(lpddsback, 0, &ddsd, DDLOCK_SURFACEMEMORYPTR | DDLOCK_NOSYSLOCK, 0);
 		if (res != DDERR_SURFACELOST)
 			break;
 		};
 	}
 	else if (res != DD_OK)
-		fatalerror("Lock failed with DirectDraw error %x", res);
+		msg_error("Lock failed with DirectDraw error %x", res);
 
 	PreScale = (INT32*)ddsd.lpSurface;
 
@@ -1739,12 +1710,12 @@ int rdp_update()
 			}
 			break;
 		}
-        default:    popmessage("Unknown framebuffer format %d\n", vi_control & 0x3);
+        default:    msg_warning("Unknown framebuffer format %d\n", vi_control & 0x3);
 	}
 
 	res = IDirectDrawSurface_Unlock(lpddsback, 0);
 	if (res != DD_OK && res != DDERR_GENERIC && res != DDERR_SURFACELOST)
-		fatalerror("Couldn't unlock the offscreen surface with DirectDraw error %x", res);
+		msg_error("Couldn't unlock the offscreen surface with DirectDraw error %x", res);
 	
 	
 
@@ -1760,14 +1731,14 @@ int rdp_update()
 			while(1){
 			res = IDirectDraw4_RestoreAllSurfaces(lpdd);
 			if (res != DD_OK)
-				fatalerror("RestoreAllSurfaces failed with DirectDraw error %x", res);
+				msg_error("RestoreAllSurfaces failed with DirectDraw error %x", res);
 			res = IDirectDrawSurface_Blt(lpddsprimary, &dst, lpddsback, &src, DDBLT_WAIT, 0);		
 			if (res != DDERR_SURFACELOST)
 				break;
 			}
 		}
 		else if (res != DD_OK && res != DDERR_GENERIC && res != DDERR_OUTOFMEMORY)
-			fatalerror("Scaled blit failed with DirectDraw error %x", res);
+			msg_error("Scaled blit failed with DirectDraw error %x", res);
 		
 	}
 
@@ -3012,7 +2983,7 @@ INLINE void fetch_texel(COLOR *color, int s, int t, UINT32 tilenum)
 		}
 		break;
 	default:
-		fatalerror("fetch_texel: unknown texture format %d, size %d, tilenum %d\n", tile[tilenum].format, tile[tilenum].size, tilenum);
+		msg_error("fetch_texel: unknown texture format %d, size %d, tilenum %d\n", tile[tilenum].format, tile[tilenum].size, tilenum);
 		break;
 	}
 }
@@ -3098,7 +3069,7 @@ INLINE void fetch_texel_entlut(COLOR *color, int s, int t, UINT32 tilenum)
 		}
 		break;
 	default:
-		fatalerror("fetch_texel_entlut: unknown texture format %d, size %d, tilenum %d\n", tile[tilenum].format, tile[tilenum].size, tilenum);
+		msg_error("fetch_texel_entlut: unknown texture format %d, size %d, tilenum %d\n", tile[tilenum].format, tile[tilenum].size, tilenum);
 		break;
 	}
 
@@ -3955,7 +3926,7 @@ INLINE void fetch_texel_quadro(COLOR *color0, COLOR *color1, COLOR *color2, COLO
 		}
 		break;
 	default:
-		fatalerror("fetch_texel_quadro: unknown texture format %d, size %d, tilenum %d\n", tile[tilenum].format, tile[tilenum].size, tilenum);
+		msg_error("fetch_texel_quadro: unknown texture format %d, size %d, tilenum %d\n", tile[tilenum].format, tile[tilenum].size, tilenum);
 		break;
 	}
 }
@@ -4160,7 +4131,7 @@ INLINE void fetch_texel_entlut_quadro(COLOR *color0, COLOR *color1, COLOR *color
 		}
 		break;
 	default:
-		fatalerror("fetch_texel_entlut_quadro: unknown texture format %d, size %d, tilenum %d\n", tile[tilenum].format, tile[tilenum].size, tilenum);
+		msg_error("fetch_texel_entlut_quadro: unknown texture format %d, size %d, tilenum %d\n", tile[tilenum].format, tile[tilenum].size, tilenum);
 		break;
 	}
 
@@ -6057,7 +6028,7 @@ void render_spans_fill(int start, int end, int flip)
 			if (fastkillbits && length >= 0)
 			{
 				if (!onetimewarnings.fillmbitcrashes)
-					popmessage("render_spans_fill: image_read_en %x z_update_en %x z_compare_en %x. RDP crashed",
+					msg_warning("render_spans_fill: image_read_en %x z_update_en %x z_compare_en %x. RDP crashed",
 					other_modes.image_read_en, other_modes.z_update_en, other_modes.z_compare_en);
 				onetimewarnings.fillmbitcrashes = 1;
 				rdp_pipeline_crashed = 1;
@@ -6081,7 +6052,7 @@ void render_spans_fill(int start, int end, int flip)
 			if (slowkillbits && length >= 0)
 			{
 				if (!onetimewarnings.fillmbitcrashes)
-					popmessage("render_spans_fill: image_read_en %x z_update_en %x z_compare_en %x z_source_sel %x. RDP crashed",
+					msg_warning("render_spans_fill: image_read_en %x z_update_en %x z_compare_en %x z_source_sel %x. RDP crashed",
 					other_modes.image_read_en, other_modes.z_update_en, other_modes.z_compare_en, other_modes.z_source_sel);
 				onetimewarnings.fillmbitcrashes = 1;
 				rdp_pipeline_crashed = 1;
@@ -6964,7 +6935,7 @@ static void edgewalker_for_prims(INT32* ewdata)
 		case CYCLE_TYPE_2: render_spans_2cycle_ptr(yhlimit >> 2, yllimit >> 2, tilenum, flip); break;
 		case CYCLE_TYPE_COPY: render_spans_copy(yhlimit >> 2, yllimit >> 2, tilenum, flip); break;
 		case CYCLE_TYPE_FILL: render_spans_fill(yhlimit >> 2, yllimit >> 2, flip); break;
-		default: fatalerror("cycle_type %d", other_modes.cycle_type); break;
+		default: msg_error("cycle_type %d", other_modes.cycle_type); break;
 	}
 	
 	
@@ -9098,7 +9069,7 @@ INLINE void z_build_com_table(void)
 		altmem = ((z << 2) & 0x1ffc) | 0xe000;
 		break;
 	default:
-		fatalerror("z_build_com_table failed");
+		msg_error("z_build_com_table failed");
 		break;
 	}
 
@@ -9400,7 +9371,7 @@ STRICTINLINE INT32 normalize_dzpix(INT32 sum)
 		if (sum & count)
 			return(count << 1);
     }
-	fatalerror("normalize_dzpix: invalid codepath taken");
+	msg_error("normalize_dzpix: invalid codepath taken");
 	return 0;
 }
 
@@ -10312,7 +10283,7 @@ INLINE void clearscreen(UINT32 x0, UINT32 y0, UINT32 x1, UINT32 y1, UINT32 white
 	ddbltfx.dwFillColor = 0;
 	res = IDirectDrawSurface_Blt(lpddsprimary, &bltrect, 0, 0, DDBLT_WAIT | DDBLT_COLORFILL, &ddbltfx);
 	if (res != DD_OK)
-		fatalerror("clearscreen: Blt failed.");
+		msg_error("clearscreen: Blt failed.");
 }
 
 INLINE void clearfb16(UINT16* fb, UINT32 width,UINT32 height)
@@ -11317,7 +11288,7 @@ const char *aAText[] =
   "SHADE",			"ENV",		"1",				"0",
 };
 
-	popmessage("Note that the 2nd-cycle equations are used in one-cycle mode.\nCombiner equations are (%s - %s) * %s + %s | (%s - %s) * %s + %s \n (%s - %s) * %s + %s | (%s - %s) * %s + %s",
+	msg_warning("Note that the 2nd-cycle equations are used in one-cycle mode.\nCombiner equations are (%s - %s) * %s + %s | (%s - %s) * %s + %s \n (%s - %s) * %s + %s | (%s - %s) * %s + %s",
 	saRGBText[combine.sub_a_rgb0],sbRGBText[combine.sub_b_rgb0],mRGBText[combine.mul_rgb0],
 	aRGBText[combine.add_rgb0],saAText[combine.sub_a_a0],sbAText[combine.sub_b_a0],
 	mAText[combine.mul_a0],aAText[combine.add_a0],
@@ -11326,7 +11297,7 @@ const char *aAText[] =
 	mAText[combine.mul_a1],aAText[combine.add_a1]);
 UINT32 LocalDebugMode=0;
 if (LocalDebugMode)
-	popmessage("%d %d %d %d %d %d %d %d",combine.sub_a_rgb0,combine.sub_b_rgb0,combine.mul_rgb0,combine.add_rgb0,
+	msg_warning("%d %d %d %d %d %d %d %d",combine.sub_a_rgb0,combine.sub_b_rgb0,combine.mul_rgb0,combine.add_rgb0,
 	combine.sub_a_a0,combine.sub_b_a0,combine.mul_a0,combine.add_a0);
 }
 
@@ -11337,14 +11308,14 @@ const char * bAText[2][4] = { {"PREVA", "FOGA", "SHADEA", "0"},
                                      {"INVALPHA", "MEMA", "1", "0"}};
 if (other_modes.cycle_type!=CYCLE_TYPE_1 && other_modes.cycle_type!=CYCLE_TYPE_2)
 {
-	popmessage("show_blender_equation not implemented for cycle type %d",other_modes.cycle_type);
+	msg_warning("show_blender_equation not implemented for cycle type %d",other_modes.cycle_type);
 	return;
 }
 if (other_modes.cycle_type == CYCLE_TYPE_1)
-	popmessage("Blender equation is %s * %s + %s * %s",bRGBText[other_modes.blend_m1a_0],
+	msg_warning("Blender equation is %s * %s + %s * %s",bRGBText[other_modes.blend_m1a_0],
 	bAText[0][other_modes.blend_m1b_0],bRGBText[other_modes.blend_m2a_0],bAText[1][other_modes.blend_m2b_0]);
 else if (other_modes.cycle_type == CYCLE_TYPE_2)
-	popmessage("Blender equations are %s * %s + %s * %s\n%s * %s + %s * %s",
+	msg_warning("Blender equations are %s * %s + %s * %s\n%s * %s + %s * %s",
 	bRGBText[other_modes.blend_m1a_0],bAText[0][other_modes.blend_m1b_0],
 	bRGBText[other_modes.blend_m2a_0],bAText[1][other_modes.blend_m2b_0],
 	bRGBText[other_modes.blend_m1a_1],bAText[0][other_modes.blend_m1b_1],
@@ -11355,10 +11326,10 @@ else if (other_modes.cycle_type == CYCLE_TYPE_2)
 void showtile(UINT32 tilenum, int stop, int clamped)
 {
 	if (tilenum > 7)
-		fatalerror("showtile: tilenum > 7");
+		msg_error("showtile: tilenum > 7");
 	
 	if (fb_size!=PIXEL_SIZE_16BIT)
-		fatalerror("showtile: non 16bit frame buffer");
+		msg_error("showtile: non 16bit frame buffer");
 	int taddr;
 	UINT32 tbase = tile[tilenum].tmem << 3;
 	UINT32 twidth = tile[tilenum].line << 3;
@@ -11373,7 +11344,7 @@ void showtile(UINT32 tilenum, int stop, int clamped)
 		tformat = 2;
 
 	if (tformat & 1)
-		fatalerror("showtile: formats besides RGBA, CI and I are not implemented");
+		msg_error("showtile: formats besides RGBA, CI and I are not implemented");
 
 	UINT32 nominalwidth = (tile[tilenum].sh >> 2) - (tile[tilenum].sl >> 2) + 1;
 	UINT32 nominalheight = (tile[tilenum].th >> 2) - (tile[tilenum].tl >> 2) + 1;
@@ -11381,10 +11352,10 @@ void showtile(UINT32 tilenum, int stop, int clamped)
 	if (height > 479)
 		height = 479;
 	if (nominalheight == 1)
-		popmessage("showtile: alert");
+		msg_warning("showtile: alert");
 
 	if (clamped && nominalwidth < 1)
-		popmessage("showtile: non-positive nominalwidth");
+		msg_warning("showtile: non-positive nominalwidth");
 	
 	UINT32 s=0, t=0;
 	UINT8 *tc = TMEM;
@@ -11392,7 +11363,7 @@ void showtile(UINT32 tilenum, int stop, int clamped)
 	UINT32* tc32 = (UINT32*)TMEM;
 	UINT32 x = (620 - nominalwidth - 1);
 	if (nominalwidth > 619)
-		fatalerror("showtile: too large");
+		msg_error("showtile: too large");
 
 	clearscreen(492, 0, 620, 479, 1);
 
@@ -11400,13 +11371,13 @@ void showtile(UINT32 tilenum, int stop, int clamped)
 	INT32* d = 0;
 	
 	UINT8 r,g,b,a;
-	popmessage("showtile: tile %d taddr 0x%x tformat %d tsize %d clamps %d mirrors %d clampt %d mirrort %d masks %d maskt %d",
+	msg_warning("showtile: tile %d taddr 0x%x tformat %d tsize %d clamps %d mirrors %d clampt %d mirrort %d masks %d maskt %d",
 		tilenum, tbase, tformat, tsize, tile[tilenum].cs, tile[tilenum].ms, tile[tilenum].ct, tile[tilenum].mt,
 		tile[tilenum].mask_s, tile[tilenum].mask_t);
 
 	res = IDirectDrawSurface_Lock(lpddsback, 0, &ddsd, DDLOCK_SURFACEMEMORYPTR | DDLOCK_NOSYSLOCK, 0);
 	if (res != DD_OK)
-		fatalerror("showtile: Lock failed.");
+		msg_error("showtile: Lock failed.");
 	PreScale = (INT32*)ddsd.lpSurface;
 
 	switch (tformat)
@@ -11460,7 +11431,7 @@ endrgb16:
 			case PIXEL_SIZE_32BIT:
 				{
 				if (other_modes.en_tlut)
-						popmessage("showtile: RGBA-32 with en_tlut not implemented");
+						msg_warning("showtile: RGBA-32 with en_tlut not implemented");
 					for (t = 0; t < height; t++)
 					{
 						d = &PreScale[t * pitchindwords];
@@ -11481,7 +11452,7 @@ endrgb16:
 					break;
 				}
 			default:
-				fatalerror("showtile: not 16-bit RGBA texel");
+				msg_error("showtile: not 16-bit RGBA texel");
 				break;
 			}
 			break;
@@ -11557,7 +11528,7 @@ endrgb16:
 			}
 			break;
 			}
-		default: fatalerror("showtile: unknown CI tile");
+		default: msg_error("showtile: unknown CI tile");
 			break;
 		}
 		break;
@@ -11607,24 +11578,24 @@ endi8:
 			break;
 		}
 		default:
-			fatalerror("showtile: unknown I texture size %d\n", tile[tilenum].size);
+			msg_error("showtile: unknown I texture size %d\n", tile[tilenum].size);
 			break;
 		}
 		break;
 	}
 	default:
-		fatalerror("showtile: formats besides I and CI are not implemented");
+		msg_error("showtile: formats besides I and CI are not implemented");
 		break;
 	}
 
 	res = IDirectDrawSurface_Unlock(lpddsback, 0);
 	if (res != DD_OK)
-		fatalerror("showtile: Unlock failed.");
+		msg_error("showtile: Unlock failed.");
 
 	src.bottom = 480;
 	res = IDirectDrawSurface_Blt(lpddsprimary, &dst, lpddsback, &src, DDBLT_WAIT, 0);
 	if (res != DD_OK)
-		fatalerror("showtile: Blt failed.");
+		msg_error("showtile: Blt failed.");
 
 	if (stop)
 	{
@@ -11645,7 +11616,7 @@ endi8:
 
 void show_tri_command(void)
 {
-	popmessage("w0: 0x%08x, w1: 0x%08x, w2: 0x%08x",rdp_cmd_data[rdp_cmd_cur], rdp_cmd_data[rdp_cmd_cur + 1], rdp_cmd_data[rdp_cmd_cur + 2]);
+	msg_warning("w0: 0x%08x, w1: 0x%08x, w2: 0x%08x",rdp_cmd_data[rdp_cmd_cur], rdp_cmd_data[rdp_cmd_cur + 1], rdp_cmd_data[rdp_cmd_cur + 2]);
 }
 
 UINT32 compare_tri_command(UINT32 w0, UINT32 w1, UINT32 w2)
@@ -11658,7 +11629,7 @@ UINT32 compare_tri_command(UINT32 w0, UINT32 w1, UINT32 w2)
 
 void show_color(COLOR* col)
 {
-	popmessage("R: 0x%x, G: 0x%x, B: 0x%x, A: 0x%x", col->r, col->g, col->b, col->a);
+	msg_warning("R: 0x%x, G: 0x%x, B: 0x%x, A: 0x%x", col->r, col->g, col->b, col->a);
 }
 
 void show_current_cfb(int isviorigin)
@@ -11683,7 +11654,7 @@ void show_current_cfb(int isviorigin)
 	vres = ((vi_y_scale & 0xfff) * vdiff) / 0x400;
 
 	if (hres > 640 || vres > 480)
-		popmessage("hres=%d vres=%d", hres, vres);
+		msg_warning("hres=%d vres=%d", hres, vres);
 #ifdef _WIN32
 	if (hres < 321 && vres < 241 && (GetAsyncKeyState(VK_SCROLL) || double_stretch == 2))
 	{
@@ -11695,7 +11666,7 @@ void show_current_cfb(int isviorigin)
 	if (hres > 320 || vres > 240)
 	{
 		if (GetAsyncKeyState(VK_SCROLL))
-			popmessage("Cannot double the resolution: %d %d",hres,vres);
+			msg_warning("Cannot double the resolution: %d %d",hres,vres);
 		if (double_stretch)
 			double_stretch = 2;
 		else
@@ -11705,7 +11676,7 @@ void show_current_cfb(int isviorigin)
 
 	res = IDirectDrawSurface_Lock(lpddsback, 0, &ddsd, DDLOCK_SURFACEMEMORYPTR | DDLOCK_NOSYSLOCK, 0);
 	if (res != DD_OK)
-		fatalerror("show_current_cfb: Blt failed.");
+		msg_error("show_current_cfb: Blt failed.");
 	PreScale = (INT32*)ddsd.lpSurface;
 
     switch (vi_control & 0x3)
@@ -11786,12 +11757,12 @@ void show_current_cfb(int isviorigin)
 		}
 
         default:    
-			popmessage("Unknown framebuffer format %d\n", vi_control & 0x3);
+			msg_warning("Unknown framebuffer format %d\n", vi_control & 0x3);
 			break;
 	}
 	res = IDirectDrawSurface_Unlock(lpddsback, 0);
 	if (res != DD_OK)
-		fatalerror("show_current_cfb: Unlock failed.");
+		msg_error("show_current_cfb: Unlock failed.");
 
 	RECT srcrect = src;
 	srcrect.bottom = vres;
@@ -11801,7 +11772,7 @@ void show_current_cfb(int isviorigin)
 	smallrect.right = smallrect.left + hres + 1;
 	res = IDirectDrawSurface_Blt(lpddsprimary, &smallrect, lpddsback, &srcrect, DDBLT_WAIT, 0);
 	if (res != DD_OK)
-		fatalerror("show_current_cfb: Blt failed");
+		msg_error("show_current_cfb: Blt failed");
 
 }
 
