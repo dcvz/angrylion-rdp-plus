@@ -5,6 +5,8 @@
 #include "msg.h"
 #include "screen.h"
 
+#include <stdio.h>
+
 extern GFX_INFO gfx;
 
 

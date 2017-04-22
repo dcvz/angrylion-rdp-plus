@@ -3,7 +3,10 @@
 #include "msg.h"
 #include "screen.h"
 
-extern const int screen_width = 1024, screen_height = 768;
+#include <stdio.h>
+
+static const int screen_width = 1024;
+static const int screen_height = 768;
 
 int ProcessDListShown = 0;
 
