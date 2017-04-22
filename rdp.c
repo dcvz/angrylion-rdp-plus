@@ -1,6 +1,6 @@
 
 #include "rdp.h"
-#include "Gfx #1.3.h"
+#include "gfx_1.3.h"
 #include "tctables.h"
 #include <stdarg.h>
 
