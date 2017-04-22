@@ -25,7 +25,6 @@ static int prevserrate = 0;
 static int oldlowerfield = 0;
 static int32_t oldvstart = 1337;
 static uint32_t prevwasblank = 0;
-static uint32_t brightness = 0;
 
 // function pointers
 STRICTINLINE void vi_fetch_filter16(CCVG* res, uint32_t fboffset, uint32_t cur_x, uint32_t fsaa, uint32_t dither_filter, uint32_t vres, uint32_t fetchstate);
@@ -554,43 +553,6 @@ STRICTINLINE void gamma_filters(int* r, int* g, int* b, int gamma_and_dither)
 	}
 }
 
-STRICTINLINE void adjust_brightness(int* r, int* g, int* b, int brightcoeff)
-{
-	brightcoeff &= 7;
-	switch(brightcoeff)
-	{
-	case 0:	
-		break;
-	case 1: 
-	case 2:
-	case 3:
-		*r += (*r >> (4 - brightcoeff));
-		*g += (*g >> (4 - brightcoeff));
-		*b += (*b >> (4 - brightcoeff));
-		if (*r > 0xff)
-			*r = 0xff;
-		if (*g > 0xff)
-			*g = 0xff;
-		if (*b > 0xff)
-			*b = 0xff;
-		break;
-	case 4:
-	case 5:
-	case 6:
-	case 7:
-		*r = (*r + 1) << (brightcoeff - 3);
-		*g = (*g + 1) << (brightcoeff - 3);
-		*b = (*b + 1) << (brightcoeff - 3);
-		if (*r > 0xff)
-			*r = 0xff;
-		if (*g > 0xff)
-			*g = 0xff;
-		if (*b > 0xff)
-			*b = 0xff;
-		break;
-	}
-}
-
 STRICTINLINE void video_max_optimized(uint32_t* pixels, uint32_t* penumin, uint32_t* penumax, int numofels)
 {
 
@@ -769,12 +731,6 @@ void vi_update(void)
 	
 	
 		
-#ifdef _WIN32
-	int slowbright = 0;
-	if (GetAsyncKeyState(0x91))
-		brightness = (brightness + 1) & 15;
-	slowbright = brightness >> 1;
-#endif
 
 	int32_t v_start = (vi_v_start >> 16) & 0x3ff;
 	int32_t h_start = (vi_h_start >> 16) & 0x3ff; 
@@ -1342,7 +1298,6 @@ void vi_update(void)
 						else
 							r = g = b = 0xff;
 #endif
-						adjust_brightness(&r, &g, &b, slowbright);
 
 						if (i >= minhpass && i < maxhpass)
 							d[i] = (r << 16) | (g << 8) | b;
