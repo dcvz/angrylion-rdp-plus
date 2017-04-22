@@ -5,10 +5,7 @@
 
 extern const int screen_width = 1024, screen_height = 768;
 
-FILE* zeldainfo = 0;
 int ProcessDListShown = 0;
-extern int SaveLoaded;
-extern UINT32 command_counter;
 
 extern GFX_INFO gfx;
 
@@ -112,9 +109,6 @@ EXPORT void CALL RomClosed (void)
 {
 	rdp_close();
 	screen_close();
-
-	SaveLoaded = 1;
-	command_counter = 0;
 }
 
  
