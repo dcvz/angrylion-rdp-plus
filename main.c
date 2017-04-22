@@ -9,7 +9,7 @@
 static const int screen_width = 1024;
 static const int screen_height = 768;
 
-static bool warnHLE = false;
+static bool warn_hle = false;
 
 EXPORT void CALL CaptureScreen(char* Directory)
 {
@@ -62,9 +62,9 @@ EXPORT void CALL MoveScreen(int xpos, int ypos)
 
 EXPORT void CALL ProcessDList(void)
 {
-    if (!warnHLE) {
+    if (!warn_hle) {
         msg_warning("Please disable 'Graphic HLE' in the plugin settings.");
-        warnHLE = true;
+        warn_hle = true;
     }
 }
 
