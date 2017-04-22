@@ -594,21 +594,6 @@ uint32_t vi_integer_sqrt(uint32_t a);
 void deduce_derivatives(void);
 STRICTINLINE int32_t irand();
 
-void dump_buffer4kb(char* Name, void* Buff);
-void dump_buffer(char* Name, void* Buff,uint32_t Bytes);
-void dump_tmem_and_exit(char* Name);
-void col_decode16(uint16_t* addr, COLOR* col);
-void show_combiner_equation(void);
-void show_blender_equation(void);
-void showtile(uint32_t tilenum, int stop, int clamped);
-void show_tri_command(void);
-uint32_t compare_tri_command(uint32_t w0, uint32_t w1, uint32_t w2);
-void show_color(COLOR* col);
-void show_current_cfb(int isviorigin);
-int getdebugcolor(void);
-void bytefill_tmem(char byte);
-
-
 static int32_t k0_tf = 0, k1_tf = 0, k2_tf = 0, k3_tf = 0;
 static int32_t k4 = 0, k5 = 0;
 static int32_t lod_frac = 0;
