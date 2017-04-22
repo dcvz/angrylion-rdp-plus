@@ -28,15 +28,6 @@ EXPORT void CALL DllAbout(HWND hParent)
     msg_warning("angrylion's RDP, unpublished beta. MESS source code used.");
 }
 
-EXPORT void CALL DllConfig(HWND hParent)
-{
-    msg_warning("Nothing to configure");
-}
-
-EXPORT void CALL DllTest(HWND hParent)
-{
-}
-
 EXPORT void CALL ReadScreen(void **dest, long *width, long *height)
 {
 }
