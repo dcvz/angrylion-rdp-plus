@@ -597,15 +597,15 @@ static void (*render_spans_2cycle_func[4])(int, int, int, int) =
 	render_spans_2cycle_notex, render_spans_2cycle_notexel1, render_spans_2cycle_notexelnext, render_spans_2cycle_complete
 };
 
-void (*fbread1_ptr)(UINT32, UINT32*) = fbread_func[0];
-void (*fbread2_ptr)(UINT32, UINT32*) = fbread2_func[0];
-void (*fbwrite_ptr)(UINT32, UINT32, UINT32, UINT32, UINT32, UINT32, UINT32) = fbwrite_func[0];
-void (*fbfill_ptr)(UINT32) = fbfill_func[0];
-void (*get_dither_noise_ptr)(int, int, int*, int*) = get_dither_noise_func[0];
-void (*rgb_dither_ptr)(int*, int*, int*, int) = rgb_dither_func[0];
-void (*tcdiv_ptr)(INT32, INT32, INT32, INT32*, INT32*) = tcdiv_func[0];
-void (*render_spans_1cycle_ptr)(int, int, int, int) = render_spans_1cycle_func[2];
-void (*render_spans_2cycle_ptr)(int, int, int, int) = render_spans_2cycle_func[1];
+void (*fbread1_ptr)(UINT32, UINT32*);
+void (*fbread2_ptr)(UINT32, UINT32*);
+void (*fbwrite_ptr)(UINT32, UINT32, UINT32, UINT32, UINT32, UINT32, UINT32);
+void (*fbfill_ptr)(UINT32);
+void (*get_dither_noise_ptr)(int, int, int*, int*);
+void (*rgb_dither_ptr)(int*, int*, int*, int);
+void (*tcdiv_ptr)(INT32, INT32, INT32, INT32*, INT32*);
+void (*render_spans_1cycle_ptr)(int, int, int, int);
+void (*render_spans_2cycle_ptr)(int, int, int, int);
 
 typedef struct{
 	UINT8 cvg;
@@ -977,6 +977,16 @@ int rdp_init()
 {
 	if (LOG_RDP_EXECUTION)
 		rdp_exec = fopen("rdp_execute.txt", "wt");
+
+    fbread1_ptr = fbread_func[0];
+    fbread2_ptr = fbread2_func[0];
+    fbwrite_ptr = fbwrite_func[0];
+    fbfill_ptr = fbfill_func[0];
+    get_dither_noise_ptr = get_dither_noise_func[0];
+    rgb_dither_ptr = rgb_dither_func[0];
+    tcdiv_ptr = tcdiv_func[0];
+    render_spans_1cycle_ptr = render_spans_1cycle_func[2];
+    render_spans_2cycle_ptr = render_spans_2cycle_func[1];
 
 	combiner_rgbsub_a_r[0] = combiner_rgbsub_a_r[1] = &one_color;
 	combiner_rgbsub_a_g[0] = combiner_rgbsub_a_g[1] = &one_color;

@@ -179,7 +179,7 @@ EXPORT void CALL RomOpen (void)
 	DDPIXELFORMAT ftpixel;
 	LPDIRECTDRAWCLIPPER lpddcl;
 
-	res = DirectDrawCreateEx(0, (LPVOID*)&lpdd, IID_IDirectDraw7, 0);
+	res = DirectDrawCreateEx(0, (LPVOID*)&lpdd, &IID_IDirectDraw7, 0);
 	if(res != DD_OK) 
 		fatalerror("Couldn't create a DirectDraw object");
 	res = IDirectDraw_SetCooperativeLevel(lpdd, gfx.hWnd, DDSCL_NORMAL);
@@ -293,7 +293,7 @@ EXPORT void CALL ViWidthChanged (void)
 
 
  
-EXPORT void CALL FBWrite(DWORD, DWORD)
+EXPORT void CALL FBWrite(DWORD addr, DWORD val)
 {
 	
 }
