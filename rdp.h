@@ -5,14 +5,6 @@
 #endif
 
 #include <stdint.h>
-typedef uint64_t UINT64;
-typedef int64_t INT64;
-typedef uint32_t UINT32;
-typedef int32_t INT32;
-typedef uint16_t UINT16;
-typedef int16_t INT16;
-typedef uint8_t UINT8;
-typedef int8_t INT8;
 
 #define SP_INTERRUPT	0x1
 #define SI_INTERRUPT	0x2
@@ -82,30 +74,30 @@ typedef int8_t INT8;
 #define PRESCALE_WIDTH 640
 #define PRESCALE_HEIGHT 625
 
-#define rdram ((UINT32*)gfx.RDRAM)
-#define rsp_imem ((UINT32*)gfx.IMEM)
-#define rsp_dmem ((UINT32*)gfx.DMEM)
+#define rdram ((uint32_t*)gfx.RDRAM)
+#define rsp_imem ((uint32_t*)gfx.IMEM)
+#define rsp_dmem ((uint32_t*)gfx.DMEM)
 
-#define rdram16 ((UINT16*)gfx.RDRAM)
+#define rdram16 ((uint16_t*)gfx.RDRAM)
 #define rdram8 (gfx.RDRAM)
 
-#define vi_origin (*(UINT32*)gfx.VI_ORIGIN_REG)
-#define vi_width (*(UINT32*)gfx.VI_WIDTH_REG)
-#define vi_control (*(UINT32*)gfx.VI_STATUS_REG)
-#define vi_v_sync (*(UINT32*)gfx.VI_V_SYNC_REG)
-#define vi_h_sync (*(UINT32*)gfx.VI_H_SYNC_REG)
-#define vi_h_start (*(UINT32*)gfx.VI_H_START_REG)
-#define vi_v_start (*(UINT32*)gfx.VI_V_START_REG)
-#define vi_v_intr (*(UINT32*)gfx.VI_INTR_REG)
-#define vi_x_scale (*(UINT32*)gfx.VI_X_SCALE_REG)
-#define vi_y_scale (*(UINT32*)gfx.VI_Y_SCALE_REG)
-#define vi_timing (*(UINT32*)gfx.VI_TIMING_REG)
-#define vi_v_current_line (*(UINT32*)gfx.VI_V_CURRENT_LINE_REG)
+#define vi_origin (*(uint32_t*)gfx.VI_ORIGIN_REG)
+#define vi_width (*(uint32_t*)gfx.VI_WIDTH_REG)
+#define vi_control (*(uint32_t*)gfx.VI_STATUS_REG)
+#define vi_v_sync (*(uint32_t*)gfx.VI_V_SYNC_REG)
+#define vi_h_sync (*(uint32_t*)gfx.VI_H_SYNC_REG)
+#define vi_h_start (*(uint32_t*)gfx.VI_H_START_REG)
+#define vi_v_start (*(uint32_t*)gfx.VI_V_START_REG)
+#define vi_v_intr (*(uint32_t*)gfx.VI_INTR_REG)
+#define vi_x_scale (*(uint32_t*)gfx.VI_X_SCALE_REG)
+#define vi_y_scale (*(uint32_t*)gfx.VI_Y_SCALE_REG)
+#define vi_timing (*(uint32_t*)gfx.VI_TIMING_REG)
+#define vi_v_current_line (*(uint32_t*)gfx.VI_V_CURRENT_LINE_REG)
 
-#define dp_start (*(UINT32*)gfx.DPC_START_REG)
-#define dp_end (*(UINT32*)gfx.DPC_END_REG)
-#define dp_current (*(UINT32*)gfx.DPC_CURRENT_REG)
-#define dp_status (*(UINT32*)gfx.DPC_STATUS_REG)
+#define dp_start (*(uint32_t*)gfx.DPC_START_REG)
+#define dp_end (*(uint32_t*)gfx.DPC_END_REG)
+#define dp_current (*(uint32_t*)gfx.DPC_CURRENT_REG)
+#define dp_status (*(uint32_t*)gfx.DPC_STATUS_REG)
 
 int rdp_init(void);
 int rdp_close(void);
