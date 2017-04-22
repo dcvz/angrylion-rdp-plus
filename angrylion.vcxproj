@@ -109,12 +109,14 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.c" />
+    <ClCompile Include="memutil.c" />
     <ClCompile Include="msg.c" />
     <ClCompile Include="rdp.c" />
     <ClCompile Include="screen.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="gfx_1.3.h" />
+    <ClInclude Include="memutil.h" />
     <ClInclude Include="msg.h" />
     <ClInclude Include="screen.h" />
     <ClInclude Include="rdp.h" />
