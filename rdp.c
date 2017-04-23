@@ -143,8 +143,6 @@ int32_t pastrawdzmem = 0;
 uint32_t plim = 0x3fffff;
 uint32_t idxlim16 = 0x1fffff;
 uint32_t idxlim32 = 0xfffff;
-uint8_t* rdram_8;
-uint16_t* rdram_16;
 int32_t iseed = 1;
 
 typedef struct
@@ -650,12 +648,12 @@ CVtcmaskDERIVATIVE cvarray[0x100];
 #define RDRAM_MASK 0x00ffffff
 
 
-#define RREADADDR8(rdst, in) {(in) &= RDRAM_MASK; (rdst) = ((in) <= plim) ? (rdram_8[(in) ^ BYTE_ADDR_XOR]) : 0;}
-#define RREADIDX16(rdst, in) {(in) &= (RDRAM_MASK >> 1); (rdst) = ((in) <= idxlim16) ? (rdram_16[(in) ^ WORD_ADDR_XOR]) : 0;}
+#define RREADADDR8(rdst, in) {(in) &= RDRAM_MASK; (rdst) = ((in) <= plim) ? (rdram8[(in) ^ BYTE_ADDR_XOR]) : 0;}
+#define RREADIDX16(rdst, in) {(in) &= (RDRAM_MASK >> 1); (rdst) = ((in) <= idxlim16) ? (rdram16[(in) ^ WORD_ADDR_XOR]) : 0;}
 #define RREADIDX32(rdst, in) {(in) &= (RDRAM_MASK >> 2); (rdst) = ((in) <= idxlim32) ? (rdram[(in)]) : 0;}
 
-#define RWRITEADDR8(in, val)	{(in) &= RDRAM_MASK; if ((in) <= plim) rdram_8[(in) ^ BYTE_ADDR_XOR] = (val);}
-#define RWRITEIDX16(in, val)	{(in) &= (RDRAM_MASK >> 1); if ((in) <= idxlim16) rdram_16[(in) ^ WORD_ADDR_XOR] = (val);}
+#define RWRITEADDR8(in, val)	{(in) &= RDRAM_MASK; if ((in) <= plim) rdram8[(in) ^ BYTE_ADDR_XOR] = (val);}
+#define RWRITEIDX16(in, val)	{(in) &= (RDRAM_MASK >> 1); if ((in) <= idxlim16) rdram16[(in) ^ WORD_ADDR_XOR] = (val);}
 #define RWRITEIDX32(in, val)	{(in) &= (RDRAM_MASK >> 2); if ((in) <= idxlim32) rdram[(in)] = (val);}
 
 
@@ -663,14 +661,14 @@ CVtcmaskDERIVATIVE cvarray[0x100];
 #define PAIRREAD16(rdst, hdst, in)		\
 {										\
 	(in) &= (RDRAM_MASK >> 1);			\
-	if ((in) <= idxlim16) {(rdst) = rdram_16[(in) ^ WORD_ADDR_XOR]; (hdst) = hidden_bits[(in)];}	\
+	if ((in) <= idxlim16) {(rdst) = rdram16[(in) ^ WORD_ADDR_XOR]; (hdst) = hidden_bits[(in)];}	\
 	else {(rdst) = (hdst) = 0;}			\
 }
 
 #define PAIRWRITE16(in, rval, hval)		\
 {										\
 	(in) &= (RDRAM_MASK >> 1);			\
-	if ((in) <= idxlim16) {rdram_16[(in) ^ WORD_ADDR_XOR] = (rval); hidden_bits[(in)] = (hval);}	\
+	if ((in) <= idxlim16) {rdram16[(in) ^ WORD_ADDR_XOR] = (rval); hidden_bits[(in)] = (hval);}	\
 }
 
 #define PAIRWRITE32(in, rval, hval0, hval1)	\
@@ -682,7 +680,7 @@ CVtcmaskDERIVATIVE cvarray[0x100];
 #define PAIRWRITE8(in, rval, hval)	\
 {									\
 	(in) &= RDRAM_MASK;				\
-	if ((in) <= plim) {rdram_8[(in) ^ BYTE_ADDR_XOR] = (rval); if ((in) & 1) hidden_bits[(in) >> 1] = (hval);}	\
+	if ((in) <= plim) {rdram8[(in) ^ BYTE_ADDR_XOR] = (rval); if ((in) & 1) hidden_bits[(in) >> 1] = (hval);}	\
 }
 
 struct onetime
@@ -1060,9 +1058,6 @@ int rdp_init()
 	idxlim32 = 0xfffff;
 #endif
 
-	
-	rdram_8 = (uint8_t*)rdram;
-	rdram_16 = (uint16_t*)rdram;
 	return 0;
 }
 

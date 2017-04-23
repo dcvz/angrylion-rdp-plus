@@ -90,7 +90,7 @@ STRICTINLINE void restore_filter16(int* r, int* g, int* b, uint32_t fboffset, ui
 #define VI_COMPARE_OPT(x)											\
 {																	\
 	addr = (x);														\
-	pix = rdram_16[addr ^ WORD_ADDR_XOR];							\
+	pix = rdram16[addr ^ WORD_ADDR_XOR];							\
 	tempr = (pix >> 11) & 0x1f;										\
 	tempg = (pix >> 6) & 0x1f;										\
 	tempb = (pix >> 1) & 0x1f;										\
