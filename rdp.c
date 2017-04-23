@@ -472,7 +472,7 @@ STRICTINLINE int32_t irand();
 static int32_t k0_tf = 0, k1_tf = 0, k2_tf = 0, k3_tf = 0;
 static int32_t k4 = 0, k5 = 0;
 static int32_t lod_frac = 0;
-uint8_t hidden_bits[0x400000];
+
 struct {uint32_t shift; uint32_t add;} z_dec_table[8] = {
      6, 0x00000,
      5, 0x20000,
@@ -891,8 +891,6 @@ int rdp_init()
 	other_modes.f.stalederivs = 1;
 	
 	memset(TMEM, 0, 0x1000);
-
-	memset(hidden_bits, 3, sizeof(hidden_bits));
 	
 	command_counter = 0;
 
