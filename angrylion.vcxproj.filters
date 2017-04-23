@@ -33,6 +33,15 @@
     <ClCompile Include="vi.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="plugin.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="rdram.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="irand.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="rdp.h">
@@ -48,6 +57,18 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="memutil.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="plugin.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vi.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="common.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="rdram.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

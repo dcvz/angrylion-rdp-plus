@@ -108,22 +108,29 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="main.c" />
-    <ClCompile Include="memutil.c" />
-    <ClCompile Include="msg.c" />
-    <ClCompile Include="rdp.c" />
-    <ClCompile Include="screen.c" />
-    <ClCompile Include="vi.c">
+    <ClCompile Include="irand.c">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="main.c" />
+    <ClCompile Include="memutil.c" />
+    <ClCompile Include="msg.c" />
+    <ClCompile Include="plugin.c" />
+    <ClCompile Include="rdp.c" />
+    <ClCompile Include="rdram.c" />
+    <ClCompile Include="screen.c" />
+    <ClCompile Include="vi.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="common.h" />
     <ClInclude Include="gfx_1.3.h" />
     <ClInclude Include="memutil.h" />
     <ClInclude Include="msg.h" />
+    <ClInclude Include="plugin.h" />
+    <ClInclude Include="rdram.h" />
     <ClInclude Include="screen.h" />
     <ClInclude Include="rdp.h" />
+    <ClInclude Include="vi.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

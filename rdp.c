@@ -1,86 +1,12 @@
 #include "rdp.h"
-#include "gfx_1.3.h"
+#include "vi.h"
+#include "common.h"
+#include "plugin.h"
+#include "rdram.h"
 #include "msg.h"
-#include "screen.h"
 #include "memutil.h"
 
 #include <stdio.h>
-
-// z64.h
-#define SP_INTERRUPT	0x1
-#define SI_INTERRUPT	0x2
-#define AI_INTERRUPT	0x4
-#define VI_INTERRUPT	0x8
-#define PI_INTERRUPT	0x10
-#define DP_INTERRUPT	0x20
-
-#define SP_STATUS_HALT			0x0001
-#define SP_STATUS_BROKE			0x0002
-#define SP_STATUS_DMABUSY		0x0004
-#define SP_STATUS_DMAFULL		0x0008
-#define SP_STATUS_IOFULL		0x0010
-#define SP_STATUS_SSTEP			0x0020
-#define SP_STATUS_INTR_BREAK	0x0040
-#define SP_STATUS_SIGNAL0		0x0080
-#define SP_STATUS_SIGNAL1		0x0100
-#define SP_STATUS_SIGNAL2		0x0200
-#define SP_STATUS_SIGNAL3		0x0400
-#define SP_STATUS_SIGNAL4		0x0800
-#define SP_STATUS_SIGNAL5		0x1000
-#define SP_STATUS_SIGNAL6		0x2000
-#define SP_STATUS_SIGNAL7		0x4000
-
-#define DP_STATUS_XBUS_DMA		0x01
-#define DP_STATUS_FREEZE		0x02
-#define DP_STATUS_FLUSH			0x04
-#define DP_STATUS_START_GCLK		0x008
-#define DP_STATUS_TMEM_BUSY		0x010
-#define DP_STATUS_PIPE_BUSY		0x020
-#define DP_STATUS_CMD_BUSY			0x040
-#define DP_STATUS_CBUF_READY		0x080
-#define DP_STATUS_DMA_BUSY			0x100
-#define DP_STATUS_END_VALID		0x200
-#define DP_STATUS_START_VALID		0x400
-
-
-#define LSB_FIRST 1 
-#ifdef LSB_FIRST
-	#define BYTE_ADDR_XOR		3
-	#define WORD_ADDR_XOR		1
-	#define BYTE4_XOR_BE(a) 	((a) ^ 3)				
-#else
-	#define BYTE_ADDR_XOR		0
-	#define WORD_ADDR_XOR		0
-	#define BYTE4_XOR_BE(a) 	(a)
-#endif
-
-#ifdef LSB_FIRST
-#define BYTE_XOR_DWORD_SWAP 7
-#define WORD_XOR_DWORD_SWAP 3
-#else
-#define BYTE_XOR_DWORD_SWAP 4
-#define WORD_XOR_DWORD_SWAP 2
-#endif
-#define DWORD_XOR_DWORD_SWAP 1
-
-#define INLINE
-#ifdef _MSC_VER
-#define STRICTINLINE	__forceinline
-#else
-#define STRICTINLINE	inline
-#endif
-
-#define rdram ((uint32_t*)gfx.RDRAM)
-#define rsp_imem ((uint32_t*)gfx.IMEM)
-#define rsp_dmem ((uint32_t*)gfx.DMEM)
-
-#define rdram16 ((uint16_t*)gfx.RDRAM)
-#define rdram8 (gfx.RDRAM)
-
-#define dp_start (*(uint32_t*)gfx.DPC_START_REG)
-#define dp_end (*(uint32_t*)gfx.DPC_END_REG)
-#define dp_current (*(uint32_t*)gfx.DPC_CURRENT_REG)
-#define dp_status (*(uint32_t*)gfx.DPC_STATUS_REG)
 
 // tctables.h
 const int32_t norm_point_table[64] = {
@@ -105,9 +31,6 @@ const int32_t norm_slope_table[64] = {
     0xfb7, 0xfb8, 0xfb9, 0xfba, 0xfbc, 0xfbc, 0xfbe, 0xfbe
 };
 
-extern GFX_INFO gfx;
-
-
 #define SIGN16(x)	((int16_t)(x))
 #define SIGN8(x)	((int8_t)(x))
 
@@ -118,9 +41,7 @@ extern GFX_INFO gfx;
 
 
 
-#define GET_LOW(x)	(((x) & 0x3e) << 2)
-#define GET_MED(x)	(((x) & 0x7c0) >> 3)
-#define GET_HI(x)	(((x) >> 8) & 0xf8)
+
 
 
 #define GET_LOW_RGBA16_TMEM(x)	(replicated_rgba[((x) >> 1) & 0x1f])
@@ -140,10 +61,6 @@ uint32_t ptr_onstart = 0;
 
 int blshifta = 0, blshiftb = 0, pastblshifta = 0, pastblshiftb = 0;
 int32_t pastrawdzmem = 0;
-uint32_t plim = 0x3fffff;
-uint32_t idxlim16 = 0x1fffff;
-uint32_t idxlim32 = 0xfffff;
-int32_t iseed = 1;
 
 typedef struct
 {
@@ -541,7 +458,6 @@ STRICTINLINE void tclod_2cycle_next(int32_t* sss, int32_t* sst, int32_t s, int32
 STRICTINLINE void tclod_copy(int32_t* sss, int32_t* sst, int32_t s, int32_t t, int32_t w, int32_t dsinc, int32_t dtinc, int32_t dwinc, int32_t prim_tile, int32_t* t1);
 STRICTINLINE void get_texel1_1cycle(int32_t* s1, int32_t* t1, int32_t s, int32_t t, int32_t w, int32_t dsinc, int32_t dtinc, int32_t dwinc, int32_t scanline, SPANSIGS* sigs);
 STRICTINLINE void get_nexttexel0_2cycle(int32_t* s1, int32_t* t1, int32_t s, int32_t t, int32_t w, int32_t dsinc, int32_t dtinc, int32_t dwinc);
-STRICTINLINE void video_max_optimized(uint32_t* Pixels, uint32_t* penumin, uint32_t* penumax, int numofels);
 INLINE void calculate_clamp_diffs(uint32_t tile);
 INLINE void calculate_tile_derivs(uint32_t tile);
 INLINE void rgb_dither_complete(int* r, int* g, int* b, int dith);
@@ -645,47 +561,9 @@ int32_t clamp_t_diff[8];
 int32_t clamp_s_diff[8];
 CVtcmaskDERIVATIVE cvarray[0x100];
 
-#define RDRAM_MASK 0x00ffffff
-
-
-#define RREADADDR8(rdst, in) {(in) &= RDRAM_MASK; (rdst) = ((in) <= plim) ? (rdram8[(in) ^ BYTE_ADDR_XOR]) : 0;}
-#define RREADIDX16(rdst, in) {(in) &= (RDRAM_MASK >> 1); (rdst) = ((in) <= idxlim16) ? (rdram16[(in) ^ WORD_ADDR_XOR]) : 0;}
-#define RREADIDX32(rdst, in) {(in) &= (RDRAM_MASK >> 2); (rdst) = ((in) <= idxlim32) ? (rdram[(in)]) : 0;}
-
-#define RWRITEADDR8(in, val)	{(in) &= RDRAM_MASK; if ((in) <= plim) rdram8[(in) ^ BYTE_ADDR_XOR] = (val);}
-#define RWRITEIDX16(in, val)	{(in) &= (RDRAM_MASK >> 1); if ((in) <= idxlim16) rdram16[(in) ^ WORD_ADDR_XOR] = (val);}
-#define RWRITEIDX32(in, val)	{(in) &= (RDRAM_MASK >> 2); if ((in) <= idxlim32) rdram[(in)] = (val);}
-
-
-
-#define PAIRREAD16(rdst, hdst, in)		\
-{										\
-	(in) &= (RDRAM_MASK >> 1);			\
-	if ((in) <= idxlim16) {(rdst) = rdram16[(in) ^ WORD_ADDR_XOR]; (hdst) = hidden_bits[(in)];}	\
-	else {(rdst) = (hdst) = 0;}			\
-}
-
-#define PAIRWRITE16(in, rval, hval)		\
-{										\
-	(in) &= (RDRAM_MASK >> 1);			\
-	if ((in) <= idxlim16) {rdram16[(in) ^ WORD_ADDR_XOR] = (rval); hidden_bits[(in)] = (hval);}	\
-}
-
-#define PAIRWRITE32(in, rval, hval0, hval1)	\
-{											\
-	(in) &= (RDRAM_MASK >> 2);				\
-	if ((in) <= idxlim32) {rdram[(in)] = (rval); hidden_bits[(in) << 1] = (hval0); hidden_bits[((in) << 1) + 1] = (hval1);}	\
-}
-
-#define PAIRWRITE8(in, rval, hval)	\
-{									\
-	(in) &= RDRAM_MASK;				\
-	if ((in) <= plim) {rdram8[(in) ^ BYTE_ADDR_XOR] = (rval); if ((in) & 1) hidden_bits[(in) >> 1] = (hval);}	\
-}
-
-struct onetime
+static struct
 {
-	int nolerp, copymstrangecrashes, fillmcrashes, fillmbitcrashes, syncfullcrash, vbusclock;
+	int copymstrangecrashes, fillmcrashes, fillmbitcrashes, syncfullcrash;
 } onetimewarnings;
 
 uint32_t z64gl_command = 0;
@@ -694,7 +572,7 @@ uint32_t max_level = 0;
 int32_t min_level = 0;
 int rdp_pipeline_crashed = 0;
 
-#include "vi.c"
+#include "irand.c"
 
 STRICTINLINE void tcmask(int32_t* S, int32_t* T, int32_t num);
 STRICTINLINE void tcmask(int32_t* S, int32_t* T, int32_t num)
@@ -1037,26 +915,8 @@ int rdp_init()
 
 	precalculate_everything();
 
-
-
-#ifdef _WIN32
-	if (IsValidPtrW32(&rdram[0x7f0000 >> 2], 16))
-	{
-		plim = 0x7fffff;
-		idxlim16 = 0x3fffff;
-		idxlim32 = 0x1fffff;
-	}
-	else
-	{
-		plim = 0x3fffff;
-		idxlim16 = 0x1fffff;
-		idxlim32 = 0xfffff;
-	}
-#else
-	plim = 0x3fffff;
-	idxlim16 = 0x1fffff;
-	idxlim32 = 0xfffff;
-#endif
+    vi_init();
+    rdram_init(plugin_rdram_size());
 
 	return 0;
 }
@@ -1523,8 +1383,6 @@ STRICTINLINE void combiner_2cycle(int adseed, uint32_t* curpixel_cvg, int32_t* a
 INLINE void precalculate_everything(void)
 {
 	int i = 0, k = 0, j = 0;
-
-	vi_init();
 
 	
 	
@@ -6991,8 +6849,7 @@ static void rdp_sync_full(uint32_t w1, uint32_t w2)
 
 	z64gl_command = 0;
 
-	*gfx.MI_INTR_REG |= DP_INTERRUPT;
-	gfx.CheckInterrupts();
+	plugin_interrupt();
 }
 
 static void rdp_set_key_gb(uint32_t w1, uint32_t w2)
@@ -7182,13 +7039,6 @@ void deduce_derivatives()
 		get_dither_noise_ptr = get_dither_noise_func[2];
 
 	other_modes.f.dolod = other_modes.tex_lod_en || lodfracused;
-}
-
-STRICTINLINE int32_t irand()
-{
-	iseed *= 0x343fd;
-	iseed += 0x269ec3;
-	return ((iseed >> 16) & 0x7fff);
 }
 
 static void rdp_set_tile_size(uint32_t w1, uint32_t w2)
@@ -7512,7 +7362,7 @@ void rdp_process_list(void)
 	{
 		for (i = 0; i < toload; i ++)
 		{
-			rdp_cmd_data[rdp_cmd_ptr] = rsp_dmem[dp_current_al & 0x3ff];
+			rdp_cmd_data[rdp_cmd_ptr] = sp_dmem32[dp_current_al & 0x3ff];
 			rdp_cmd_ptr++;
 			dp_current_al++;
 		}
@@ -8394,7 +8244,9 @@ STRICTINLINE uint32_t z_compare(uint32_t zcurpixel, uint32_t sz, uint16_t dzpix,
 	int force_coplanar = 0;
 	sz &= 0x3ffff;
 
-	uint32_t oz, dzmem, zval, hval;
+	uint8_t hval;
+	uint16_t zval;
+	uint32_t oz, dzmem;
 	int32_t rawdzmem;
 
 	if (other_modes.z_compare_en)

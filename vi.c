@@ -1,21 +1,14 @@
+#include "vi.h"
+#include "common.h"
+#include "plugin.h"
+#include "rdram.h"
+#include "msg.h"
+#include "screen.h"
+
 typedef struct
 {
 	uint8_t r, g, b, cvg;
 } CCVG;
-
-// plugin interface
-#define vi_origin (*(uint32_t*)gfx.VI_ORIGIN_REG)
-#define vi_width (*(uint32_t*)gfx.VI_WIDTH_REG)
-#define vi_control (*(uint32_t*)gfx.VI_STATUS_REG)
-#define vi_v_sync (*(uint32_t*)gfx.VI_V_SYNC_REG)
-#define vi_h_sync (*(uint32_t*)gfx.VI_H_SYNC_REG)
-#define vi_h_start (*(uint32_t*)gfx.VI_H_START_REG)
-#define vi_v_start (*(uint32_t*)gfx.VI_V_START_REG)
-#define vi_v_intr (*(uint32_t*)gfx.VI_INTR_REG)
-#define vi_x_scale (*(uint32_t*)gfx.VI_X_SCALE_REG)
-#define vi_y_scale (*(uint32_t*)gfx.VI_Y_SCALE_REG)
-#define vi_timing (*(uint32_t*)gfx.VI_TIMING_REG)
-#define vi_v_current_line (*(uint32_t*)gfx.VI_V_CURRENT_LINE_REG)
 
 // states
 static uint32_t tvfadeoutstate[625];
@@ -25,6 +18,11 @@ static int prevserrate = 0;
 static int oldlowerfield = 0;
 static int32_t oldvstart = 1337;
 static uint32_t prevwasblank = 0;
+
+static struct
+{
+	int nolerp, vbusclock;
+} onetimewarnings;
 
 // function pointers
 STRICTINLINE void vi_fetch_filter16(CCVG* res, uint32_t fboffset, uint32_t cur_x, uint32_t fsaa, uint32_t dither_filter, uint32_t vres, uint32_t fetchstate);
@@ -39,6 +37,8 @@ static void (*vi_fetch_filter_func[2])(CCVG*, uint32_t, uint32_t, uint32_t, uint
 static uint32_t gamma_table[0x100];
 static uint32_t gamma_dither_table[0x4000];
 static int vi_restore_table[0x400];
+
+#include "irand.c"
 
 STRICTINLINE void restore_filter16(int* r, int* g, int* b, uint32_t fboffset, uint32_t num, uint32_t hres, uint32_t fetchbugstate)
 {
@@ -99,7 +99,7 @@ STRICTINLINE void restore_filter16(int* r, int* g, int* b, uint32_t fboffset, ui
 	bend += blueptr[tempb];											\
 }
 
-	if (maxpix <= idxlim16 && leftuppix <= idxlim16)
+	if (rdram_valid_idx16(maxpix) && rdram_valid_idx16(leftuppix))
 	{
 		VI_COMPARE_OPT(leftuppix);
 		VI_COMPARE_OPT(leftuppix + 1);
@@ -174,7 +174,7 @@ STRICTINLINE void restore_filter32(int* r, int* g, int* b, uint32_t fboffset, ui
 #define VI_COMPARE32_OPT(x)													\
 {																		\
 	addr = (x);															\
-	pix = rdram[addr];												\
+	pix = rdram32[addr];												\
 	tempr = (pix >> 27) & 0x1f;											\
 	tempg = (pix >> 19) & 0x1f;											\
 	tempb = (pix >> 11) & 0x1f;											\
@@ -183,7 +183,7 @@ STRICTINLINE void restore_filter32(int* r, int* g, int* b, uint32_t fboffset, ui
 	bend += blueptr[tempb];												\
 }
 
-	if (maxpix <= idxlim32 && leftuppix <= idxlim32)
+	if (rdram_valid_idx32(maxpix) && rdram_valid_idx32(leftuppix))
 	{
 		VI_COMPARE32_OPT(leftuppix);
 		VI_COMPARE32_OPT(leftuppix + 1);
@@ -211,6 +211,52 @@ STRICTINLINE void restore_filter32(int* r, int* g, int* b, uint32_t fboffset, ui
 	*b = bend;
 }
 
+STRICTINLINE void video_max_optimized(uint32_t* pixels, uint32_t* penumin, uint32_t* penumax, int numofels)
+{
+
+
+
+	int i;
+	int posmax = 0, posmin = 0;
+	uint32_t curpenmax = pixels[0], curpenmin = pixels[0];
+	uint32_t max, min;
+
+	for (i = 1; i < numofels; i++)
+	{
+	    if (pixels[i] > pixels[posmax])
+		{
+			curpenmax = pixels[posmax];
+			posmax = i;			
+		}
+		else if (pixels[i] < pixels[posmin])
+		{
+			curpenmin = pixels[posmin];
+			posmin = i;
+		}
+	}
+	max = pixels[posmax];
+	min = pixels[posmin];
+	if (curpenmax != max)
+	{
+		for (i = posmax + 1; i < numofels; i++)
+		{
+			if (pixels[i] > curpenmax)
+				curpenmax = pixels[i];
+		}
+	}
+	if (curpenmin != min)
+	{
+		for (i = posmin + 1; i < numofels; i++)
+		{
+			if (pixels[i] < curpenmin)
+				curpenmin = pixels[i];
+		}
+	}
+	*penumax = curpenmax;
+	*penumin = curpenmin;
+}
+
+
 STRICTINLINE void video_filter16(int* endr, int* endg, int* endb, uint32_t fboffset, uint32_t num, uint32_t hres, uint32_t centercvg, uint32_t fetchbugstate)
 {
 
@@ -222,7 +268,7 @@ STRICTINLINE void video_filter16(int* endr, int* endg, int* endb, uint32_t fboff
 	uint32_t penumaxr, penumaxg, penumaxb, penuminr, penuming, penuminb;
 	uint16_t pix;
 	uint32_t numoffull = 1;
-	uint32_t hidval;
+	uint8_t hidval;
 	uint32_t r, g, b; 
 	uint32_t backr[7], backg[7], backb[7];
 
@@ -398,7 +444,8 @@ STRICTINLINE void vi_fetch_filter16(CCVG* res, uint32_t fboffset, uint32_t cur_x
 {
 	int r, g, b;
 	uint32_t idx = (fboffset >> 1) + cur_x;
-	uint32_t pix, hval;	
+	uint8_t hval;
+	uint16_t pix;	
 	uint32_t cur_cvg;
 	if (fsaa)
 	{
@@ -551,51 +598,6 @@ STRICTINLINE void gamma_filters(int* r, int* g, int* b, int gamma_and_dither)
 		*b = gamma_dither_table[((*b) << 6)|dith];
 		break;
 	}
-}
-
-STRICTINLINE void video_max_optimized(uint32_t* pixels, uint32_t* penumin, uint32_t* penumax, int numofels)
-{
-
-
-
-	int i;
-	int posmax = 0, posmin = 0;
-	uint32_t curpenmax = pixels[0], curpenmin = pixels[0];
-	uint32_t max, min;
-
-	for (i = 1; i < numofels; i++)
-	{
-	    if (pixels[i] > pixels[posmax])
-		{
-			curpenmax = pixels[posmax];
-			posmax = i;			
-		}
-		else if (pixels[i] < pixels[posmin])
-		{
-			curpenmin = pixels[posmin];
-			posmin = i;
-		}
-	}
-	max = pixels[posmax];
-	min = pixels[posmin];
-	if (curpenmax != max)
-	{
-		for (i = posmax + 1; i < numofels; i++)
-		{
-			if (pixels[i] > curpenmax)
-				curpenmax = pixels[i];
-		}
-	}
-	if (curpenmin != min)
-	{
-		for (i = posmin + 1; i < numofels; i++)
-		{
-			if (pixels[i] < curpenmin)
-				curpenmin = pixels[i];
-		}
-	}
-	*penumax = curpenmax;
-	*penumin = curpenmin;
 }
 
 STRICTINLINE void vi_vl_lerp(CCVG* up, CCVG down, uint32_t frac)

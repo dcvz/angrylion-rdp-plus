@@ -1,5 +1,7 @@
 #include "rdp.h"
+#include "vi.h"
 #include "gfx_1.3.h"
+#include "plugin.h"
 #include "msg.h"
 #include "screen.h"
 
@@ -10,6 +12,8 @@ static const int screen_width = 1024;
 static const int screen_height = 768;
 
 static bool warn_hle = false;
+
+GFX_INFO gfx;
 
 EXPORT void CALL CaptureScreen(char* Directory)
 {
@@ -45,8 +49,6 @@ EXPORT void CALL GetDllInfo(PLUGIN_INFO* PluginInfo)
     PluginInfo->NormalMemory = TRUE;
     PluginInfo->MemoryBswaped = TRUE;
 }
-
-GFX_INFO gfx;
 
 EXPORT BOOL CALL InitiateGFX(GFX_INFO Gfx_Info)
 {
