@@ -4,7 +4,6 @@
 #include "plugin.h"
 #include "rdram.h"
 #include "msg.h"
-#include "memutil.h"
 
 #include <stdio.h>
 

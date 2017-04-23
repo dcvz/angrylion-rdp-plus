@@ -27,9 +27,6 @@
     <ClCompile Include="screen.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="memutil.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="vi.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -54,9 +51,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="screen.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="memutil.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="plugin.h">
