@@ -694,7 +694,7 @@ uint32_t max_level = 0;
 int32_t min_level = 0;
 int rdp_pipeline_crashed = 0;
 
-#include "rdp/vi.c"
+#include "vi.c"
 
 STRICTINLINE void tcmask(int32_t* S, int32_t* T, int32_t num);
 STRICTINLINE void tcmask(int32_t* S, int32_t* T, int32_t num)

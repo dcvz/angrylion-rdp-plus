@@ -112,11 +112,11 @@
     <ClCompile Include="memutil.c" />
     <ClCompile Include="msg.c" />
     <ClCompile Include="rdp.c" />
-    <ClCompile Include="rdp\vi.c">
+    <ClCompile Include="screen.c" />
+    <ClCompile Include="vi.c">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="screen.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="gfx_1.3.h" />
