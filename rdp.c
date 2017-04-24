@@ -368,12 +368,12 @@ typedef struct{
 }SPANSIGS;
 
 
-static void rdp_set_other_modes(uint32_t w1, uint32_t w2);
+static void rdp_set_other_modes(const uint32_t* args);
 INLINE void fetch_texel(COLOR *color, int s, int t, uint32_t tilenum);
 INLINE void fetch_texel_entlut(COLOR *color, int s, int t, uint32_t tilenum);
 INLINE void fetch_texel_quadro(COLOR *color0, COLOR *color1, COLOR *color2, COLOR *color3, int s0, int s1, int t0, int t1, uint32_t tilenum);
 INLINE void fetch_texel_entlut_quadro(COLOR *color0, COLOR *color1, COLOR *color2, COLOR *color3, int s0, int s1, int t0, int t1, uint32_t tilenum);
-void tile_tlut_common_cs_decoder(uint32_t w1, uint32_t w2);
+void tile_tlut_common_cs_decoder(const uint32_t* args);
 void loading_pipeline(int start, int end, int tilenum, int coord_quad, int ltlut);
 void get_tmem_idx(int s, int t, uint32_t tilenum, uint32_t* idx0, uint32_t* idx1, uint32_t* idx2, uint32_t* idx3, uint32_t* bit3flipped, uint32_t* hibit);
 void sort_tmem_idx(uint32_t *idx, uint32_t idxa, uint32_t idxb, uint32_t idxc, uint32_t idxd, uint32_t bankno);
@@ -886,7 +886,8 @@ int rdp_init()
 	combiner_alphamul[0] = combiner_alphamul[1] = &one_color;
 	combiner_alphaadd[0] = combiner_alphaadd[1] = &one_color;
 
-	rdp_set_other_modes(0, 0);
+	uint32_t tmp[2] = {0};
+	rdp_set_other_modes(tmp);
 	other_modes.f.stalederivs = 1;
 	
 	memset(TMEM, 0, 0x1000);
@@ -6593,48 +6594,48 @@ static int rdp_dasm(char *buffer)
 
 
 
-static void rdp_invalid(uint32_t w1, uint32_t w2)
+static void rdp_invalid(const uint32_t* args)
 {
 }
 
-static void rdp_noop(uint32_t w1, uint32_t w2)
+static void rdp_noop(const uint32_t* args)
 {
 }
 
-static void rdp_tri_noshade(uint32_t w1, uint32_t w2)
+static void rdp_tri_noshade(const uint32_t* args)
 {
 	int32_t ewdata[44];
-	memcpy(&ewdata[0], &rdp_cmd_data[rdp_cmd_cur], 8 * sizeof(int32_t));
+	memcpy(&ewdata[0], args, 8 * sizeof(int32_t));
 	memset(&ewdata[8], 0, 36 * sizeof(int32_t));
 	edgewalker_for_prims(ewdata);
 }
 
-static void rdp_tri_noshade_z(uint32_t w1, uint32_t w2)
+static void rdp_tri_noshade_z(const uint32_t* args)
 {
 	int32_t ewdata[44];
-	memcpy(&ewdata[0], &rdp_cmd_data[rdp_cmd_cur], 8 * sizeof(int32_t));
+	memcpy(&ewdata[0], args, 8 * sizeof(int32_t));
 	memset(&ewdata[8], 0, 32 * sizeof(int32_t));
-	memcpy(&ewdata[40], &rdp_cmd_data[rdp_cmd_cur + 8], 4 * sizeof(int32_t));
+	memcpy(&ewdata[40], args + 8, 4 * sizeof(int32_t));
 	edgewalker_for_prims(ewdata);
 }
 
-static void rdp_tri_tex(uint32_t w1, uint32_t w2)
+static void rdp_tri_tex(const uint32_t* args)
 {
 	int32_t ewdata[44];
-	memcpy(&ewdata[0], &rdp_cmd_data[rdp_cmd_cur], 8 * sizeof(int32_t));
+	memcpy(&ewdata[0], args, 8 * sizeof(int32_t));
 	memset(&ewdata[8], 0, 16 * sizeof(int32_t));
-	memcpy(&ewdata[24], &rdp_cmd_data[rdp_cmd_cur + 8], 16 * sizeof(int32_t));
+	memcpy(&ewdata[24], args + 8, 16 * sizeof(int32_t));
 	memset(&ewdata[40], 0, 4 * sizeof(int32_t));
 	edgewalker_for_prims(ewdata);
 }
 
-static void rdp_tri_tex_z(uint32_t w1, uint32_t w2)
+static void rdp_tri_tex_z(const uint32_t* args)
 {
 	int32_t ewdata[44];
-	memcpy(&ewdata[0], &rdp_cmd_data[rdp_cmd_cur], 8 * sizeof(int32_t));
+	memcpy(&ewdata[0], args, 8 * sizeof(int32_t));
 	memset(&ewdata[8], 0, 16 * sizeof(int32_t));
-	memcpy(&ewdata[24], &rdp_cmd_data[rdp_cmd_cur + 8], 16 * sizeof(int32_t));
-	memcpy(&ewdata[40], &rdp_cmd_data[rdp_cmd_cur + 24], 4 * sizeof(int32_t));
+	memcpy(&ewdata[24], args + 8, 16 * sizeof(int32_t));
+	memcpy(&ewdata[40], args + 24, 4 * sizeof(int32_t));
 
 	
 	
@@ -6646,35 +6647,35 @@ static void rdp_tri_tex_z(uint32_t w1, uint32_t w2)
 	
 }
 
-static void rdp_tri_shade(uint32_t w1, uint32_t w2)
+static void rdp_tri_shade(const uint32_t* args)
 {
 	int32_t ewdata[44];
-	memcpy(&ewdata[0], &rdp_cmd_data[rdp_cmd_cur], 24 * sizeof(int32_t));
+	memcpy(&ewdata[0], args, 24 * sizeof(int32_t));
 	memset(&ewdata[24], 0, 20 * sizeof(int32_t));
 	edgewalker_for_prims(ewdata);
 }
 
-static void rdp_tri_shade_z(uint32_t w1, uint32_t w2)
+static void rdp_tri_shade_z(const uint32_t* args)
 {
 	int32_t ewdata[44];
-	memcpy(&ewdata[0], &rdp_cmd_data[rdp_cmd_cur], 24 * sizeof(int32_t));
+	memcpy(&ewdata[0], args, 24 * sizeof(int32_t));
 	memset(&ewdata[24], 0, 16 * sizeof(int32_t));
-	memcpy(&ewdata[40], &rdp_cmd_data[rdp_cmd_cur + 24], 4 * sizeof(int32_t));
+	memcpy(&ewdata[40], args + 24, 4 * sizeof(int32_t));
 	edgewalker_for_prims(ewdata);
 }
 
-static void rdp_tri_texshade(uint32_t w1, uint32_t w2)
+static void rdp_tri_texshade(const uint32_t* args)
 {
 	int32_t ewdata[44];
-	memcpy(&ewdata[0], &rdp_cmd_data[rdp_cmd_cur], 40 * sizeof(int32_t));
+	memcpy(&ewdata[0], args, 40 * sizeof(int32_t));
 	memset(&ewdata[40], 0, 4 * sizeof(int32_t));
 	edgewalker_for_prims(ewdata);
 }
 
-static void rdp_tri_texshade_z(uint32_t w1, uint32_t w2)
+static void rdp_tri_texshade_z(const uint32_t* args)
 {
 	int32_t ewdata[44];
-	memcpy(&ewdata[0], &rdp_cmd_data[rdp_cmd_cur], 44 * sizeof(int32_t));
+	memcpy(&ewdata[0], args, 44 * sizeof(int32_t));
 
 	
 	
@@ -6685,22 +6686,18 @@ static void rdp_tri_texshade_z(uint32_t w1, uint32_t w2)
 	
 }
 
-static void rdp_tex_rect(uint32_t w1, uint32_t w2)
+static void rdp_tex_rect(const uint32_t* args)
 {
-	uint32_t w3 = rdp_cmd_data[rdp_cmd_cur + 2];
-	uint32_t w4 = rdp_cmd_data[rdp_cmd_cur + 3];
-
+	uint32_t tilenum	= (args[1] >> 24) & 0x7;
+	uint32_t xl = (args[0] >> 12) & 0xfff;
+	uint32_t yl	= (args[0] >>  0) & 0xfff;
+	uint32_t xh	= (args[1] >> 12) & 0xfff;
+	uint32_t yh	= (args[1] >>  0) & 0xfff;
 	
-	uint32_t tilenum	= (w2 >> 24) & 0x7;
-	uint32_t xl = (w1 >> 12) & 0xfff;
-	uint32_t yl	= (w1 >>  0) & 0xfff;
-	uint32_t xh	= (w2 >> 12) & 0xfff;
-	uint32_t yh	= (w2 >>  0) & 0xfff;
-	
-	int32_t s = (w3 >> 16) & 0xffff;
-	int32_t t = (w3 >>  0) & 0xffff;
-	int32_t dsdx = (w4 >> 16) & 0xffff;
-	int32_t dtdy = (w4 >>  0) & 0xffff;
+	int32_t s = (args[2] >> 16) & 0xffff;
+	int32_t t = (args[2] >>  0) & 0xffff;
+	int32_t dsdx = (args[3] >> 16) & 0xffff;
+	int32_t dtdy = (args[3] >>  0) & 0xffff;
 	
 	dsdx = SIGN16(dsdx);
 	dtdy = SIGN16(dtdy);
@@ -6745,22 +6742,18 @@ static void rdp_tex_rect(uint32_t w1, uint32_t w2)
 
 }
 
-static void rdp_tex_rect_flip(uint32_t w1, uint32_t w2)
+static void rdp_tex_rect_flip(const uint32_t* args)
 {
-	uint32_t w3 = rdp_cmd_data[rdp_cmd_cur+2];
-	uint32_t w4 = rdp_cmd_data[rdp_cmd_cur+3];
-
+	uint32_t tilenum	= (args[1] >> 24) & 0x7;
+	uint32_t xl = (args[0] >> 12) & 0xfff;
+	uint32_t yl	= (args[0] >>  0) & 0xfff;
+	uint32_t xh	= (args[1] >> 12) & 0xfff;
+	uint32_t yh	= (args[1] >>  0) & 0xfff;
 	
-	uint32_t tilenum	= (w2 >> 24) & 0x7;
-	uint32_t xl = (w1 >> 12) & 0xfff;
-	uint32_t yl	= (w1 >>  0) & 0xfff;
-	uint32_t xh	= (w2 >> 12) & 0xfff;
-	uint32_t yh	= (w2 >>  0) & 0xfff;
-	
-	int32_t s = (w3 >> 16) & 0xffff;
-	int32_t t = (w3 >>  0) & 0xffff;
-	int32_t dsdx = (w4 >> 16) & 0xffff;
-	int32_t dtdy = (w4 >>  0) & 0xffff;
+	int32_t s = (args[2] >> 16) & 0xffff;
+	int32_t t = (args[2] >>  0) & 0xffff;
+	int32_t dsdx = (args[3] >> 16) & 0xffff;
+	int32_t dtdy = (args[3] >>  0) & 0xffff;
 	
 	dsdx = SIGN16(dsdx);
 	dtdy = SIGN16(dtdy);
@@ -6805,23 +6798,23 @@ static void rdp_tex_rect_flip(uint32_t w1, uint32_t w2)
 
 
 
-static void rdp_sync_load(uint32_t w1, uint32_t w2)
+static void rdp_sync_load(const uint32_t* args)
 {
 	
 }
 
-static void rdp_sync_pipe(uint32_t w1, uint32_t w2)
+static void rdp_sync_pipe(const uint32_t* args)
 {
 	
 	
 }
 
-static void rdp_sync_tile(uint32_t w1, uint32_t w2)
+static void rdp_sync_tile(const uint32_t* args)
 {
 	
 }
 
-static void rdp_sync_full(uint32_t w1, uint32_t w2)
+static void rdp_sync_full(const uint32_t* args)
 {
 	
 	
@@ -6849,94 +6842,94 @@ static void rdp_sync_full(uint32_t w1, uint32_t w2)
 	plugin_interrupt();
 }
 
-static void rdp_set_key_gb(uint32_t w1, uint32_t w2)
+static void rdp_set_key_gb(const uint32_t* args)
 {
-	key_width.g = (w1 >> 12) & 0xfff;
-	key_width.b = w1 & 0xfff;
-	key_center.g = (w2 >> 24) & 0xff;
-	key_scale.g = (w2 >> 16) & 0xff;
-	key_center.b = (w2 >> 8) & 0xff;
-	key_scale.b = w2 & 0xff;
+	key_width.g = (args[0] >> 12) & 0xfff;
+	key_width.b = args[0] & 0xfff;
+	key_center.g = (args[1] >> 24) & 0xff;
+	key_scale.g = (args[1] >> 16) & 0xff;
+	key_center.b = (args[1] >> 8) & 0xff;
+	key_scale.b = args[1] & 0xff;
 }
 
-static void rdp_set_key_r(uint32_t w1, uint32_t w2)
+static void rdp_set_key_r(const uint32_t* args)
 {
-	key_width.r = (w2 >> 16) & 0xfff;
-	key_center.r = (w2 >> 8) & 0xff;
-	key_scale.r = w2 & 0xff;
+	key_width.r = (args[1] >> 16) & 0xfff;
+	key_center.r = (args[1] >> 8) & 0xff;
+	key_scale.r = args[1] & 0xff;
 }
 
-static void rdp_set_convert(uint32_t w1, uint32_t w2)
+static void rdp_set_convert(const uint32_t* args)
 {
-	int32_t k0 = (w1 >> 13) & 0x1ff;
-	int32_t k1 = (w1 >> 4) & 0x1ff;
-	int32_t k2 = ((w1 & 0xf) << 5) | ((w2 >> 27) & 0x1f);
-	int32_t k3 = (w2 >> 18) & 0x1ff;
+	int32_t k0 = (args[0] >> 13) & 0x1ff;
+	int32_t k1 = (args[0] >> 4) & 0x1ff;
+	int32_t k2 = ((args[0] & 0xf) << 5) | ((args[1] >> 27) & 0x1f);
+	int32_t k3 = (args[1] >> 18) & 0x1ff;
 	k0_tf = (SIGN(k0, 9) << 1) + 1;
 	k1_tf = (SIGN(k1, 9) << 1) + 1;
 	k2_tf = (SIGN(k2, 9) << 1) + 1;
 	k3_tf = (SIGN(k3, 9) << 1) + 1;
-	k4 = (w2 >> 9) & 0x1ff;
-	k5 = w2 & 0x1ff;
+	k4 = (args[1] >> 9) & 0x1ff;
+	k5 = args[1] & 0x1ff;
 }
 
-static void rdp_set_scissor(uint32_t w1, uint32_t w2)
+static void rdp_set_scissor(const uint32_t* args)
 {
-	clip.xh = (w1 >> 12) & 0xfff;
-	clip.yh = (w1 >>  0) & 0xfff;
-	clip.xl = (w2 >> 12) & 0xfff;
-	clip.yl = (w2 >>  0) & 0xfff;
+	clip.xh = (args[0] >> 12) & 0xfff;
+	clip.yh = (args[0] >>  0) & 0xfff;
+	clip.xl = (args[1] >> 12) & 0xfff;
+	clip.yl = (args[1] >>  0) & 0xfff;
 	
-	scfield = (w2 >> 25) & 1;
-	sckeepodd = (w2 >> 24) & 1;
+	scfield = (args[1] >> 25) & 1;
+	sckeepodd = (args[1] >> 24) & 1;
 }
 
-static void rdp_set_prim_depth(uint32_t w1, uint32_t w2)
+static void rdp_set_prim_depth(const uint32_t* args)
 {
-	primitive_z = w2 & (0x7fff << 16);
+	primitive_z = args[1] & (0x7fff << 16);
 	
 
-	primitive_delta_z = (uint16_t)(w2);
+	primitive_delta_z = (uint16_t)(args[1]);
 }
 
-static void rdp_set_other_modes(uint32_t w1, uint32_t w2)
+static void rdp_set_other_modes(const uint32_t* args)
 {
-	other_modes.cycle_type			= (w1 >> 20) & 0x3;
-	other_modes.persp_tex_en 		= (w1 & 0x80000) ? 1 : 0;
-	other_modes.detail_tex_en		= (w1 & 0x40000) ? 1 : 0;
-	other_modes.sharpen_tex_en		= (w1 & 0x20000) ? 1 : 0;
-	other_modes.tex_lod_en			= (w1 & 0x10000) ? 1 : 0;
-	other_modes.en_tlut				= (w1 & 0x08000) ? 1 : 0;
-	other_modes.tlut_type			= (w1 & 0x04000) ? 1 : 0;
-	other_modes.sample_type			= (w1 & 0x02000) ? 1 : 0;
-	other_modes.mid_texel			= (w1 & 0x01000) ? 1 : 0;
-	other_modes.bi_lerp0			= (w1 & 0x00800) ? 1 : 0;
-	other_modes.bi_lerp1			= (w1 & 0x00400) ? 1 : 0;
-	other_modes.convert_one			= (w1 & 0x00200) ? 1 : 0;
-	other_modes.key_en				= (w1 & 0x00100) ? 1 : 0;
-	other_modes.rgb_dither_sel		= (w1 >> 6) & 0x3;
-	other_modes.alpha_dither_sel	= (w1 >> 4) & 0x3;
-	other_modes.blend_m1a_0			= (w2 >> 30) & 0x3;
-	other_modes.blend_m1a_1			= (w2 >> 28) & 0x3;
-	other_modes.blend_m1b_0			= (w2 >> 26) & 0x3;
-	other_modes.blend_m1b_1			= (w2 >> 24) & 0x3;
-	other_modes.blend_m2a_0			= (w2 >> 22) & 0x3;
-	other_modes.blend_m2a_1			= (w2 >> 20) & 0x3;
-	other_modes.blend_m2b_0			= (w2 >> 18) & 0x3;
-	other_modes.blend_m2b_1			= (w2 >> 16) & 0x3;
-	other_modes.force_blend			= (w2 >> 14) & 1;
-	other_modes.alpha_cvg_select	= (w2 >> 13) & 1;
-	other_modes.cvg_times_alpha		= (w2 >> 12) & 1;
-	other_modes.z_mode				= (w2 >> 10) & 0x3;
-	other_modes.cvg_dest			= (w2 >> 8) & 0x3;
-	other_modes.color_on_cvg		= (w2 >> 7) & 1;
-	other_modes.image_read_en		= (w2 >> 6) & 1;
-	other_modes.z_update_en			= (w2 >> 5) & 1;
-	other_modes.z_compare_en		= (w2 >> 4) & 1;
-	other_modes.antialias_en		= (w2 >> 3) & 1;
-	other_modes.z_source_sel		= (w2 >> 2) & 1;
-	other_modes.dither_alpha_en		= (w2 >> 1) & 1;
-	other_modes.alpha_compare_en	= (w2) & 1;
+	other_modes.cycle_type			= (args[0] >> 20) & 0x3;
+	other_modes.persp_tex_en 		= (args[0] & 0x80000) ? 1 : 0;
+	other_modes.detail_tex_en		= (args[0] & 0x40000) ? 1 : 0;
+	other_modes.sharpen_tex_en		= (args[0] & 0x20000) ? 1 : 0;
+	other_modes.tex_lod_en			= (args[0] & 0x10000) ? 1 : 0;
+	other_modes.en_tlut				= (args[0] & 0x08000) ? 1 : 0;
+	other_modes.tlut_type			= (args[0] & 0x04000) ? 1 : 0;
+	other_modes.sample_type			= (args[0] & 0x02000) ? 1 : 0;
+	other_modes.mid_texel			= (args[0] & 0x01000) ? 1 : 0;
+	other_modes.bi_lerp0			= (args[0] & 0x00800) ? 1 : 0;
+	other_modes.bi_lerp1			= (args[0] & 0x00400) ? 1 : 0;
+	other_modes.convert_one			= (args[0] & 0x00200) ? 1 : 0;
+	other_modes.key_en				= (args[0] & 0x00100) ? 1 : 0;
+	other_modes.rgb_dither_sel		= (args[0] >> 6) & 0x3;
+	other_modes.alpha_dither_sel	= (args[0] >> 4) & 0x3;
+	other_modes.blend_m1a_0			= (args[1] >> 30) & 0x3;
+	other_modes.blend_m1a_1			= (args[1] >> 28) & 0x3;
+	other_modes.blend_m1b_0			= (args[1] >> 26) & 0x3;
+	other_modes.blend_m1b_1			= (args[1] >> 24) & 0x3;
+	other_modes.blend_m2a_0			= (args[1] >> 22) & 0x3;
+	other_modes.blend_m2a_1			= (args[1] >> 20) & 0x3;
+	other_modes.blend_m2b_0			= (args[1] >> 18) & 0x3;
+	other_modes.blend_m2b_1			= (args[1] >> 16) & 0x3;
+	other_modes.force_blend			= (args[1] >> 14) & 1;
+	other_modes.alpha_cvg_select	= (args[1] >> 13) & 1;
+	other_modes.cvg_times_alpha		= (args[1] >> 12) & 1;
+	other_modes.z_mode				= (args[1] >> 10) & 0x3;
+	other_modes.cvg_dest			= (args[1] >> 8) & 0x3;
+	other_modes.color_on_cvg		= (args[1] >> 7) & 1;
+	other_modes.image_read_en		= (args[1] >> 6) & 1;
+	other_modes.z_update_en			= (args[1] >> 5) & 1;
+	other_modes.z_compare_en		= (args[1] >> 4) & 1;
+	other_modes.antialias_en		= (args[1] >> 3) & 1;
+	other_modes.z_source_sel		= (args[1] >> 2) & 1;
+	other_modes.dither_alpha_en		= (args[1] >> 1) & 1;
+	other_modes.alpha_compare_en	= (args[1]) & 1;
 
 	SET_BLENDER_INPUT(0, 0, &blender1a_r[0], &blender1a_g[0], &blender1a_b[0], &blender1b_a[0],
 					  other_modes.blend_m1a_0, other_modes.blend_m1b_0);
@@ -7038,27 +7031,27 @@ void deduce_derivatives()
 	other_modes.f.dolod = other_modes.tex_lod_en || lodfracused;
 }
 
-static void rdp_set_tile_size(uint32_t w1, uint32_t w2)
+static void rdp_set_tile_size(const uint32_t* args)
 {
-	int tilenum = (w2 >> 24) & 0x7;
-	tile[tilenum].sl = (w1 >> 12) & 0xfff;
-	tile[tilenum].tl = (w1 >>  0) & 0xfff;
-	tile[tilenum].sh = (w2 >> 12) & 0xfff;
-	tile[tilenum].th = (w2 >>  0) & 0xfff;
+	int tilenum = (args[1] >> 24) & 0x7;
+	tile[tilenum].sl = (args[0] >> 12) & 0xfff;
+	tile[tilenum].tl = (args[0] >>  0) & 0xfff;
+	tile[tilenum].sh = (args[1] >> 12) & 0xfff;
+	tile[tilenum].th = (args[1] >>  0) & 0xfff;
 
 	calculate_clamp_diffs(tilenum);
 }
 	
-static void rdp_load_block(uint32_t w1, uint32_t w2)
+static void rdp_load_block(const uint32_t* args)
 {
-	int tilenum = (w2 >> 24) & 0x7;
+	int tilenum = (args[1] >> 24) & 0x7;
 	int sl, sh, tl, dxt;
 						
 	
-	tile[tilenum].sl = sl = ((w1 >> 12) & 0xfff);
-	tile[tilenum].tl = tl = ((w1 >>  0) & 0xfff);
-	tile[tilenum].sh = sh = ((w2 >> 12) & 0xfff);
-	tile[tilenum].th = dxt	= ((w2 >>  0) & 0xfff);
+	tile[tilenum].sl = sl = ((args[0] >> 12) & 0xfff);
+	tile[tilenum].tl = tl = ((args[0] >>  0) & 0xfff);
+	tile[tilenum].sh = sh = ((args[1] >> 12) & 0xfff);
+	tile[tilenum].th = dxt	= ((args[1] >>  0) & 0xfff);
 
 	calculate_clamp_diffs(tilenum);
 
@@ -7066,7 +7059,7 @@ static void rdp_load_block(uint32_t w1, uint32_t w2)
 
 	int32_t lewdata[10];
 	
-	lewdata[0] = (w1 & 0xff000000) | (0x10 << 19) | (tilenum << 16) | ((tlclamped << 2) | 3);
+	lewdata[0] = (args[0] & 0xff000000) | (0x10 << 19) | (tilenum << 16) | ((tlclamped << 2) | 3);
 	lewdata[1] = (((tlclamped << 2) | 3) << 16) | (tlclamped << 2);
 	lewdata[2] = sh << 16;
 	lewdata[3] = sl << 16;
@@ -7081,35 +7074,35 @@ static void rdp_load_block(uint32_t w1, uint32_t w2)
 
 }
 
-static void rdp_load_tlut(uint32_t w1, uint32_t w2)
+static void rdp_load_tlut(const uint32_t* args)
 {
 	
 
-	tile_tlut_common_cs_decoder(w1, w2);
+	tile_tlut_common_cs_decoder(args);
 }
 
-static void rdp_load_tile(uint32_t w1, uint32_t w2)
+static void rdp_load_tile(const uint32_t* args)
 {
-	tile_tlut_common_cs_decoder(w1, w2);
+	tile_tlut_common_cs_decoder(args);
 }
 
-void tile_tlut_common_cs_decoder(uint32_t w1, uint32_t w2)
+void tile_tlut_common_cs_decoder(const uint32_t* args)
 {
-	int tilenum = (w2 >> 24) & 0x7;
+	int tilenum = (args[1] >> 24) & 0x7;
 	int sl, tl, sh, th;
 
 	
-	tile[tilenum].sl = sl = ((w1 >> 12) & 0xfff);
-	tile[tilenum].tl = tl = ((w1 >>  0) & 0xfff);
-	tile[tilenum].sh = sh = ((w2 >> 12) & 0xfff);
-	tile[tilenum].th = th = ((w2 >>  0) & 0xfff);
+	tile[tilenum].sl = sl = ((args[0] >> 12) & 0xfff);
+	tile[tilenum].tl = tl = ((args[0] >>  0) & 0xfff);
+	tile[tilenum].sh = sh = ((args[1] >> 12) & 0xfff);
+	tile[tilenum].th = th = ((args[1] >>  0) & 0xfff);
 
 	calculate_clamp_diffs(tilenum);
 
 	
 	int32_t lewdata[10];
 
-	lewdata[0] = (w1 & 0xff000000) | (0x10 << 19) | (tilenum << 16) | (th | 3);
+	lewdata[0] = (args[0] & 0xff000000) | (0x10 << 19) | (tilenum << 16) | (th | 3);
 	lewdata[1] = ((th | 3) << 16) | (tl);
 	lewdata[2] = ((sh >> 2) << 16) | ((sh & 3) << 14);
 	lewdata[3] = ((sl >> 2) << 16) | ((sl & 3) << 14);
@@ -7123,33 +7116,33 @@ void tile_tlut_common_cs_decoder(uint32_t w1, uint32_t w2)
 	edgewalker_for_loads(lewdata);
 }
 
-static void rdp_set_tile(uint32_t w1, uint32_t w2)
+static void rdp_set_tile(const uint32_t* args)
 {
-	int tilenum = (w2 >> 24) & 0x7;
+	int tilenum = (args[1] >> 24) & 0x7;
 	
-	tile[tilenum].format	= (w1 >> 21) & 0x7;
-	tile[tilenum].size		= (w1 >> 19) & 0x3;
-	tile[tilenum].line		= (w1 >>  9) & 0x1ff;
-	tile[tilenum].tmem		= (w1 >>  0) & 0x1ff;
-	tile[tilenum].palette	= (w2 >> 20) & 0xf;
-	tile[tilenum].ct		= (w2 >> 19) & 0x1;
-	tile[tilenum].mt		= (w2 >> 18) & 0x1;
-	tile[tilenum].mask_t	= (w2 >> 14) & 0xf;
-	tile[tilenum].shift_t	= (w2 >> 10) & 0xf;
-	tile[tilenum].cs		= (w2 >>  9) & 0x1;
-	tile[tilenum].ms		= (w2 >>  8) & 0x1;
-	tile[tilenum].mask_s	= (w2 >>  4) & 0xf;
-	tile[tilenum].shift_s	= (w2 >>  0) & 0xf;
+	tile[tilenum].format	= (args[0] >> 21) & 0x7;
+	tile[tilenum].size		= (args[0] >> 19) & 0x3;
+	tile[tilenum].line		= (args[0] >>  9) & 0x1ff;
+	tile[tilenum].tmem		= (args[0] >>  0) & 0x1ff;
+	tile[tilenum].palette	= (args[1] >> 20) & 0xf;
+	tile[tilenum].ct		= (args[1] >> 19) & 0x1;
+	tile[tilenum].mt		= (args[1] >> 18) & 0x1;
+	tile[tilenum].mask_t	= (args[1] >> 14) & 0xf;
+	tile[tilenum].shift_t	= (args[1] >> 10) & 0xf;
+	tile[tilenum].cs		= (args[1] >>  9) & 0x1;
+	tile[tilenum].ms		= (args[1] >>  8) & 0x1;
+	tile[tilenum].mask_s	= (args[1] >>  4) & 0xf;
+	tile[tilenum].shift_s	= (args[1] >>  0) & 0xf;
 
 	calculate_tile_derivs(tilenum);
 }
 
-static void rdp_fill_rect(uint32_t w1, uint32_t w2)
+static void rdp_fill_rect(const uint32_t* args)
 {
-	uint32_t xl = (w1 >> 12) & 0xfff;
-	uint32_t yl = (w1 >>  0) & 0xfff;
-	uint32_t xh = (w2 >> 12) & 0xfff;
-	uint32_t yh = (w2 >>  0) & 0xfff;
+	uint32_t xl = (args[0] >> 12) & 0xfff;
+	uint32_t yl = (args[0] >>  0) & 0xfff;
+	uint32_t xh = (args[1] >> 12) & 0xfff;
+	uint32_t yh = (args[1] >>  0) & 0xfff;
 
 	if (other_modes.cycle_type == CYCLE_TYPE_FILL || other_modes.cycle_type == CYCLE_TYPE_COPY)
 		yl |= 3;
@@ -7171,64 +7164,64 @@ static void rdp_fill_rect(uint32_t w1, uint32_t w2)
 	edgewalker_for_prims(ewdata);
 }
 
-static void rdp_set_fill_color(uint32_t w1, uint32_t w2)
+static void rdp_set_fill_color(const uint32_t* args)
 {
-	fill_color = w2;
+	fill_color = args[1];
 }
 
-static void rdp_set_fog_color(uint32_t w1, uint32_t w2)
+static void rdp_set_fog_color(const uint32_t* args)
 {
-	fog_color.r = (w2 >> 24) & 0xff;
-	fog_color.g = (w2 >> 16) & 0xff;
-	fog_color.b = (w2 >>  8) & 0xff;
-	fog_color.a = (w2 >>  0) & 0xff;
+	fog_color.r = (args[1] >> 24) & 0xff;
+	fog_color.g = (args[1] >> 16) & 0xff;
+	fog_color.b = (args[1] >>  8) & 0xff;
+	fog_color.a = (args[1] >>  0) & 0xff;
 }
 
-static void rdp_set_blend_color(uint32_t w1, uint32_t w2)
+static void rdp_set_blend_color(const uint32_t* args)
 {
-	blend_color.r = (w2 >> 24) & 0xff;
-	blend_color.g = (w2 >> 16) & 0xff;
-	blend_color.b = (w2 >>  8) & 0xff;
-	blend_color.a = (w2 >>  0) & 0xff;
+	blend_color.r = (args[1] >> 24) & 0xff;
+	blend_color.g = (args[1] >> 16) & 0xff;
+	blend_color.b = (args[1] >>  8) & 0xff;
+	blend_color.a = (args[1] >>  0) & 0xff;
 }
 
-static void rdp_set_prim_color(uint32_t w1, uint32_t w2)
+static void rdp_set_prim_color(const uint32_t* args)
 {
-	min_level = (w1 >> 8) & 0x1f;
-	primitive_lod_frac = w1 & 0xff;
-	prim_color.r = (w2 >> 24) & 0xff;
-	prim_color.g = (w2 >> 16) & 0xff;
-	prim_color.b = (w2 >>  8) & 0xff;
-	prim_color.a = (w2 >>  0) & 0xff;
+	min_level = (args[0] >> 8) & 0x1f;
+	primitive_lod_frac = args[0] & 0xff;
+	prim_color.r = (args[1] >> 24) & 0xff;
+	prim_color.g = (args[1] >> 16) & 0xff;
+	prim_color.b = (args[1] >>  8) & 0xff;
+	prim_color.a = (args[1] >>  0) & 0xff;
 }
 
-static void rdp_set_env_color(uint32_t w1, uint32_t w2)
+static void rdp_set_env_color(const uint32_t* args)
 {
-	env_color.r = (w2 >> 24) & 0xff;
-	env_color.g = (w2 >> 16) & 0xff;
-	env_color.b = (w2 >>  8) & 0xff;
-	env_color.a = (w2 >>  0) & 0xff;
+	env_color.r = (args[1] >> 24) & 0xff;
+	env_color.g = (args[1] >> 16) & 0xff;
+	env_color.b = (args[1] >>  8) & 0xff;
+	env_color.a = (args[1] >>  0) & 0xff;
 }
 
-static void rdp_set_combine(uint32_t w1, uint32_t w2)
+static void rdp_set_combine(const uint32_t* args)
 {
-	combine.sub_a_rgb0	= (w1 >> 20) & 0xf;
-	combine.mul_rgb0	= (w1 >> 15) & 0x1f;
-	combine.sub_a_a0	= (w1 >> 12) & 0x7;
-	combine.mul_a0		= (w1 >>  9) & 0x7;
-	combine.sub_a_rgb1	= (w1 >>  5) & 0xf;
-	combine.mul_rgb1	= (w1 >>  0) & 0x1f;
+	combine.sub_a_rgb0	= (args[0] >> 20) & 0xf;
+	combine.mul_rgb0	= (args[0] >> 15) & 0x1f;
+	combine.sub_a_a0	= (args[0] >> 12) & 0x7;
+	combine.mul_a0		= (args[0] >>  9) & 0x7;
+	combine.sub_a_rgb1	= (args[0] >>  5) & 0xf;
+	combine.mul_rgb1	= (args[0] >>  0) & 0x1f;
 
-	combine.sub_b_rgb0	= (w2 >> 28) & 0xf;
-	combine.sub_b_rgb1	= (w2 >> 24) & 0xf;
-	combine.sub_a_a1	= (w2 >> 21) & 0x7;
-	combine.mul_a1		= (w2 >> 18) & 0x7;
-	combine.add_rgb0	= (w2 >> 15) & 0x7;
-	combine.sub_b_a0	= (w2 >> 12) & 0x7;
-	combine.add_a0		= (w2 >>  9) & 0x7;
-	combine.add_rgb1	= (w2 >>  6) & 0x7;
-	combine.sub_b_a1	= (w2 >>  3) & 0x7;
-	combine.add_a1		= (w2 >>  0) & 0x7;
+	combine.sub_b_rgb0	= (args[1] >> 28) & 0xf;
+	combine.sub_b_rgb1	= (args[1] >> 24) & 0xf;
+	combine.sub_a_a1	= (args[1] >> 21) & 0x7;
+	combine.mul_a1		= (args[1] >> 18) & 0x7;
+	combine.add_rgb0	= (args[1] >> 15) & 0x7;
+	combine.sub_b_a0	= (args[1] >> 12) & 0x7;
+	combine.add_a0		= (args[1] >>  9) & 0x7;
+	combine.add_rgb1	= (args[1] >>  6) & 0x7;
+	combine.sub_b_a1	= (args[1] >>  3) & 0x7;
+	combine.add_a1		= (args[1] >>  0) & 0x7;
 
 	
 	SET_SUBA_RGB_INPUT(&combiner_rgbsub_a_r[0], &combiner_rgbsub_a_g[0], &combiner_rgbsub_a_b[0], combine.sub_a_rgb0);
@@ -7252,28 +7245,28 @@ static void rdp_set_combine(uint32_t w1, uint32_t w2)
 	other_modes.f.stalederivs = 1;
 }
 
-static void rdp_set_texture_image(uint32_t w1, uint32_t w2)
+static void rdp_set_texture_image(const uint32_t* args)
 {
-	ti_format	= (w1 >> 21) & 0x7;
-	ti_size		= (w1 >> 19) & 0x3;
-	ti_width	= (w1 & 0x3ff) + 1;
-	ti_address	= w2 & 0x0ffffff;
+	ti_format	= (args[0] >> 21) & 0x7;
+	ti_size		= (args[0] >> 19) & 0x3;
+	ti_width	= (args[0] & 0x3ff) + 1;
+	ti_address	= args[1] & 0x0ffffff;
 	
 	
 	
 }
 
-static void rdp_set_mask_image(uint32_t w1, uint32_t w2)
+static void rdp_set_mask_image(const uint32_t* args)
 {
-	zb_address	= w2 & 0x0ffffff;
+	zb_address	= args[1] & 0x0ffffff;
 }
 
-static void rdp_set_color_image(uint32_t w1, uint32_t w2)
+static void rdp_set_color_image(const uint32_t* args)
 {
-	fb_format 	= (w1 >> 21) & 0x7;
-	fb_size		= (w1 >> 19) & 0x3;
-	fb_width	= (w1 & 0x3ff) + 1;
-	fb_address	= w2 & 0x0ffffff;
+	fb_format 	= (args[0] >> 21) & 0x7;
+	fb_size		= (args[0] >> 19) & 0x3;
+	fb_width	= (args[0] & 0x3ff) + 1;
+	fb_address	= args[1] & 0x0ffffff;
 
 	
 	fbread1_ptr = fbread_func[fb_size];
@@ -7284,7 +7277,7 @@ static void rdp_set_color_image(uint32_t w1, uint32_t w2)
 
 
 
-static void (*const rdp_command_table[64])(uint32_t w1, uint32_t w2) =
+static void (*const rdp_command_table[64])(const uint32_t* args) =
 {
 	
 	rdp_noop,			rdp_invalid,			rdp_invalid,			rdp_invalid,
@@ -7423,7 +7416,7 @@ void rdp_process_list(void)
 		
 
 		
-		rdp_command_table[cmd](rdp_cmd_data[rdp_cmd_cur+0], rdp_cmd_data[rdp_cmd_cur + 1]);
+		rdp_command_table[cmd](rdp_cmd_data + rdp_cmd_cur);
 		
 		rdp_cmd_cur += cmd_length;
 	};
