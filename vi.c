@@ -4,6 +4,7 @@
 #include "rdram.h"
 #include "msg.h"
 #include "screen.h"
+#include "irand.h"
 
 typedef struct
 {
@@ -37,8 +38,6 @@ static void (*vi_fetch_filter_func[2])(CCVG*, uint32_t, uint32_t, uint32_t, uint
 static uint32_t gamma_table[0x100];
 static uint32_t gamma_dither_table[0x4000];
 static int vi_restore_table[0x400];
-
-#include "irand.c"
 
 STRICTINLINE void restore_filter16(int* r, int* g, int* b, uint32_t fboffset, uint32_t num, uint32_t hres, uint32_t fetchbugstate)
 {

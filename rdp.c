@@ -4,6 +4,7 @@
 #include "plugin.h"
 #include "rdram.h"
 #include "msg.h"
+#include "irand.h"
 
 #include <stdio.h>
 
@@ -466,7 +467,6 @@ INLINE void get_dither_only(int x, int y, int* cdith, int* adith);
 INLINE void get_dither_nothing(int x, int y, int* cdith, int* adith);
 STRICTINLINE void rgbaz_correct_clip(int offx, int offy, int r, int g, int b, int a, int* z, uint32_t curpixel_cvg);
 void deduce_derivatives(void);
-STRICTINLINE int32_t irand();
 
 static int32_t k0_tf = 0, k1_tf = 0, k2_tf = 0, k3_tf = 0;
 static int32_t k4 = 0, k5 = 0;
@@ -570,8 +570,6 @@ uint32_t command_counter = 0;
 uint32_t max_level = 0;
 int32_t min_level = 0;
 int rdp_pipeline_crashed = 0;
-
-#include "irand.c"
 
 STRICTINLINE void tcmask(int32_t* S, int32_t* T, int32_t num);
 STRICTINLINE void tcmask(int32_t* S, int32_t* T, int32_t num)

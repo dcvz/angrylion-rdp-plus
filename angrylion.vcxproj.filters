@@ -36,8 +36,8 @@
     <ClCompile Include="rdram.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="irand.c">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="irand.h">
+      <Filter>Header Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
