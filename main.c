@@ -29,7 +29,7 @@ EXPORT void CALL CloseDLL(void)
 
 EXPORT void CALL DllAbout(HWND hParent)
 {
-    msg_warning("angrylion's RDP, unpublished beta. MESS source code used.");
+    msg_warning("angrylion's RDP, 'plus' fork. MESS source code used.");
 }
 
 EXPORT void CALL ReadScreen(void **dest, long *width, long *height)
@@ -44,7 +44,7 @@ EXPORT void CALL GetDllInfo(PLUGIN_INFO* PluginInfo)
 {
     PluginInfo->Version = 0x0103;
     PluginInfo->Type  = PLUGIN_TYPE_GFX;
-    sprintf(PluginInfo->Name, "angrylion's RDP");
+    sprintf(PluginInfo->Name, "angrylion's RDP Plus");
 
     PluginInfo->NormalMemory = TRUE;
     PluginInfo->MemoryBswaped = TRUE;
