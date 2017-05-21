@@ -246,3 +246,5 @@ ModelManifest.xml
 
 # auto-generated files
 core/git_tag.h
+
+private/
