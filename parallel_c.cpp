@@ -14,7 +14,7 @@ void parallel_init(uint32_t num)
         num = std::thread::hardware_concurrency();
     }
 
-    parallel = std::make_unique<Parallel>(num, [](uint32_t id) mutable {
+    parallel = std::make_unique<Parallel>(num, [](uint32_t id) {
         worker_id = id;
     });
 
