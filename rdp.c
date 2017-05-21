@@ -59,8 +59,8 @@ uint32_t rdp_cmd_ptr = 0;
 uint32_t rdp_cmd_cur = 0;
 uint32_t ptr_onstart = 0;
 
-int blshifta = 0, blshiftb = 0, pastblshifta = 0, pastblshiftb = 0;
-int32_t pastrawdzmem = 0;
+TLS int blshifta = 0, blshiftb = 0, pastblshifta = 0, pastblshiftb = 0;
+TLS int32_t pastrawdzmem = 0;
 
 typedef struct
 {
@@ -73,24 +73,24 @@ typedef struct
     int32_t invalyscan[4];
 } SPAN;
 
-static SPAN span[1024];
-uint8_t cvgbuf[1024];
+static TLS SPAN span[1024];
+TLS uint8_t cvgbuf[1024];
 
 
-static int spans_ds;
-static int spans_dt;
-static int spans_dw;
-static int spans_dr;
-static int spans_dg;
-static int spans_db;
-static int spans_da;
-static int spans_dz;
-static int spans_dzpix;
+static TLS int spans_ds;
+static TLS int spans_dt;
+static TLS int spans_dw;
+static TLS int spans_dr;
+static TLS int spans_dg;
+static TLS int spans_db;
+static TLS int spans_da;
+static TLS int spans_dz;
+static TLS int spans_dzpix;
 
-int spans_drdy, spans_dgdy, spans_dbdy, spans_dady, spans_dzdy;
-int spans_cdr, spans_cdg, spans_cdb, spans_cda, spans_cdz;
+TLS int spans_drdy, spans_dgdy, spans_dbdy, spans_dady, spans_dzdy;
+TLS int spans_cdr, spans_cdg, spans_cdb, spans_cda, spans_cdz;
 
-static int spans_dsdy, spans_dtdy, spans_dwdy;
+static TLS int spans_dsdy, spans_dtdy, spans_dwdy;
 
 
 
@@ -269,90 +269,90 @@ typedef struct
 #define ZMODE_TRANSPARENT       2
 #define ZMODE_DECAL             3
 
-COMBINE_MODES combine;
-OTHER_MODES other_modes;
+TLS COMBINE_MODES combine;
+TLS OTHER_MODES other_modes;
 
-COLOR blend_color;
-COLOR prim_color;
-COLOR env_color;
-COLOR fog_color;
-COLOR combined_color;
-COLOR texel0_color;
-COLOR texel1_color;
-COLOR nexttexel_color;
-COLOR shade_color;
-COLOR key_scale;
-COLOR key_center;
-COLOR key_width;
-static int32_t noise = 0;
-static int32_t primitive_lod_frac = 0;
+TLS COLOR blend_color;
+TLS COLOR prim_color;
+TLS COLOR env_color;
+TLS COLOR fog_color;
+TLS COLOR combined_color;
+TLS COLOR texel0_color;
+TLS COLOR texel1_color;
+TLS COLOR nexttexel_color;
+TLS COLOR shade_color;
+TLS COLOR key_scale;
+TLS COLOR key_center;
+TLS COLOR key_width;
+static TLS int32_t noise = 0;
+static TLS int32_t primitive_lod_frac = 0;
 static int32_t one_color = 0x100;
 static int32_t zero_color = 0x00;
 
-int32_t keyalpha;
+TLS int32_t keyalpha;
 
 static int32_t blenderone   = 0xff;
 
 
-static int32_t *combiner_rgbsub_a_r[2];
-static int32_t *combiner_rgbsub_a_g[2];
-static int32_t *combiner_rgbsub_a_b[2];
-static int32_t *combiner_rgbsub_b_r[2];
-static int32_t *combiner_rgbsub_b_g[2];
-static int32_t *combiner_rgbsub_b_b[2];
-static int32_t *combiner_rgbmul_r[2];
-static int32_t *combiner_rgbmul_g[2];
-static int32_t *combiner_rgbmul_b[2];
-static int32_t *combiner_rgbadd_r[2];
-static int32_t *combiner_rgbadd_g[2];
-static int32_t *combiner_rgbadd_b[2];
+static TLS int32_t *combiner_rgbsub_a_r[2];
+static TLS int32_t *combiner_rgbsub_a_g[2];
+static TLS int32_t *combiner_rgbsub_a_b[2];
+static TLS int32_t *combiner_rgbsub_b_r[2];
+static TLS int32_t *combiner_rgbsub_b_g[2];
+static TLS int32_t *combiner_rgbsub_b_b[2];
+static TLS int32_t *combiner_rgbmul_r[2];
+static TLS int32_t *combiner_rgbmul_g[2];
+static TLS int32_t *combiner_rgbmul_b[2];
+static TLS int32_t *combiner_rgbadd_r[2];
+static TLS int32_t *combiner_rgbadd_g[2];
+static TLS int32_t *combiner_rgbadd_b[2];
 
-static int32_t *combiner_alphasub_a[2];
-static int32_t *combiner_alphasub_b[2];
-static int32_t *combiner_alphamul[2];
-static int32_t *combiner_alphaadd[2];
+static TLS int32_t *combiner_alphasub_a[2];
+static TLS int32_t *combiner_alphasub_b[2];
+static TLS int32_t *combiner_alphamul[2];
+static TLS int32_t *combiner_alphaadd[2];
 
 
-static int32_t *blender1a_r[2];
-static int32_t *blender1a_g[2];
-static int32_t *blender1a_b[2];
-static int32_t *blender1b_a[2];
-static int32_t *blender2a_r[2];
-static int32_t *blender2a_g[2];
-static int32_t *blender2a_b[2];
-static int32_t *blender2b_a[2];
+static TLS int32_t *blender1a_r[2];
+static TLS int32_t *blender1a_g[2];
+static TLS int32_t *blender1a_b[2];
+static TLS int32_t *blender1b_a[2];
+static TLS int32_t *blender2a_r[2];
+static TLS int32_t *blender2a_g[2];
+static TLS int32_t *blender2a_b[2];
+static TLS int32_t *blender2b_a[2];
 
-COLOR pixel_color;
-COLOR inv_pixel_color;
-COLOR blended_pixel_color;
-COLOR memory_color;
-COLOR pre_memory_color;
+TLS COLOR pixel_color;
+TLS COLOR inv_pixel_color;
+TLS COLOR blended_pixel_color;
+TLS COLOR memory_color;
+TLS COLOR pre_memory_color;
 
-uint32_t fill_color;
+TLS uint32_t fill_color;
 
-uint32_t primitive_z;
-uint16_t primitive_delta_z;
+TLS uint32_t primitive_z;
+TLS uint16_t primitive_delta_z;
 
-static int fb_format = FORMAT_RGBA;
-static int fb_size = PIXEL_SIZE_4BIT;
-static int fb_width = 0;
-static uint32_t fb_address = 0;
+static TLS int fb_format = FORMAT_RGBA;
+static TLS int fb_size = PIXEL_SIZE_4BIT;
+static TLS int fb_width = 0;
+static TLS uint32_t fb_address = 0;
 
-static int ti_format = FORMAT_RGBA;
-static int ti_size = PIXEL_SIZE_4BIT;
-static int ti_width = 0;
-static uint32_t ti_address = 0;
+static TLS int ti_format = FORMAT_RGBA;
+static TLS int ti_size = PIXEL_SIZE_4BIT;
+static TLS int ti_width = 0;
+static TLS uint32_t ti_address = 0;
 
-static uint32_t zb_address = 0;
+static TLS uint32_t zb_address = 0;
 
-static TILE tile[8];
+static TLS TILE tile[8];
 
-static RECTANGLE clip = {0,0,0x2000,0x2000};
-static int scfield = 0;
-static int sckeepodd = 0;
-int oldscyl = 0;
+static TLS RECTANGLE clip = {0,0,0x2000,0x2000};
+static TLS int scfield = 0;
+static TLS int sckeepodd = 0;
+TLS int oldscyl = 0;
 
-uint8_t TMEM[0x1000];
+TLS uint8_t TMEM[0x1000];
 
 #define tlut ((uint16_t*)(&TMEM[0x800]))
 
@@ -467,10 +467,11 @@ INLINE void get_dither_only(int x, int y, int* cdith, int* adith);
 INLINE void get_dither_nothing(int x, int y, int* cdith, int* adith);
 STRICTINLINE void rgbaz_correct_clip(int offx, int offy, int r, int g, int b, int a, int* z, uint32_t curpixel_cvg);
 void deduce_derivatives(void);
+STRICTINLINE int32_t irand();
 
-static int32_t k0_tf = 0, k1_tf = 0, k2_tf = 0, k3_tf = 0;
-static int32_t k4 = 0, k5 = 0;
-static int32_t lod_frac = 0;
+static TLS int32_t k0_tf = 0, k1_tf = 0, k2_tf = 0, k3_tf = 0;
+static TLS int32_t k4 = 0, k5 = 0;
+static TLS int32_t lod_frac = 0;
 
 struct {uint32_t shift; uint32_t add;} z_dec_table[8] = {
      6, 0x00000,
@@ -528,15 +529,15 @@ static void (*render_spans_2cycle_func[4])(int, int, int, int) =
     render_spans_2cycle_notex, render_spans_2cycle_notexel1, render_spans_2cycle_notexelnext, render_spans_2cycle_complete
 };
 
-void (*fbread1_ptr)(uint32_t, uint32_t*);
-void (*fbread2_ptr)(uint32_t, uint32_t*);
-void (*fbwrite_ptr)(uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t);
-void (*fbfill_ptr)(uint32_t);
-void (*get_dither_noise_ptr)(int, int, int*, int*);
-void (*rgb_dither_ptr)(int*, int*, int*, int);
-void (*tcdiv_ptr)(int32_t, int32_t, int32_t, int32_t*, int32_t*);
-void (*render_spans_1cycle_ptr)(int, int, int, int);
-void (*render_spans_2cycle_ptr)(int, int, int, int);
+TLS void (*fbread1_ptr)(uint32_t, uint32_t*);
+TLS void (*fbread2_ptr)(uint32_t, uint32_t*);
+TLS void (*fbwrite_ptr)(uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t);
+TLS void (*fbfill_ptr)(uint32_t);
+TLS void (*get_dither_noise_ptr)(int, int, int*, int*);
+TLS void (*rgb_dither_ptr)(int*, int*, int*, int);
+TLS void (*tcdiv_ptr)(int32_t, int32_t, int32_t, int32_t*, int32_t*);
+TLS void (*render_spans_1cycle_ptr)(int, int, int, int);
+TLS void (*render_spans_2cycle_ptr)(int, int, int, int);
 
 typedef struct{
     uint8_t cvg;
@@ -567,8 +568,8 @@ static struct
 
 uint32_t z64gl_command = 0;
 uint32_t command_counter = 0;
-uint32_t max_level = 0;
-int32_t min_level = 0;
+TLS uint32_t max_level = 0;
+TLS int32_t min_level = 0;
 int rdp_pipeline_crashed = 0;
 
 STRICTINLINE void tcmask(int32_t* S, int32_t* T, int32_t num);

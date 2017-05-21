@@ -4,7 +4,7 @@
 
 #include <stdint.h>
 
-static int32_t iseed = 1;
+static TLS int32_t iseed = 1;
 
 static STRICTINLINE int32_t irand()
 {
