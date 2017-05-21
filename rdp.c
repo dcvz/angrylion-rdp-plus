@@ -5,6 +5,7 @@
 #include "rdram.h"
 #include "msg.h"
 #include "irand.h"
+#include "parallel_c.hpp"
 
 #include <stdio.h>
 
@@ -59,8 +60,16 @@ uint32_t rdp_cmd_ptr = 0;
 uint32_t rdp_cmd_cur = 0;
 uint32_t ptr_onstart = 0;
 
+#define CMD_BUFFER_SIZE 44
+#define CMD_BUFFER_COUNT 1024
+
+uint32_t rdp_cmd_buf[CMD_BUFFER_COUNT][CMD_BUFFER_SIZE];
+uint32_t rdp_cmd_buf_pos;
+
 TLS int blshifta = 0, blshiftb = 0, pastblshifta = 0, pastblshiftb = 0;
 TLS int32_t pastrawdzmem = 0;
+
+static bool mt_en = true;
 
 typedef struct
 {
@@ -912,6 +921,7 @@ int rdp_init()
 
     precalculate_everything();
 
+    parallel_init(0);
     vi_init();
     rdram_init(plugin_rdram_size());
 
@@ -5827,6 +5837,9 @@ static void edgewalker_for_prims(int32_t* ewdata)
     xfrac = ((xright >> 8) & 0xff);
 
 
+    uint32_t worker_id = parallel_worker_id();
+    uint32_t worker_num = parallel_worker_num();
+
     if (flip)
     {
     for (k = ycur; k <= ylfar; k++)
@@ -5907,7 +5920,7 @@ static void edgewalker_for_prims(int32_t* ewdata)
             {
                 span[j].lx = maxxmx;
                 span[j].rx = minxhx;
-                span[j].validline  = !allinval && !allover && !allunder && (!scfield || (scfield && !(sckeepodd ^ (j & 1))));
+                span[j].validline  = !allinval && !allover && !allunder && (!scfield || (scfield && !(sckeepodd ^ (j & 1)))) && (!mt_en || j % worker_num == worker_id);
 
             }
 
@@ -5994,7 +6007,7 @@ static void edgewalker_for_prims(int32_t* ewdata)
             {
                 span[j].lx = minxmx;
                 span[j].rx = maxxhx;
-                span[j].validline  = !allinval && !allover && !allunder && (!scfield || (scfield && !(sckeepodd ^ (j & 1))));
+                span[j].validline  = !allinval && !allover && !allunder && (!scfield || (scfield && !(sckeepodd ^ (j & 1)))) && (!mt_en || j % worker_num == worker_id);
             }
 
         }
@@ -7300,6 +7313,117 @@ static void (*const rdp_command_table[64])(const uint32_t* args) =
     rdp_set_combine,    rdp_set_texture_image,  rdp_set_mask_image,     rdp_set_color_image
 };
 
+
+// command metadata table
+static const struct
+{
+    bool singlethread;  // run in main thread
+    bool multithread;   // run in worker threads
+    bool sync;          // synchronize all workers before execution
+    char name[32];      // descriptive name for debugging
+} rdp_command_meta[] = {
+    {true,  false, false, "No_Op"},
+    {true,  false, false, "???"},
+    {true,  false, false, "???"},
+    {true,  false, false, "???"},
+    {true,  false, false, "???"},
+    {true,  false, false, "???"},
+    {true,  false, false, "???"},
+    {true,  false, false, "???"},
+    {false, true,  false, "Fill_Triangle"},
+    {false, true,  false, "Fill_ZBuffer_Triangle"},
+    {false, true,  false, "Texture_Triangle"},
+    {false, true,  false, "Texture_ZBuffer_Triangle"},
+    {false, true,  false, "Shade_Triangle"},
+    {false, true,  false, "Shade_ZBuffer_Triangle"},
+    {false, true,  false, "Shade_Texture_Triangle"},
+    {false, true,  false, "Shade_Texture_Z_Buffer_Triangle"},
+    {true,  false, false, "???"},
+    {true,  false, false, "???"},
+    {true,  false, false, "???"},
+    {true,  false, false, "???"},
+    {true,  false, false, "???"},
+    {true,  false, false, "???"},
+    {true,  false, false, "???"},
+    {true,  false, false, "???"},
+    {true,  false, false, "???"},
+    {true,  false, false, "???"},
+    {true,  false, false, "???"},
+    {true,  false, false, "???"},
+    {true,  false, false, "???"},
+    {true,  false, false, "???"},
+    {true,  false, false, "???"},
+    {true,  false, false, "???"},
+    {true,  false, false, "???"},
+    {true,  false, false, "???"},
+    {true,  false, false, "???"},
+    {true,  false, false, "???"},
+    {false, true,  false, "Texture_Rectangle"},
+    {false, true,  false, "Texture_Rectangle_Flip"},
+    {true,  false, false, "Sync_Load"},
+    {true,  false, false, "Sync_Pipe"},
+    {true,  false, false, "Sync_Tile"},
+    {true,  false, true,  "Sync_Full"},
+    {false, true,  false, "Set_Key_GB"},
+    {false, true,  false, "Set_Key_R"},
+    {false, true,  false, "Set_Convert"},
+    {false, true,  false, "Set_Scissor"},
+    {false, true,  false, "Set_Prim_Depth"},
+    {false, true,  false, "Set_Other_Modes"},
+    {false, true,  false, "Load_TLUT"},
+    {true,  false, false, "???"},
+    {false, true,  false, "Set_Tile_Size"},
+    {false, true,  false, "Load_Block"},
+    {false, true,  false, "Load_Tile"},
+    {false, true,  false, "Set_Tile"},
+    {false, true,  false, "Fill_Rectangle"},
+    {false, true,  false, "Set_Fill_Color"},
+    {false, true,  false, "Set_Fog_Color"},
+    {false, true,  false, "Set_Blend_Color"},
+    {false, true,  false, "Set_Prim_Color"},
+    {false, true,  false, "Set_Env_Color"},
+    {false, true,  false, "Set_Combine"},
+    {false, true,  false, "Set_Texture_Image"},
+    {false, true,  true,  "Set_Mask_Image"},
+    {false, true,  true,  "Set_Color_Image"}
+};
+
+static void rdp_cmd_run(const uint32_t* arg)
+{
+    uint32_t cmd = (arg[0] >> 24) & 0x3f;
+    rdp_command_table[cmd](arg);
+}
+
+static void rdp_cmd_run_buffered(void)
+{
+    for (uint32_t pos = 0; pos < rdp_cmd_buf_pos; pos++) {
+        rdp_cmd_run(rdp_cmd_buf[pos]);
+    }
+}
+
+static void rdp_cmd_flush(void)
+{
+    // only run if there's something buffered
+    if (rdp_cmd_buf_pos) {
+        // let workers run all buffered commands in parallel
+        parallel_run(rdp_cmd_run_buffered);
+
+        // reset buffer by starting from the beginning
+        rdp_cmd_buf_pos = 0;
+    }
+}
+
+static void rdp_cmd_push(const uint32_t* arg, size_t length)
+{
+    // copy command data to current buffer position
+    memcpy(rdp_cmd_buf + rdp_cmd_buf_pos, arg, length * sizeof(uint32_t));
+
+    // increment buffer position and flush buffer when it is full
+    if (++rdp_cmd_buf_pos >= CMD_BUFFER_COUNT) {
+        rdp_cmd_flush();
+    }
+}
+
 void rdp_process_list(void)
 {
     int i, length;
@@ -7415,7 +7539,17 @@ void rdp_process_list(void)
 
 
 
-        rdp_command_table[cmd](rdp_cmd_data + rdp_cmd_cur);
+        if (rdp_command_meta[cmd].sync && mt_en) {
+            rdp_cmd_flush();
+        }
+
+        if (rdp_command_meta[cmd].singlethread || !mt_en) {
+            rdp_cmd_run(rdp_cmd_data + rdp_cmd_cur);
+        }
+
+        if (rdp_command_meta[cmd].multithread && mt_en) {
+           rdp_cmd_push(rdp_cmd_data + rdp_cmd_cur, cmd_length);
+        }
 
         rdp_cmd_cur += cmd_length;
     };
@@ -7720,6 +7854,7 @@ STRICTINLINE void compute_cvg_noflip(int32_t scanline)
 
 int rdp_close()
 {
+    parallel_close();
     return 0;
 }
 

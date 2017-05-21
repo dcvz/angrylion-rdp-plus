@@ -5,6 +5,7 @@
 #include "msg.h"
 #include "screen.h"
 #include "irand.h"
+#include "parallel_c.hpp"
 
 typedef struct
 {
@@ -12,13 +13,44 @@ typedef struct
 } CCVG;
 
 // states
+static bool mt_en = true;
 static uint32_t tvfadeoutstate[625];
-static uint32_t prevvicurrent = 0;
-static int emucontrolsvicurrent = -1;
-static int prevserrate = 0;
-static int oldlowerfield = 0;
-static int32_t oldvstart = 1337;
-static uint32_t prevwasblank = 0;
+static uint32_t prevvicurrent;
+static int emucontrolsvicurrent;
+static int prevserrate;
+static int oldlowerfield;
+static int32_t oldvstart;
+static uint32_t prevwasblank;
+
+static int pitchindwords;
+static int ispal;
+static int lineshifter;
+static int minhpass;
+static int maxhpass;
+static uint32_t x_add;
+static uint32_t x_start_init;
+static uint32_t y_add;
+static uint32_t y_start;
+
+// prescale buffer
+static int32_t* PreScale;
+static uint32_t prescale_ptr;
+static int linecount;
+
+// parsed VI registers
+static int dither_filter;
+static int fsaa;
+static int divot;
+static int gamma;
+static int gamma_dither;
+static int lerp_en;
+static int extralines;
+static int vitype;
+static int serration_pulses;
+static int gamma_and_dither;
+static int32_t hres, vres;
+static int32_t v_start;
+static int32_t h_start;
 
 static struct
 {
@@ -33,6 +65,8 @@ static void (*vi_fetch_filter_func[2])(CCVG*, uint32_t, uint32_t, uint32_t, uint
 {
     vi_fetch_filter16, vi_fetch_filter32
 };
+
+void (*vi_fetch_filter_ptr)(CCVG*, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t);
 
 // lookup tables
 static uint32_t gamma_table[0x100];
@@ -658,9 +692,16 @@ void vi_init(void)
         else
             vi_restore_table[i] = 0;
     }
+
+    prevvicurrent = 0;
+    emucontrolsvicurrent = -1;
+    prevserrate = 0;
+    oldlowerfield = 0;
+    oldvstart = 1337;
+    prevwasblank = 0;
 }
 
-void vi_update(void)
+int vi_begin(void)
 {
 
 
@@ -669,9 +710,6 @@ void vi_update(void)
     int i, j;
     uint32_t final = 0;
 
-    CCVG *viaa_cache, *viaa_cache_next, *divot_cache, *divot_cache_next;
-    CCVG viaa_array[0xa10 << 1];
-    CCVG divot_array[0xa10 << 1];
 
 
 
@@ -687,7 +725,7 @@ void vi_update(void)
 
 
 
-    int32_t hres, vres;
+
     hres = (vi_h_start & 0x3ff) - ((vi_h_start >> 16) & 0x3ff);
 
     vres = (vi_v_start & 0x3ff) - ((vi_v_start >> 16) & 0x3ff);
@@ -697,18 +735,17 @@ void vi_update(void)
 
 
 
+    dither_filter = (vi_control >> 16) & 1;
+    fsaa = !((vi_control >> 9) & 1);
+    divot = (vi_control >> 4) & 1;
+    gamma = (vi_control >> 3) & 1;
+    gamma_dither = (vi_control >> 2) & 1;
+    lerp_en = (((vi_control >> 8) & 3) != 3);
+    extralines = !((vi_control >> 8) & 1);
 
-    int dither_filter = (vi_control >> 16) & 1;
-    int fsaa = !((vi_control >> 9) & 1);
-    int divot = (vi_control >> 4) & 1;
-    int gamma = (vi_control >> 3) & 1;
-    int gamma_dither = (vi_control >> 2) & 1;
-    int lerp_en = (((vi_control >> 8) & 3) != 3);
-    int extralines = !((vi_control >> 8) & 1);
-
-    int vitype = vi_control & 3;
-    int serration_pulses = (vi_control >> 6) & 1;
-    int gamma_and_dither = (gamma << 1) | gamma_dither;
+    vitype = vi_control & 3;
+    serration_pulses = (vi_control >> 6) & 1;
+    gamma_and_dither = (gamma << 1) | gamma_dither;
     if (((vi_control >> 5) & 1) && !onetimewarnings.vbusclock)
     {
         msg_warning("rdp_update: vbus_clock_enable bit set in VI_CONTROL_REG register. Never run this code on your N64! It's rumored that turning this bit on\
@@ -720,9 +757,6 @@ void vi_update(void)
 
 
 
-    void (*vi_fetch_filter_ptr)(CCVG*, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t) = vi_fetch_filter_func[vitype & 1];
-
-    int ispal = (vi_v_sync & 0x3ff) > 550;
 
 
 
@@ -733,10 +767,33 @@ void vi_update(void)
 
 
 
-    int32_t v_start = (vi_v_start >> 16) & 0x3ff;
-    int32_t h_start = (vi_h_start >> 16) & 0x3ff;
 
-    uint32_t x_add = vi_x_scale & 0xfff;
+    vi_fetch_filter_ptr = vi_fetch_filter_func[vitype & 1];
+
+    ispal = (vi_v_sync & 0x3ff) > 550;
+
+
+
+
+
+
+
+
+
+
+    v_start = (vi_v_start >> 16) & 0x3ff;
+    h_start = (vi_h_start >> 16) & 0x3ff;
+
+    x_add = vi_x_scale & 0xfff;
+
+
+
+
+
+
+
+
+
 
 
 
@@ -755,7 +812,7 @@ void vi_update(void)
 
     h_start -= (ispal ? 128 : 108);
 
-    uint32_t x_start, x_start_init = (vi_x_scale >> 16) & 0xfff;
+    x_start_init = (vi_x_scale >> 16) & 0xfff;
 
     int h_start_clamped = 0;
 
@@ -768,7 +825,7 @@ void vi_update(void)
         h_start_clamped = 1;
     }
 
-    int cache_marker_init = (x_start_init >> 10) - 1;
+
 
 
 
@@ -840,7 +897,7 @@ void vi_update(void)
 
 
 
-    int lineshifter = serration_pulses ? 0 : 1;
+    lineshifter = serration_pulses ? 0 : 1;
     int twolines = serration_pulses ? 1 : 0;
 
     int32_t vstartoffset = ispal ? 44 : 34;
@@ -851,8 +908,8 @@ void vi_update(void)
 
 
 
-    uint32_t y_start = (vi_y_scale >> 16) & 0xfff;
-    uint32_t y_add = vi_y_scale & 0xfff;
+    y_start = (vi_y_scale >> 16) & 0xfff;
+    y_add = vi_y_scale & 0xfff;
 
     if (v_start < 0)
     {
@@ -884,37 +941,16 @@ void vi_update(void)
     if (vactivelines > PRESCALE_HEIGHT)
         msg_error("VI_V_SYNC_REG too big");
     if (vactivelines < 0)
-        return;
+        return 0;
     vactivelines >>= lineshifter;
 
     int validh = (hres > 0 && h_start < PRESCALE_WIDTH);
 
 
 
-
-    uint32_t frame_buffer = vi_origin & 0xffffff;
-
-    uint32_t pixels = 0, nextpixels = 0, fetchbugstate = 0;
-    CCVG color, nextcolor, scancolor, scannextcolor;
-    int r = 0, g = 0, b = 0;
-    int xfrac = 0, yfrac = 0;
-    int vi_width_low = vi_width & 0xfff;
-    int line_x = 0, next_line_x = 0, prev_line_x = 0, far_line_x = 0;
-    int cache_marker = 0, cache_next_marker = 0, divot_cache_marker = 0, divot_cache_next_marker = 0;
-    int prev_scan_x = 0, scan_x = 0, next_scan_x = 0, far_scan_x = 0;
-    int prev_x = 0, cur_x = 0, next_x = 0, far_x = 0;
-
-
     uint32_t pix = 0;
     uint8_t cur_cvg = 0;
 
-    int lerping = 0;
-    uint32_t prevy = 0, nexty = y_start + y_add;
-    CCVG* tempccvgptr;
-    viaa_cache = &viaa_array[0];
-    viaa_cache_next = &viaa_array[0xa10];
-    divot_cache = &divot_array[0];
-    divot_cache_next = &divot_array[0xa10];
 
     int32_t *d = 0;
 
@@ -937,20 +973,18 @@ void vi_update(void)
 
 
 
-    int minhpass = h_start_clamped ? 0 : 8;
-    int maxhpass =  hres_clamped ? hres : (hres - 7);
+    minhpass = h_start_clamped ? 0 : 8;
+    maxhpass =  hres_clamped ? hres : (hres - 7);
 
     if (!(vitype & 2) && prevwasblank)
     {
-        return;
+        return 0;
     }
 
-    int pitchindwords;
-    int32_t* PreScale;
     screen_lock(&PreScale, &pitchindwords);
 
-    int linecount = serration_pulses ? (pitchindwords << 1) : pitchindwords;
-    uint32_t prescale_ptr = v_start * linecount + h_start + (lowerfield ? pitchindwords : 0);
+    linecount = serration_pulses ? (pitchindwords << 1) : pitchindwords;
+    prescale_ptr = v_start * linecount + h_start + (lowerfield ? pitchindwords : 0);
 
 
 
@@ -1057,6 +1091,35 @@ void vi_update(void)
         }
     }
 
+    return 1;
+}
+
+void vi_process(void)
+{
+    CCVG viaa_array[0xa10 << 1];
+    CCVG divot_array[0xa10 << 1];
+
+    int cache_marker = 0, cache_next_marker = 0, divot_cache_marker = 0, divot_cache_next_marker = 0;
+    int cache_marker_init = (x_start_init >> 10) - 1;
+
+    CCVG *viaa_cache = &viaa_array[0];
+    CCVG *viaa_cache_next = &viaa_array[0xa10];
+    CCVG *divot_cache = &divot_array[0];
+    CCVG *divot_cache_next = &divot_array[0xa10];
+
+    CCVG color, nextcolor, scancolor, scannextcolor;
+
+    uint32_t pixels = 0, nextpixels = 0, fetchbugstate = 0;
+
+    int r = 0, g = 0, b = 0;
+    int xfrac = 0, yfrac = 0;
+    int vi_width_low = vi_width & 0xfff;
+    int line_x = 0, next_line_x = 0, prev_line_x = 0, far_line_x = 0;
+    int prev_scan_x = 0, scan_x = 0, next_scan_x = 0, far_scan_x = 0;
+    int prev_x = 0, cur_x = 0, next_x = 0, far_x = 0;
+
+    bool cache_init = false;
+
     switch (vitype)
     {
         case 0:
@@ -1079,45 +1142,35 @@ void vi_update(void)
 #undef ZBUFF_AS_16B_IATEXTURE
 
 #ifdef MONITOR_Z
-            frame_buffer = zb_address;
+            uint32_t frame_buffer = zb_address;
+#else
+            uint32_t frame_buffer = vi_origin & 0xffffff;
 #endif
 
             if (frame_buffer)
             {
-                for (j = 0; j < vres; j++)
-                {
+                int32_t j_start = 0;
+                int32_t j_end = vres;
+                int32_t j_add = 1;
 
-                    x_start = x_start_init;
+                if (mt_en) {
+                    j_start = parallel_worker_id();
+                    j_add = parallel_worker_num();
+                }
 
-                    if (y_add == 0x400 && j)
-                    {
-                        cache_marker = cache_next_marker;
-                        cache_next_marker = cache_marker_init;
+                for (int32_t j = j_start; j < j_end; j += j_add) {
+                    uint32_t x_start = x_start_init;
+                    uint32_t curry = y_start + j * y_add;
+                    uint32_t nexty = y_start + (j + 1) * y_add;
+                    uint32_t prevy = curry >> 10;
 
-                        tempccvgptr = viaa_cache;
-                        viaa_cache = viaa_cache_next;
-                        viaa_cache_next = tempccvgptr;
-                        if (divot)
-                        {
-                            divot_cache_marker = divot_cache_next_marker;
-                            divot_cache_next_marker = cache_marker_init;
-                            tempccvgptr = divot_cache;
-                            divot_cache = divot_cache_next;
-                            divot_cache_next = tempccvgptr;
-                        }
-                    }
-                    else
-                    {
-                        cache_marker = cache_next_marker = cache_marker_init;
-                        if (divot)
-                            divot_cache_marker = divot_cache_next_marker = cache_marker_init;
-                    }
+                    cache_marker = cache_next_marker = cache_marker_init;
+                    if (divot)
+                        divot_cache_marker = divot_cache_next_marker = cache_marker_init;
 
-                    d = &PreScale[prescale_ptr];
-                    prescale_ptr += linecount;
+                    int* d = PreScale + prescale_ptr + linecount * j;
 
-                    prevy = y_start >> 10;
-                    yfrac = (y_start >> 5) & 0x1f;
+                    yfrac = (curry >> 5) & 0x1f;
                     pixels = vi_width_low * prevy;
                     nextpixels = vi_width_low + pixels;
 
@@ -1126,7 +1179,7 @@ void vi_update(void)
                     else
                         fetchbugstate >>= 1;
 
-                    for (i = 0; i < hres; i++)
+                    for (int i = 0; i < hres; i++, x_start += x_add)
                     {
                         line_x = x_start >> 10;
                         prev_line_x = line_x - 1;
@@ -1152,7 +1205,7 @@ void vi_update(void)
 
                         xfrac = (x_start >> 5) & 0x1f;
 
-                        lerping = lerp_en && (xfrac || yfrac);
+                        int lerping = lerp_en && (xfrac || yfrac);
 
 
                         if (prev_line_x > cache_marker)
@@ -1304,23 +1357,55 @@ void vi_update(void)
                             d[i] = (r << 16) | (g << 8) | b;
                         else
                             d[i] = 0;
-                        x_start += x_add;
-
                     }
 
-                    y_start += y_add;
-                    nexty += y_add;
+                    if (!cache_init && y_add == 0x400) {
+                        cache_marker = cache_next_marker;
+                        cache_next_marker = cache_marker_init;
 
+                        CCVG* tempccvgptr = viaa_cache;
+                        viaa_cache = viaa_cache_next;
+                        viaa_cache_next = tempccvgptr;
+                        if (divot)
+                        {
+                            divot_cache_marker = divot_cache_next_marker;
+                            divot_cache_next_marker = cache_marker_init;
+                            tempccvgptr = divot_cache;
+                            divot_cache = divot_cache_next;
+                            divot_cache_next = tempccvgptr;
+                        }
 
+                        cache_init = true;
+                    }
                 }
             }
             break;
         }
         default:    msg_warning("Unknown framebuffer format %d\n", vi_control & 0x3);
     }
+}
 
+void vi_end(void)
+{
     screen_unlock();
 
     int visiblelines = (ispal ? 576 : 480) >> lineshifter;
     screen_swap(visiblelines);
+}
+
+void vi_update(void)
+{
+    // try to start VI, abort if there's nothing to display
+    if (!vi_begin()) {
+        return;
+    }
+
+    // run filter update in parallel if enabled
+    if (mt_en) {
+        parallel_run(vi_process);
+    } else {
+        vi_process();
+    }
+
+    vi_end();
 }
