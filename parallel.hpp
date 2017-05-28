@@ -24,6 +24,7 @@ private:
     std::atomic_bool m_accept_work{true};
 
     void do_work(int32_t worker_id, std::function<void(uint32_t)>&& func_worker_id);
+    void wait();
 
     void operator=(const Parallel&) = delete;
     Parallel(const Parallel&) = delete;

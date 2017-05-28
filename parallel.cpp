@@ -13,6 +13,14 @@ Parallel::Parallel(uint32_t num_workers, std::function<void(uint32_t)>&& func_wo
 
 Parallel::~Parallel()
 {
+    // wait for all workers to finish their current work
+    wait();
+
+    // set a dummy task in case nothing has been done yet
+    if (!m_task) {
+        m_task = []() {};
+    }
+
     // exit worker main loops
     m_accept_work = false;
     m_signal_work.notify_all();
@@ -42,10 +50,7 @@ void Parallel::run(std::function<void(void)>&& task)
     m_task();
 
     // wait for all workers to finish
-    std::unique_lock<std::mutex> ul(m_mutex);
-    while (m_workers_active) {
-        m_signal_done.wait(ul);
-    }
+    wait();
 }
 
 void Parallel::do_work(int32_t worker_id, std::function<void(uint32_t)>&& func_worker_id)
@@ -62,3 +67,10 @@ void Parallel::do_work(int32_t worker_id, std::function<void(uint32_t)>&& func_w
     }
 }
 
+void Parallel::wait()
+{
+    std::unique_lock<std::mutex> ul(m_mutex);
+    while (m_workers_active) {
+        m_signal_done.wait(ul);
+    }
+}
