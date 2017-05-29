@@ -113,6 +113,12 @@ void screen_init(GFX_INFO* info)
     gfx_hwnd = info->hWnd;
     gfx_hwnd_status = info->hStatusBar;
 
+    BOOL zoomed = IsZoomed(gfx_hwnd);
+
+    if (zoomed) {
+        ShowWindow(gfx_hwnd, SW_RESTORE);
+    }
+
     if (!prev_fullscreen) {
         // make window resizable for the user
         LONG style = GetWindowLong(gfx_hwnd, GWL_STYLE);
@@ -135,6 +141,10 @@ void screen_init(GFX_INFO* info)
         AdjustWindowRect(&rect, style, FALSE);
         SetWindowPos(gfx_hwnd, HWND_TOP, rect.left, rect.top,
             rect.right - rect.left, rect.bottom - rect.top, SWP_SHOWWINDOW);
+    }
+
+    if (zoomed) {
+        ShowWindow(gfx_hwnd, SW_MAXIMIZE);
     }
 
     PIXELFORMATDESCRIPTOR win_pfd = {
@@ -301,7 +311,7 @@ void screen_set_full(bool fullscreen)
 {
     static HMENU old_menu;
     static LONG old_style;
-    static RECT old_rect;
+    static WINDOWPLACEMENT old_pos;
 
     if (fullscreen) {
         // hide curser
@@ -319,7 +329,7 @@ void screen_set_full(bool fullscreen)
         }
 
         // save old window position and size
-        GetWindowRect(gfx_hwnd, &old_rect);
+        GetWindowPlacement(gfx_hwnd, &old_pos);
 
         // use virtual screen dimensions for fullscreen mode
         int vs_width = GetSystemMetrics(SM_CXVIRTUALSCREEN);
@@ -351,9 +361,7 @@ void screen_set_full(bool fullscreen)
         SetWindowLong(gfx_hwnd, GWL_STYLE, old_style);
 
         // restore window size and position
-        SetWindowPos(gfx_hwnd, HWND_TOP, old_rect.left, old_rect.top,
-            old_rect.right - old_rect.left, old_rect.bottom - old_rect.top,
-            SWP_SHOWWINDOW);
+        SetWindowPlacement(gfx_hwnd, &old_pos);
     }
 
     prev_fullscreen = fullscreen;
