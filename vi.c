@@ -1007,11 +1007,12 @@ int vi_process_init(void)
 
 
 
-#if TV_FADE_EMULATION
-    int i, j;
+    int i;
     if (!(vitype & 2))
     {
+#if TV_FADE_EMULATION
         memset(tvfadeoutstate, 0, PRESCALE_HEIGHT * sizeof(uint32_t));
+#endif
         //for (i = 0; i < PRESCALE_HEIGHT; i++)
         for (i = 0; i < vactivelines; i++)
             memset(&PreScale[i * pitchindwords], 0, PRESCALE_WIDTH * sizeof(int32_t));
@@ -1022,8 +1023,8 @@ int vi_process_init(void)
         prevwasblank = 0;
 
 
-
-
+#if TV_FADE_EMULATION
+        int j;
         if (h_start > 0 && h_start < PRESCALE_WIDTH)
         {
             for (i = 0; i < vactivelines; i++)
@@ -1103,8 +1104,8 @@ int vi_process_init(void)
                 else
                     memset(&PreScale[i * pitchindwords], 0, PRESCALE_WIDTH * sizeof(uint32_t));
         }
-    }
 #endif
+    }
 
     return 1;
 }
