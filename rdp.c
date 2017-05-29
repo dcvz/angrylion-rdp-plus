@@ -8,6 +8,7 @@
 #include "parallel_c.hpp"
 
 #include <stdio.h>
+#include <memory.h>
 
 // tctables.h
 static const int32_t norm_point_table[64] = {
