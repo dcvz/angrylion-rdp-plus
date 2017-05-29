@@ -7,6 +7,10 @@
 #include "irand.h"
 #include "parallel_c.hpp"
 
+// CRT fading emulation. Disabled on default, because the visual quality,
+// performance and the code for it is pretty shoddy.
+#define TV_FADE_EMULATION 0
+
 typedef struct
 {
     uint8_t r, g, b, cvg;
@@ -14,13 +18,16 @@ typedef struct
 
 // states
 static bool mt_en = true;
-static uint32_t tvfadeoutstate[625];
 static uint32_t prevvicurrent;
 static int emucontrolsvicurrent;
 static int prevserrate;
 static int oldlowerfield;
 static int32_t oldvstart;
 static uint32_t prevwasblank;
+
+#if TV_FADE_EMULATION
+static uint32_t tvfadeoutstate[625];
+#endif
 
 static int pitchindwords;
 static int ispal;
@@ -710,7 +717,7 @@ int vi_process_init(void)
 
 
 
-    int i, j;
+
     uint32_t final = 0;
 
 
@@ -1000,7 +1007,8 @@ int vi_process_init(void)
 
 
 
-
+#if TV_FADE_EMULATION
+    int i, j;
     if (!(vitype & 2))
     {
         memset(tvfadeoutstate, 0, PRESCALE_HEIGHT * sizeof(uint32_t));
@@ -1096,6 +1104,7 @@ int vi_process_init(void)
                     memset(&PreScale[i * pitchindwords], 0, PRESCALE_WIDTH * sizeof(uint32_t));
         }
     }
+#endif
 
     return 1;
 }
