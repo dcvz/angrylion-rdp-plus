@@ -73,6 +73,9 @@ static uint32_t gamma_table[0x100];
 static uint32_t gamma_dither_table[0x4000];
 static int vi_restore_table[0x400];
 
+#define PRESCALE_WIDTH 640
+#define PRESCALE_HEIGHT 625
+
 STRICTINLINE void restore_filter16(int* r, int* g, int* b, uint32_t fboffset, uint32_t num, uint32_t hres, uint32_t fetchbugstate)
 {
 
@@ -701,7 +704,7 @@ void vi_init(void)
     prevwasblank = 0;
 }
 
-int vi_begin(void)
+int vi_process_init(void)
 {
 
 
@@ -942,7 +945,8 @@ int vi_begin(void)
         msg_error("VI_V_SYNC_REG too big");
     if (vactivelines < 0)
         return 0;
-    vactivelines >>= lineshifter;
+    //vactivelines >>= lineshifter;
+    vactivelines = (ispal ? 576 : 480) >> lineshifter;
 
     int validh = (hres > 0 && h_start < PRESCALE_WIDTH);
 
@@ -981,8 +985,9 @@ int vi_begin(void)
         return 0;
     }
 
-    screen_lock(&PreScale, &pitchindwords);
+    screen_get_buffer(PRESCALE_WIDTH, vactivelines, PRESCALE_WIDTH, 480, &PreScale, &pitchindwords);
 
+    pitchindwords >>= 2;
     linecount = serration_pulses ? (pitchindwords << 1) : pitchindwords;
     prescale_ptr = v_start * linecount + h_start + (lowerfield ? pitchindwords : 0);
 
@@ -999,7 +1004,8 @@ int vi_begin(void)
     if (!(vitype & 2))
     {
         memset(tvfadeoutstate, 0, PRESCALE_HEIGHT * sizeof(uint32_t));
-        for (i = 0; i < PRESCALE_HEIGHT; i++)
+        //for (i = 0; i < PRESCALE_HEIGHT; i++)
+        for (i = 0; i < vactivelines; i++)
             memset(&PreScale[i * pitchindwords], 0, PRESCALE_WIDTH * sizeof(int32_t));
         prevwasblank = 1;
     }
@@ -1385,18 +1391,10 @@ void vi_process(void)
     }
 }
 
-void vi_end(void)
-{
-    screen_unlock();
-
-    int visiblelines = (ispal ? 576 : 480) >> lineshifter;
-    screen_swap(visiblelines);
-}
-
 void vi_update(void)
 {
-    // try to start VI, abort if there's nothing to display
-    if (!vi_begin()) {
+    // try to init VI frame, abort if there's nothing to display
+    if (!vi_process_init()) {
         return;
     }
 
@@ -1407,5 +1405,6 @@ void vi_update(void)
         vi_process();
     }
 
-    vi_end();
+    // render frame to screen
+    screen_swap();
 }

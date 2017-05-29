@@ -45,6 +45,12 @@
     <ClCompile Include="parallel_c.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="gl_core_3_3.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="wgl_ext.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="rdp.h">
@@ -75,6 +81,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="parallel_c.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="gl_core_3_3.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="wgl_ext.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

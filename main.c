@@ -8,10 +8,8 @@
 #include <stdio.h>
 #include <stdbool.h>
 
-static const int screen_width = 1024;
-static const int screen_height = 768;
-
-static bool warn_hle = false;
+static bool warn_hle;
+static bool fullscreen;
 
 GFX_INFO gfx;
 
@@ -21,6 +19,8 @@ EXPORT void CALL CaptureScreen(char* Directory)
 
 EXPORT void CALL ChangeWindow(void)
 {
+    fullscreen = !fullscreen;
+    screen_set_full(fullscreen);
 }
 
 EXPORT void CALL CloseDLL(void)
@@ -59,7 +59,6 @@ EXPORT BOOL CALL InitiateGFX(GFX_INFO Gfx_Info)
 
 EXPORT void CALL MoveScreen(int xpos, int ypos)
 {
-    screen_move();
 }
 
 EXPORT void CALL ProcessDList(void)
@@ -83,7 +82,7 @@ EXPORT void CALL RomClosed(void)
 
 EXPORT void CALL RomOpen(void)
 {
-    screen_init(PRESCALE_WIDTH, PRESCALE_HEIGHT, screen_width, screen_height);
+    screen_init(&gfx);
     rdp_init();
 }
 

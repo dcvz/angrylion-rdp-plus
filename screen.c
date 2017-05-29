@@ -1,196 +1,379 @@
 #include "screen.h"
-#include "gfx_1.3.h"
 #include "msg.h"
+#include "gl_core_3_3.h"
+#include "wgl_ext.h"
 
-#include <ddraw.h>
+#include <stdlib.h>
+#include <stdint.h>
 
-static LPDIRECTDRAW7 lpdd = 0;
-static LPDIRECTDRAWSURFACE7 lpddsprimary;
-static LPDIRECTDRAWSURFACE7 lpddsback;
-static DDSURFACEDESC2 ddsd;
-static HRESULT res;
-static RECT dst, src;
+#pragma comment (lib, "opengl32.lib")
 
-extern GFX_INFO gfx;
+// default size of the window
+#define WINDOW_DEFAULT_WIDTH 640
+#define WINDOW_DEFAULT_HEIGHT 480
 
-void screen_init(int width, int height, int screen_width, int screen_height)
+// supposedly, these settings are most hardware-friendly on all platforms
+#define TEX_INTERNAL_FORMAT GL_RGBA8
+#define TEX_FORMAT GL_BGRA
+#define TEX_TYPE GL_UNSIGNED_INT_8_8_8_8_REV
+#define TEX_BYTES_PER_PIXEL sizeof(uint32_t)
+
+// OpenGL objects
+static GLuint program;
+static GLuint vao;
+static GLuint texture;
+
+// framebuffer texture states
+static uint32_t* tex_buffer;
+static bool tex_buffer_resize;
+static int32_t tex_width;
+static int32_t tex_height;
+static int32_t tex_display_width;
+static int32_t tex_display_height;
+
+// context states
+static HDC dc;
+static HGLRC glrc;
+static HGLRC glrc_core;
+static HWND gfx_hwnd;
+static HWND gfx_hwnd_status;
+static bool prev_fullscreen;
+
+static GLuint gl_shader_compile(GLenum type, const GLchar* source)
 {
-    RECT bigrect, smallrect, statusrect;
+    GLuint shader = glCreateShader(type);
+    glShaderSource(shader, 1, &source, NULL);
+    glCompileShader(shader);
 
-    GetWindowRect(gfx.hWnd,&bigrect);
-    GetClientRect(gfx.hWnd,&smallrect);
-    int rightdiff = screen_width - smallrect.right;
-    int bottomdiff = screen_height - smallrect.bottom;
-    if (gfx.hStatusBar)
-    {
-        GetClientRect(gfx.hStatusBar, &statusrect);
-        bottomdiff += statusrect.bottom;
+    GLint param;
+    glGetShaderiv(shader, GL_COMPILE_STATUS, &param);
+
+    if (!param) {
+        GLchar log[4096];
+        glGetShaderInfoLog(shader, sizeof(log), NULL, log);
+        msg_error("%s shader error: %s\n", type == GL_FRAGMENT_SHADER ? "Frag" : "Vert", log);
     }
-    MoveWindow(gfx.hWnd, bigrect.left, bigrect.top, bigrect.right - bigrect.left + rightdiff, bigrect.bottom - bigrect.top + bottomdiff, TRUE);
 
-
-    DDPIXELFORMAT ftpixel;
-    LPDIRECTDRAWCLIPPER lpddcl;
-
-    res = DirectDrawCreateEx(0, (LPVOID*)&lpdd, &IID_IDirectDraw7, 0);
-    if(res != DD_OK)
-        msg_error("Couldn't create a DirectDraw object");
-    res = IDirectDraw_SetCooperativeLevel(lpdd, gfx.hWnd, DDSCL_NORMAL);
-    if(res != DD_OK)
-        msg_error("Couldn't set a cooperative level. Error code %x", res);
-
-    memset(&ddsd, 0, sizeof(ddsd));
-    ddsd.dwSize = sizeof(ddsd);
-    ddsd.dwFlags = DDSD_CAPS;
-    ddsd.ddsCaps.dwCaps = DDSCAPS_PRIMARYSURFACE;
-
-
-    res = IDirectDraw_CreateSurface(lpdd, &ddsd, &lpddsprimary, 0);
-    if(res != DD_OK)
-        msg_error("CreateSurface for a primary surface failed. Error code %x", res);
-
-
-    ddsd.dwFlags = DDSD_CAPS | DDSD_HEIGHT | DDSD_WIDTH | DDSD_PIXELFORMAT;
-    ddsd.ddsCaps.dwCaps = DDSCAPS_OFFSCREENPLAIN;
-    ddsd.dwWidth = width;
-    ddsd.dwHeight = height;
-    memset(&ftpixel, 0, sizeof(ftpixel));
-    ftpixel.dwSize = sizeof(ftpixel);
-    ftpixel.dwFlags = DDPF_RGB;
-    ftpixel.dwRGBBitCount = 32;
-    ftpixel.dwRBitMask = 0xff0000;
-    ftpixel.dwGBitMask = 0xff00;
-    ftpixel.dwBBitMask = 0xff;
-    ddsd.ddpfPixelFormat = ftpixel;
-    res = IDirectDraw_CreateSurface(lpdd, &ddsd, &lpddsback, 0);
-    if (res == DDERR_INVALIDPIXELFORMAT)
-        msg_error("ARGB8888 is not supported. You can try changing desktop color depth to 32-bit, but most likely that won't help.");
-    else if(res != DD_OK)
-        msg_error("CreateSurface for a secondary surface failed. Error code %x", res);
-
-
-    res = IDirectDrawSurface_GetSurfaceDesc(lpddsback, &ddsd);
-    if (res != DD_OK)
-        msg_error("GetSurfaceDesc failed.");
-    if ((ddsd.lPitch & 3) || ddsd.lPitch < (width << 2))
-        msg_error("Pitch of a secondary surface is either not 32 bit aligned or two small.");
-
-
-    res = IDirectDraw_CreateClipper(lpdd, 0, &lpddcl, 0);
-    if (res != DD_OK)
-        msg_error("Couldn't create a clipper.");
-    res = IDirectDrawClipper_SetHWnd(lpddcl, 0, gfx.hWnd);
-    if (res != DD_OK)
-        msg_error("Couldn't register a windows handle as a clipper.");
-    res = IDirectDrawSurface_SetClipper(lpddsprimary, lpddcl);
-    if (res != DD_OK)
-        msg_error("Couldn't attach a clipper to a surface.");
-
-
-    src.top = src.left = 0;
-    src.bottom = 0;
-    src.right = width;
-
-
-
-
-    POINT p;
-    p.x = p.y = 0;
-    GetClientRect(gfx.hWnd, &dst);
-    ClientToScreen(gfx.hWnd, &p);
-    OffsetRect(&dst, p.x, p.y);
-    GetClientRect(gfx.hStatusBar, &statusrect);
-    dst.bottom -= statusrect.bottom;
-
-
-
-    DDBLTFX ddbltfx;
-    ddbltfx.dwSize = sizeof(DDBLTFX);
-    ddbltfx.dwFillColor = 0;
-    res = IDirectDrawSurface_Blt(lpddsprimary, &dst, 0, 0, DDBLT_COLORFILL | DDBLT_WAIT, &ddbltfx);
-    src.bottom = height;
-    res = IDirectDrawSurface_Blt(lpddsback, &src, 0, 0, DDBLT_COLORFILL | DDBLT_WAIT, &ddbltfx);
+    return shader;
 }
 
-void screen_lock(int** prescale, int* pitch)
+static GLuint gl_shader_link(GLuint vert, GLuint frag)
 {
-    res = IDirectDrawSurface_Lock(lpddsback, 0, &ddsd, DDLOCK_SURFACEMEMORYPTR | DDLOCK_NOSYSLOCK, 0);
-    if (res == DDERR_SURFACELOST)
-    {
-        while(1){
-        res = IDirectDrawSurface_Restore(lpddsback);
-        if (res != DD_OK)
-            msg_error("Restore failed with DirectDraw error %x", res);
-        res = IDirectDrawSurface_Lock(lpddsback, 0, &ddsd, DDLOCK_SURFACEMEMORYPTR | DDLOCK_NOSYSLOCK, 0);
-        if (res != DDERR_SURFACELOST)
-            break;
-        };
+    GLuint program = glCreateProgram();
+    glAttachShader(program, vert);
+    glAttachShader(program, frag);
+    glLinkProgram(program);
+
+    GLint param;
+    glGetProgramiv(program, GL_LINK_STATUS, &param);
+
+    if (!param) {
+        GLchar log[4096];
+        glGetProgramInfoLog(program, sizeof(log), NULL, log);
+        msg_error("Shader link error: %s\n", log);
     }
-    else if (res != DD_OK)
-        msg_error("Lock failed with DirectDraw error %x", res);
 
-    *prescale = (int*)ddsd.lpSurface;
-    *pitch = ddsd.lPitch >> 2;
+    glDeleteShader(frag);
+    glDeleteShader(vert);
+
+    return program;
 }
 
-void screen_unlock()
+static void gl_check_errors(void)
 {
-    res = IDirectDrawSurface_Unlock(lpddsback, 0);
-    if (res != DD_OK && res != DDERR_GENERIC && res != DDERR_SURFACELOST)
-        msg_error("Couldn't unlock the offscreen surface with DirectDraw error %x", res);
-}
-
-void screen_swap(int visiblelines)
-{
-    src.bottom = visiblelines;
-
-    if (dst.left < dst.right && dst.top < dst.bottom)
-    {
-        res = IDirectDrawSurface_Blt(lpddsprimary, &dst, lpddsback, &src, DDBLT_WAIT, 0);
-        if (res == DDERR_SURFACELOST)
-        {
-            while(1){
-            res = IDirectDraw4_RestoreAllSurfaces(lpdd);
-            if (res != DD_OK)
-                msg_error("RestoreAllSurfaces failed with DirectDraw error %x", res);
-            res = IDirectDrawSurface_Blt(lpddsprimary, &dst, lpddsback, &src, DDBLT_WAIT, 0);
-            if (res != DDERR_SURFACELOST)
+    GLenum err;
+    while ((err = glGetError()) != GL_NO_ERROR) {
+        char* err_str;
+        switch (err) {
+            case GL_INVALID_OPERATION:
+                err_str = "INVALID_OPERATION";
                 break;
-            }
+            case GL_INVALID_ENUM:
+                err_str = "INVALID_ENUM";
+                break;
+            case GL_INVALID_VALUE:
+                err_str = "INVALID_VALUE";
+                break;
+            case GL_OUT_OF_MEMORY:
+                err_str = "OUT_OF_MEMORY";
+                break;
+            case GL_INVALID_FRAMEBUFFER_OPERATION:
+                err_str = "INVALID_FRAMEBUFFER_OPERATION";
+                break;
+            default:
+                err_str = "unknown";
         }
-        else if (res != DD_OK && res != DDERR_GENERIC && res != DDERR_OUTOFMEMORY)
-            msg_error("Scaled blit failed with DirectDraw error %x", res);
-
+        msg_warning("OpenGL error: %d (%s)", err, err_str);
     }
 }
 
-void screen_move()
+void screen_init(GFX_INFO* info)
 {
-    RECT statusrect;
-    POINT p;
-    p.x = p.y = 0;
-    GetClientRect(gfx.hWnd, &dst);
-    ClientToScreen(gfx.hWnd, &p);
-    OffsetRect(&dst, p.x, p.y);
-    GetClientRect(gfx.hStatusBar, &statusrect);
-    dst.bottom -= statusrect.bottom;
+    gfx_hwnd = info->hWnd;
+    gfx_hwnd_status = info->hStatusBar;
+
+    if (!prev_fullscreen) {
+        // make window resizable for the user
+        LONG style = GetWindowLong(gfx_hwnd, GWL_STYLE);
+        style |= WS_SIZEBOX | WS_MAXIMIZEBOX;
+        SetWindowLong(gfx_hwnd, GWL_STYLE, style);
+
+        // resize window to 640x480
+        RECT rect;
+        GetWindowRect(gfx_hwnd, &rect);
+
+        rect.right = rect.left + WINDOW_DEFAULT_WIDTH;
+        rect.bottom = rect.top + WINDOW_DEFAULT_HEIGHT;
+
+        if (gfx_hwnd_status) {
+            RECT statusrect;
+            GetClientRect(gfx_hwnd_status, &statusrect);
+            rect.bottom += statusrect.bottom - statusrect.top;
+        }
+
+        AdjustWindowRect(&rect, style, FALSE);
+        SetWindowPos(gfx_hwnd, HWND_TOP, rect.left, rect.top,
+            rect.right - rect.left, rect.bottom - rect.top, SWP_SHOWWINDOW);
+    }
+
+    PIXELFORMATDESCRIPTOR win_pfd = {
+        sizeof(PIXELFORMATDESCRIPTOR), 1,
+        PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER, // Flags
+        PFD_TYPE_RGBA, // The kind of framebuffer. RGBA or palette.
+        32,            // Colordepth of the framebuffer.
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        24, // Number of bits for the depthbuffer
+        8,  // Number of bits for the stencilbuffer
+        0,  // Number of Aux buffers in the framebuffer.
+        PFD_MAIN_PLANE, 0, 0, 0, 0
+    };
+
+    dc = GetDC(gfx_hwnd);
+    if (!dc) {
+        msg_error("Can't get device context.");
+    }
+
+    int win_pf = ChoosePixelFormat(dc, &win_pfd);
+    if (!win_pf) {
+        msg_error("Can't choose pixel format.");
+    }
+    SetPixelFormat(dc, win_pf, &win_pfd);
+
+    // create legacy context, required for wglGetProcAddress to work properly
+    glrc = wglCreateContext(dc);
+    if (!glrc) {
+        msg_error("Can't create OpenGL context.");
+    }
+    wglMakeCurrent(dc, glrc);
+
+    // attributes for a 3.3 core profile without all the legacy stuff
+    GLint attribs[] =
+    {
+        WGL_CONTEXT_MAJOR_VERSION_ARB, 3,
+        WGL_CONTEXT_MINOR_VERSION_ARB, 3,
+        WGL_CONTEXT_FLAGS_ARB, WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB,
+        WGL_CONTEXT_PROFILE_MASK_ARB, WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
+        0
+    };
+
+    // create the actual context
+    glrc_core = wglCreateContextAttribsARB(dc, glrc, attribs);
+    if (glrc_core) {
+        wglMakeCurrent(dc, glrc_core);
+    } else {
+        // rendering probably still works with the legacy context, so just send
+        // a warning
+        msg_warning("Can't create OpenGL 3.3 core context.");
+    }
+
+    // shader sources for drawing a clipped full-screen triangle. the geometry
+    // is defined by the vertex ID, so a VBO is not required.
+    const GLchar* vert_shader =
+        "#version 330 core\n"
+        "out vec2 uv;\n"
+        "void main(void) {\n"
+        "    uv = vec2((gl_VertexID << 1) & 2, gl_VertexID & 2);\n"
+        "    gl_Position = vec4(uv * vec2(2.0, -2.0) + vec2(-1.0, 1.0), 0.0, 1.0);\n"
+        "}\n";
+
+    const GLchar* frag_shader =
+        "#version 330 core\n"
+        "in vec2 uv;\n"
+        "layout(location = 0) out vec4 color;\n"
+        "uniform sampler2D tex0;\n"
+        "void main(void) {\n"
+        "    color = texture(tex0, uv);\n"
+        "}\n";
+
+    // compile and link OpenGL program
+    GLuint vert = gl_shader_compile(GL_VERTEX_SHADER, vert_shader);
+    GLuint frag = gl_shader_compile(GL_FRAGMENT_SHADER, frag_shader);
+    program = gl_shader_link(vert, frag);
+    glUseProgram(program);
+
+    // prepare dummy VAO
+    glGenVertexArrays(1, &vao);
+    glBindVertexArray(vao);
+
+    // prepare texture
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    // check if there was an error when using any of the commands above
+    gl_check_errors();
 }
 
-void screen_close()
+void screen_get_buffer(int width, int height, int display_width, int display_height, int** buffer, int* pitch)
 {
-    if (lpddsback)
-    {
-        IDirectDrawSurface_Release(lpddsback);
-        lpddsback = 0;
+    // check if the texture memory needs to be re-allocated to change the size
+    tex_buffer_resize = tex_width != width || tex_height != height;
+
+    if (tex_buffer_resize) {
+        tex_buffer = realloc(tex_buffer, width * height * TEX_BYTES_PER_PIXEL);
     }
-    if (lpddsprimary)
-    {
-        IDirectDrawSurface_Release(lpddsprimary);
-        lpddsprimary = 0;
+
+    tex_width = width;
+    tex_height = height;
+    tex_display_width = display_width;
+    tex_display_height = display_height;
+
+    *buffer = (int*)tex_buffer;
+    *pitch = width * TEX_BYTES_PER_PIXEL;
+}
+
+void screen_swap(void)
+{
+    // copy local framebuffer to texture
+    if (tex_buffer_resize) {
+        // texture size has changed, create new texture
+        glTexImage2D(GL_TEXTURE_2D, 0, TEX_INTERNAL_FORMAT, tex_width,
+            tex_height, 0, TEX_FORMAT, TEX_TYPE, tex_buffer);
+        tex_buffer_resize = false;
+    } else {
+        // same texture size, just update data to reduce overhead
+        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, tex_width, tex_height,
+            TEX_FORMAT, TEX_TYPE, tex_buffer);
     }
-    if (lpdd)
-    {
-        IDirectDraw_Release(lpdd);
-        lpdd = 0;
+
+    RECT rect;
+    GetClientRect(gfx_hwnd, &rect);
+
+    int32_t vp_width = rect.right - rect.left;
+    int32_t vp_height = rect.bottom - rect.top;
+
+    // default to bottom left corner of the window
+    int32_t vp_x = 0;
+    int32_t vp_y = 0;
+
+    int32_t hw = tex_display_height * vp_width;
+    int32_t wh = tex_display_width * vp_height;
+
+    // add letterboxes or pillarboxes if the window has a different aspect ratio
+    // than the current display mode
+    if (hw > wh) {
+        int32_t w_max = wh / tex_display_height;
+        vp_x = (vp_width - w_max) / 2;
+        vp_width = w_max;
+    } else if (hw < wh) {
+        int32_t h_max = hw / tex_display_width;
+        vp_y = (vp_height - h_max) / 2;
+        vp_height = h_max;
     }
+
+    // configure viewport
+    glViewport(vp_x, vp_y, vp_width, vp_height);
+
+    // draw fullscreen triangle
+    glDrawArrays(GL_TRIANGLES, 0, 3);
+
+    // swap front and back buffers
+    SwapBuffers(dc);
+
+    // check if there was an error when using any of the commands above
+    gl_check_errors();
+}
+
+void screen_set_full(bool fullscreen)
+{
+    static HMENU old_menu;
+    static LONG old_style;
+    static RECT old_rect;
+
+    if (fullscreen) {
+        // hide curser
+        ShowCursor(FALSE);
+
+        // hide status bar
+        if (gfx_hwnd_status) {
+            ShowWindow(gfx_hwnd_status, SW_HIDE);
+        }
+
+        // disable menu and save it to restore it later
+        old_menu = GetMenu(gfx_hwnd);
+        if (old_menu) {
+            SetMenu(gfx_hwnd, NULL);
+        }
+
+        // save old window position and size
+        GetWindowRect(gfx_hwnd, &old_rect);
+
+        // use virtual screen dimensions for fullscreen mode
+        int vs_width = GetSystemMetrics(SM_CXVIRTUALSCREEN);
+        int vs_height = GetSystemMetrics(SM_CYVIRTUALSCREEN);
+
+        // disable all styles to get a borderless window and save it to restore
+        // it later
+        old_style = GetWindowLong(gfx_hwnd, GWL_STYLE);
+        SetWindowLong(gfx_hwnd, GWL_STYLE, WS_VISIBLE);
+
+        // resize window so it covers the entire virtual screen
+        SetWindowPos(gfx_hwnd, HWND_TOP, 0, 0, vs_width, vs_height, SWP_SHOWWINDOW);
+    } else {
+        // restore cursor
+        ShowCursor(TRUE);
+
+        // restore status bar
+        if (gfx_hwnd_status) {
+            ShowWindow(gfx_hwnd_status, SW_SHOW);
+        }
+
+        // restore menu
+        if (old_menu) {
+            SetMenu(gfx_hwnd, old_menu);
+            old_menu = NULL;
+        }
+
+        // restore style
+        SetWindowLong(gfx_hwnd, GWL_STYLE, old_style);
+
+        // restore window size and position
+        SetWindowPos(gfx_hwnd, HWND_TOP, old_rect.left, old_rect.top,
+            old_rect.right - old_rect.left, old_rect.bottom - old_rect.top,
+            SWP_SHOWWINDOW);
+    }
+
+    prev_fullscreen = fullscreen;
+}
+
+void screen_close(void)
+{
+    if (tex_buffer) {
+        free(tex_buffer);
+        tex_buffer = NULL;
+    }
+
+    tex_width = 0;
+    tex_height = 0;
+
+    glDeleteTextures(1, &texture);
+    glDeleteVertexArrays(1, &vao);
+    glDeleteProgram(program);
+
+    if (glrc_core) {
+        wglDeleteContext(glrc_core);
+    }
+
+    wglDeleteContext(glrc);
 }

@@ -62,12 +62,10 @@
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <PrecompiledHeader />
       <WarningLevel>Level3</WarningLevel>
-      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
       <AdditionalOptions>ddraw.lib dxguid.lib %(AdditionalOptions)</AdditionalOptions>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-      <ProgramDatabaseFile>$(OutDir)angrylion.pdb</ProgramDatabaseFile>
       <SubSystem>Windows</SubSystem>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <DataExecutionPrevention />
@@ -98,7 +96,6 @@
     </ClCompile>
     <Link>
       <AdditionalOptions>ddraw.lib dxguid.lib %(AdditionalOptions)</AdditionalOptions>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
       <GenerateMapFile>true</GenerateMapFile>
       <MapExports>true</MapExports>
       <SubSystem>Windows</SubSystem>
@@ -111,6 +108,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="gl_core_3_3.c" />
     <ClCompile Include="irand.h" />
     <ClCompile Include="main.c" />
     <ClCompile Include="msg.c" />
@@ -121,10 +119,12 @@
     <ClCompile Include="rdram.c" />
     <ClCompile Include="screen.c" />
     <ClCompile Include="vi.c" />
+    <ClCompile Include="wgl_ext.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="common.h" />
     <ClInclude Include="gfx_1.3.h" />
+    <ClInclude Include="gl_core_3_3.h" />
     <ClInclude Include="msg.h" />
     <ClInclude Include="parallel.hpp" />
     <ClInclude Include="parallel_c.hpp" />
@@ -133,6 +133,7 @@
     <ClInclude Include="screen.h" />
     <ClInclude Include="rdp.h" />
     <ClInclude Include="vi.h" />
+    <ClInclude Include="wgl_ext.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
