@@ -4,17 +4,84 @@
 #include "plugin.h"
 #include "msg.h"
 #include "screen.h"
+#include "rdram.h"
 
 #include <stdio.h>
 #include <stdbool.h>
+#include <ctype.h>
 
 static bool warn_hle;
 static bool fullscreen;
+static int32_t screenshot_id;
 
 GFX_INFO gfx;
 
+static bool file_exists(char* path)
+{
+    FILE* fp = fopen(path, "rb");
+
+    if (!fp) {
+        return false;
+    }
+
+    fclose(fp);
+    return true;
+}
+
+static char filter_char(char c)
+{
+    if (isalnum(c) || c == '_' || c == '-' || c == '.') {
+        return c;
+    } else {
+        return ' ';
+    }
+}
+
 EXPORT void CALL CaptureScreen(char* Directory)
 {
+    // can't have more than 9999 screenshot files per ROM with four digits
+    if (screenshot_id == 9999) {
+        msg_warning("Screenshots folder overflow.");
+        return;
+    }
+
+    // copy game name from ROM header, which is encoded in Shift_JIS.
+    // most games just use the ASCII subset, so filter out the rest.
+    char rom_name[21];
+    int i;
+    for (i = 0; i < 20; i++) {
+        rom_name[i] = filter_char(gfx.HEADER[(32 + i) ^ BYTE_ADDR_XOR]);
+    }
+
+    // make sure there's at least one whitespace that will terminate the string
+    // below
+    rom_name[i] = ' ';
+
+    // trim trailing whitespaces
+    for (; i > 0; i--) {
+        if (rom_name[i] != ' ') {
+            break;
+        }
+        rom_name[i] = 0;
+    }
+
+    // game title is empty or invalid, use safe fallback using the four-character
+    // game ID
+    if (i == 0) {
+        for (; i < 4; i++) {
+            rom_name[i] = filter_char(gfx.HEADER[(59 + i) ^ BYTE_ADDR_XOR]);
+        }
+        rom_name[i] = 0;
+    }
+
+    // generate and find an unused file path
+    char path[MAX_PATH];
+    do {
+        sprintf_s(path, sizeof(path), "%s/%s_%04d.bmp", Directory, rom_name,
+            screenshot_id++);
+    } while (file_exists(path));
+
+    screen_capture(path);
 }
 
 EXPORT void CALL ChangeWindow(void)
@@ -82,6 +149,9 @@ EXPORT void CALL RomClosed(void)
 
 EXPORT void CALL RomOpen(void)
 {
+    // game name might have changed, so reset the screenshot ID
+    screenshot_id = 0;
+
     screen_init(&gfx);
     rdp_init();
 }

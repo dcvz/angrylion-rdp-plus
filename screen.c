@@ -5,6 +5,7 @@
 
 #include <stdlib.h>
 #include <stdint.h>
+#include <stdio.h>
 
 #pragma comment (lib, "opengl32.lib")
 
@@ -355,6 +356,47 @@ void screen_set_full(bool fullscreen)
     }
 
     prev_fullscreen = fullscreen;
+}
+
+void screen_capture(char* path)
+{
+    // prepare bitmap headers
+    size_t pitch = tex_width * TEX_BYTES_PER_PIXEL;
+    size_t img_size = tex_height * pitch;
+
+    BITMAPINFOHEADER ihdr = {0};
+    ihdr.biSize = sizeof(ihdr);
+    ihdr.biWidth = tex_width;
+    ihdr.biHeight = tex_height;
+    ihdr.biPlanes = 1;
+    ihdr.biBitCount = 32;
+    ihdr.biSizeImage = img_size;
+
+    // calculate aspect ratio
+    const int32_t ppmbase = 2835; // 72 DPI × 39.3701 inches per meter
+    ihdr.biXPelsPerMeter = (ppmbase * tex_width) / tex_display_width;
+    ihdr.biYPelsPerMeter = (ppmbase * tex_height) / tex_display_height;
+
+    BITMAPFILEHEADER fhdr = {0};
+    fhdr.bfType = 'B' | ('M' << 8);
+    fhdr.bfOffBits = sizeof(fhdr) + sizeof(ihdr) + 10;
+    fhdr.bfSize = img_size + fhdr.bfOffBits;
+
+    FILE* fp = fopen(path, "wb");
+
+    // write bitmap headers
+    fwrite(&fhdr, sizeof(fhdr), 1, fp);
+    fwrite(&ihdr, sizeof(ihdr), 1, fp);
+
+    // write bitmap contents
+    fseek(fp, fhdr.bfOffBits, SEEK_SET);
+
+    uint8_t* buffer = (uint8_t*) tex_buffer;
+    for (int32_t y = (tex_height - 1); y >= 0; y--) {
+        fwrite(buffer + pitch * y, pitch, 1, fp);
+    }
+
+    fclose(fp);
 }
 
 void screen_close(void)
