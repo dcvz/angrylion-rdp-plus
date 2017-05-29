@@ -4,3 +4,5 @@ Current features:
 * More maintainable code base by dividing the huge n64video.cpp into smaller pieces.
 * Improved portability by separating the emulator plugin interface and window management from the RDP emulation core.
 * Multi-threaded rendering support, which increases performance on multi-core CPUs significantly.
+* Replaced DirectDraw interface with a modern OpenGL 3.3 implementation.
+* Slightly improved interlacing performance.
