@@ -178,11 +178,9 @@ void screen_init(GFX_INFO* info)
     wglMakeCurrent(dc, glrc);
 
     // attributes for a 3.3 core profile without all the legacy stuff
-    GLint attribs[] =
-    {
+    GLint attribs[] = {
         WGL_CONTEXT_MAJOR_VERSION_ARB, 3,
         WGL_CONTEXT_MINOR_VERSION_ARB, 3,
-        WGL_CONTEXT_FLAGS_ARB, WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB,
         WGL_CONTEXT_PROFILE_MASK_ARB, WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
         0
     };
