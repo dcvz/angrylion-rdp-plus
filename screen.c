@@ -242,8 +242,9 @@ void screen_get_buffer(int width, int height, int display_width, int display_hei
     tex_buffer_resize = tex_width != width || tex_height != height;
 
     if (tex_buffer_resize) {
-        tex_buffer = realloc(tex_buffer, width * height * TEX_BYTES_PER_PIXEL);
-        memset(tex_buffer, 0, width * height * TEX_BYTES_PER_PIXEL);
+        size_t tex_buffer_size = width * height * TEX_BYTES_PER_PIXEL;
+        tex_buffer = realloc(tex_buffer, tex_buffer_size);
+        memset(tex_buffer, 0, tex_buffer_size);
     }
 
     tex_width = width;
