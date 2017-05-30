@@ -247,8 +247,11 @@ void screen_get_buffer(int width, int height, int display_width, int display_hei
         memset(tex_buffer, 0, tex_buffer_size);
     }
 
+    // texture size for the actual buffer
     tex_width = width;
     tex_height = height;
+
+    // texture may have non-square pixels, so save the display size separately
     tex_display_width = display_width;
     tex_display_height = display_height;
 
