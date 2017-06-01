@@ -21,12 +21,6 @@
     <ClInclude Include="gl_core_3_3.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="plugin.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="screen.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="wgl_ext.h">
       <Filter>Source Files</Filter>
     </ClInclude>

@@ -13,8 +13,6 @@
   <ItemGroup>
     <ClInclude Include="gfx_1.3.h" />
     <ClInclude Include="gl_core_3_3.h" />
-    <ClInclude Include="plugin.h" />
-    <ClInclude Include="screen.h" />
     <ClInclude Include="wgl_ext.h" />
   </ItemGroup>
   <ItemGroup>
