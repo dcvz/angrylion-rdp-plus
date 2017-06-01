@@ -10,6 +10,14 @@
 #include <stdbool.h>
 #include <ctype.h>
 
+#define PLUGIN_BASE_NAME "angrylion's RDP Plus"
+
+#ifdef _DEBUG
+#define PLUGIN_NAME PLUGIN_BASE_NAME " (Debug)"
+#else
+#define PLUGIN_NAME PLUGIN_BASE_NAME
+#endif
+
 static bool warn_hle;
 static bool fullscreen;
 static int32_t screenshot_id;
@@ -96,7 +104,7 @@ EXPORT void CALL CloseDLL(void)
 
 EXPORT void CALL DllAbout(HWND hParent)
 {
-    msg_warning("angrylion's RDP, 'plus' fork. MESS source code used.");
+    msg_warning(PLUGIN_NAME ". MESS source code used.");
 }
 
 EXPORT void CALL ReadScreen(void **dest, long *width, long *height)
@@ -111,7 +119,7 @@ EXPORT void CALL GetDllInfo(PLUGIN_INFO* PluginInfo)
 {
     PluginInfo->Version = 0x0103;
     PluginInfo->Type  = PLUGIN_TYPE_GFX;
-    sprintf(PluginInfo->Name, "angrylion's RDP Plus");
+    sprintf(PluginInfo->Name, PLUGIN_NAME);
 
     PluginInfo->NormalMemory = TRUE;
     PluginInfo->MemoryBswaped = TRUE;
