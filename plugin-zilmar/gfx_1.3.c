@@ -152,7 +152,7 @@ EXPORT void CALL RomOpen(void)
     // game name might have changed, so reset the screenshot ID
     screenshot_id = 0;
 
-    screen_init(&gfx);
+    screen_init();
     rdp_init();
 }
 

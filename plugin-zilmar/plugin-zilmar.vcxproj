@@ -10,8 +10,22 @@
       <Platform>Win32</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="gfx_1.3.h" />
+    <ClInclude Include="gl_core_3_3.h" />
+    <ClInclude Include="plugin.h" />
+    <ClInclude Include="screen.h" />
+    <ClInclude Include="wgl_ext.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="gfx_1.3.c" />
+    <ClCompile Include="gl_core_3_3.c" />
+    <ClCompile Include="plugin.c" />
+    <ClCompile Include="screen.c" />
+    <ClCompile Include="wgl_ext.c" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{D86C6E84-3371-4B20-8620-A703FF3F2CC5}</ProjectGuid>
+    <ProjectGuid>{722AD25D-C281-48FB-9A58-7699E50F8E6D}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
@@ -42,16 +56,12 @@
     <_ProjectFileVersion>14.0.25431.1</_ProjectFileVersion>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <OutDir>Debug\</OutDir>
-    <IntDir>Debug\</IntDir>
     <LinkIncremental>true</LinkIncremental>
-    <TargetName>$(ProjectName)-plus</TargetName>
+    <TargetName>$(SolutionName)-plus</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>Release\</OutDir>
-    <IntDir>Release\</IntDir>
     <LinkIncremental>false</LinkIncremental>
-    <TargetName>$(ProjectName)-plus</TargetName>
+    <TargetName>$(SolutionName)-plus</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -63,6 +73,7 @@
       <PrecompiledHeader />
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <AdditionalIncludeDirectories>$(SolutionDir)core;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <AdditionalOptions>ddraw.lib dxguid.lib %(AdditionalOptions)</AdditionalOptions>
@@ -71,6 +82,8 @@
       <DataExecutionPrevention />
       <ImportLibrary>$(OutDir)angrylion.lib</ImportLibrary>
       <TargetMachine>MachineX86</TargetMachine>
+      <AdditionalDependencies>core.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(OutDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -93,6 +106,7 @@
       <FloatingPointModel>Fast</FloatingPointModel>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <WholeProgramOptimization>true</WholeProgramOptimization>
+      <AdditionalIncludeDirectories>$(SolutionDir)core;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <AdditionalOptions>ddraw.lib dxguid.lib %(AdditionalOptions)</AdditionalOptions>
@@ -105,36 +119,10 @@
       <DataExecutionPrevention />
       <ImportLibrary>$(OutDir)angrylion.lib</ImportLibrary>
       <TargetMachine>MachineX86</TargetMachine>
+      <AdditionalDependencies>core.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(OutDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ClCompile Include="gl_core_3_3.c" />
-    <ClCompile Include="irand.h" />
-    <ClCompile Include="main.c" />
-    <ClCompile Include="msg.c" />
-    <ClCompile Include="parallel.cpp" />
-    <ClCompile Include="parallel_c.cpp" />
-    <ClCompile Include="plugin.c" />
-    <ClCompile Include="rdp.c" />
-    <ClCompile Include="rdram.c" />
-    <ClCompile Include="screen.c" />
-    <ClCompile Include="vi.c" />
-    <ClCompile Include="wgl_ext.c" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="common.h" />
-    <ClInclude Include="gfx_1.3.h" />
-    <ClInclude Include="gl_core_3_3.h" />
-    <ClInclude Include="msg.h" />
-    <ClInclude Include="parallel.hpp" />
-    <ClInclude Include="parallel_c.hpp" />
-    <ClInclude Include="plugin.h" />
-    <ClInclude Include="rdram.h" />
-    <ClInclude Include="screen.h" />
-    <ClInclude Include="rdp.h" />
-    <ClInclude Include="vi.h" />
-    <ClInclude Include="wgl_ext.h" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

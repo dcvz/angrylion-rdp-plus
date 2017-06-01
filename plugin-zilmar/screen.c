@@ -1,5 +1,6 @@
 #include "screen.h"
 #include "msg.h"
+#include "gfx_1.3.h"
 #include "gl_core_3_3.h"
 #include "wgl_ext.h"
 
@@ -8,6 +9,8 @@
 #include <stdio.h>
 
 #pragma comment (lib, "opengl32.lib")
+
+extern GFX_INFO gfx;
 
 // default size of the window
 #define WINDOW_DEFAULT_WIDTH 640
@@ -36,8 +39,6 @@ static int32_t tex_display_height;
 static HDC dc;
 static HGLRC glrc;
 static HGLRC glrc_core;
-static HWND gfx_hwnd;
-static HWND gfx_hwnd_status;
 static bool prev_fullscreen;
 
 static GLuint gl_shader_compile(GLenum type, const GLchar* source)
@@ -108,43 +109,40 @@ static void gl_check_errors(void)
     }
 }
 
-void screen_init(GFX_INFO* info)
+void screen_init(void)
 {
-    gfx_hwnd = info->hWnd;
-    gfx_hwnd_status = info->hStatusBar;
-
-    BOOL zoomed = IsZoomed(gfx_hwnd);
+    BOOL zoomed = IsZoomed(gfx.hWnd);
 
     if (zoomed) {
-        ShowWindow(gfx_hwnd, SW_RESTORE);
+        ShowWindow(gfx.hWnd, SW_RESTORE);
     }
 
     if (!prev_fullscreen) {
         // make window resizable for the user
-        LONG style = GetWindowLong(gfx_hwnd, GWL_STYLE);
+        LONG style = GetWindowLong(gfx.hWnd, GWL_STYLE);
         style |= WS_SIZEBOX | WS_MAXIMIZEBOX;
-        SetWindowLong(gfx_hwnd, GWL_STYLE, style);
+        SetWindowLong(gfx.hWnd, GWL_STYLE, style);
 
         // resize window to 640x480
         RECT rect;
-        GetWindowRect(gfx_hwnd, &rect);
+        GetWindowRect(gfx.hWnd, &rect);
 
         rect.right = rect.left + WINDOW_DEFAULT_WIDTH;
         rect.bottom = rect.top + WINDOW_DEFAULT_HEIGHT;
 
-        if (gfx_hwnd_status) {
+        if (gfx.hStatusBar) {
             RECT statusrect;
-            GetClientRect(gfx_hwnd_status, &statusrect);
+            GetClientRect(gfx.hStatusBar, &statusrect);
             rect.bottom += statusrect.bottom - statusrect.top;
         }
 
         AdjustWindowRect(&rect, style, FALSE);
-        SetWindowPos(gfx_hwnd, HWND_TOP, rect.left, rect.top,
+        SetWindowPos(gfx.hWnd, HWND_TOP, rect.left, rect.top,
             rect.right - rect.left, rect.bottom - rect.top, SWP_SHOWWINDOW);
     }
 
     if (zoomed) {
-        ShowWindow(gfx_hwnd, SW_MAXIMIZE);
+        ShowWindow(gfx.hWnd, SW_MAXIMIZE);
     }
 
     PIXELFORMATDESCRIPTOR win_pfd = {
@@ -159,7 +157,7 @@ void screen_init(GFX_INFO* info)
         PFD_MAIN_PLANE, 0, 0, 0, 0
     };
 
-    dc = GetDC(gfx_hwnd);
+    dc = GetDC(gfx.hWnd);
     if (!dc) {
         msg_error("Can't get device context.");
     }
@@ -272,7 +270,7 @@ void screen_swap(void)
     }
 
     RECT rect;
-    GetClientRect(gfx_hwnd, &rect);
+    GetClientRect(gfx.hWnd, &rect);
 
     int32_t vp_width = rect.right - rect.left;
     int32_t vp_height = rect.bottom - rect.top;
@@ -320,18 +318,18 @@ void screen_set_full(bool fullscreen)
         ShowCursor(FALSE);
 
         // hide status bar
-        if (gfx_hwnd_status) {
-            ShowWindow(gfx_hwnd_status, SW_HIDE);
+        if (gfx.hStatusBar) {
+            ShowWindow(gfx.hStatusBar, SW_HIDE);
         }
 
         // disable menu and save it to restore it later
-        old_menu = GetMenu(gfx_hwnd);
+        old_menu = GetMenu(gfx.hWnd);
         if (old_menu) {
-            SetMenu(gfx_hwnd, NULL);
+            SetMenu(gfx.hWnd, NULL);
         }
 
         // save old window position and size
-        GetWindowPlacement(gfx_hwnd, &old_pos);
+        GetWindowPlacement(gfx.hWnd, &old_pos);
 
         // use virtual screen dimensions for fullscreen mode
         int vs_width = GetSystemMetrics(SM_CXVIRTUALSCREEN);
@@ -339,31 +337,31 @@ void screen_set_full(bool fullscreen)
 
         // disable all styles to get a borderless window and save it to restore
         // it later
-        old_style = GetWindowLong(gfx_hwnd, GWL_STYLE);
-        SetWindowLong(gfx_hwnd, GWL_STYLE, WS_VISIBLE);
+        old_style = GetWindowLong(gfx.hWnd, GWL_STYLE);
+        SetWindowLong(gfx.hWnd, GWL_STYLE, WS_VISIBLE);
 
         // resize window so it covers the entire virtual screen
-        SetWindowPos(gfx_hwnd, HWND_TOP, 0, 0, vs_width, vs_height, SWP_SHOWWINDOW);
+        SetWindowPos(gfx.hWnd, HWND_TOP, 0, 0, vs_width, vs_height, SWP_SHOWWINDOW);
     } else {
         // restore cursor
         ShowCursor(TRUE);
 
         // restore status bar
-        if (gfx_hwnd_status) {
-            ShowWindow(gfx_hwnd_status, SW_SHOW);
+        if (gfx.hStatusBar) {
+            ShowWindow(gfx.hStatusBar, SW_SHOW);
         }
 
         // restore menu
         if (old_menu) {
-            SetMenu(gfx_hwnd, old_menu);
+            SetMenu(gfx.hWnd, old_menu);
             old_menu = NULL;
         }
 
         // restore style
-        SetWindowLong(gfx_hwnd, GWL_STYLE, old_style);
+        SetWindowLong(gfx.hWnd, GWL_STYLE, old_style);
 
         // restore window size and position
-        SetWindowPlacement(gfx_hwnd, &old_pos);
+        SetWindowPlacement(gfx.hWnd, &old_pos);
     }
 
     prev_fullscreen = fullscreen;

@@ -15,29 +15,17 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="main.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="rdp.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="msg.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="screen.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="vi.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="plugin.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="rdram.c">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="irand.h">
-      <Filter>Header Files</Filter>
     </ClCompile>
     <ClCompile Include="parallel.cpp">
       <Filter>Source Files</Filter>
@@ -45,48 +33,36 @@
     <ClCompile Include="parallel_c.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="gl_core_3_3.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="wgl_ext.c">
+    <ClCompile Include="irand.h">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="rdp.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="gfx_1.3.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="common.h">
+      <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="msg.h">
-      <Filter>Header Files</Filter>
+      <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="screen.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="parallel.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="parallel_c.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="rdp.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="rdram.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vi.h">
+      <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="plugin.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="vi.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="common.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="rdram.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="parallel.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="parallel_c.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="gl_core_3_3.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="wgl_ext.h">
+    <ClInclude Include="screen.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

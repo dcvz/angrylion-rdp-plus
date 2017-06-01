@@ -7,6 +7,8 @@
 #include "irand.h"
 #include "parallel_c.hpp"
 
+#include <memory.h>
+
 // CRT fading emulation. Disabled on default, because the visual quality,
 // performance and the code for it is pretty shoddy.
 #define TV_FADE_EMULATION 0
