@@ -11,10 +11,10 @@
 // performance and the code for it is pretty shoddy.
 #define TV_FADE_EMULATION 0
 
-typedef struct
+struct ccvg
 {
     uint8_t r, g, b, cvg;
-} CCVG;
+};
 
 // states
 static bool mt_en = true;
@@ -65,15 +65,15 @@ static struct
 } onetimewarnings;
 
 // function pointers
-STRICTINLINE void vi_fetch_filter16(CCVG* res, uint32_t fboffset, uint32_t cur_x, uint32_t fsaa, uint32_t dither_filter, uint32_t vres, uint32_t fetchstate);
-STRICTINLINE void vi_fetch_filter32(CCVG* res, uint32_t fboffset, uint32_t cur_x, uint32_t fsaa, uint32_t dither_filter, uint32_t vres, uint32_t fetchstate);
+STRICTINLINE void vi_fetch_filter16(struct ccvg* res, uint32_t fboffset, uint32_t cur_x, uint32_t fsaa, uint32_t dither_filter, uint32_t vres, uint32_t fetchstate);
+STRICTINLINE void vi_fetch_filter32(struct ccvg* res, uint32_t fboffset, uint32_t cur_x, uint32_t fsaa, uint32_t dither_filter, uint32_t vres, uint32_t fetchstate);
 
-static void (*vi_fetch_filter_func[2])(CCVG*, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t) =
+static void (*vi_fetch_filter_func[2])(struct ccvg*, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t) =
 {
     vi_fetch_filter16, vi_fetch_filter32
 };
 
-void (*vi_fetch_filter_ptr)(CCVG*, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t);
+void (*vi_fetch_filter_ptr)(struct ccvg*, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t);
 
 // lookup tables
 static uint32_t gamma_table[0x100];
@@ -483,7 +483,7 @@ STRICTINLINE void video_filter32(int* endr, int* endg, int* endb, uint32_t fboff
     *endb = colb & 0xff;
 }
 
-STRICTINLINE void vi_fetch_filter16(CCVG* res, uint32_t fboffset, uint32_t cur_x, uint32_t fsaa, uint32_t dither_filter, uint32_t vres, uint32_t fetchstate)
+STRICTINLINE void vi_fetch_filter16(struct ccvg* res, uint32_t fboffset, uint32_t cur_x, uint32_t fsaa, uint32_t dither_filter, uint32_t vres, uint32_t fetchstate)
 {
     int r, g, b;
     uint32_t idx = (fboffset >> 1) + cur_x;
@@ -523,7 +523,7 @@ STRICTINLINE void vi_fetch_filter16(CCVG* res, uint32_t fboffset, uint32_t cur_x
     res->cvg = cur_cvg;
 }
 
-STRICTINLINE void vi_fetch_filter32(CCVG* res, uint32_t fboffset, uint32_t cur_x, uint32_t fsaa, uint32_t dither_filter, uint32_t vres, uint32_t fetchstate)
+STRICTINLINE void vi_fetch_filter32(struct ccvg* res, uint32_t fboffset, uint32_t cur_x, uint32_t fsaa, uint32_t dither_filter, uint32_t vres, uint32_t fetchstate)
 {
     int r, g, b;
     uint32_t pix, addr = (fboffset >> 2) + cur_x;
@@ -555,7 +555,7 @@ STRICTINLINE void vi_fetch_filter32(CCVG* res, uint32_t fboffset, uint32_t cur_x
     res->cvg = cur_cvg;
 }
 
-STRICTINLINE void divot_filter(CCVG* final, CCVG centercolor, CCVG leftcolor, CCVG rightcolor)
+STRICTINLINE void divot_filter(struct ccvg* final, struct ccvg centercolor, struct ccvg leftcolor, struct ccvg rightcolor)
 {
 
 
@@ -643,7 +643,7 @@ STRICTINLINE void gamma_filters(int* r, int* g, int* b, int gamma_and_dither)
     }
 }
 
-STRICTINLINE void vi_vl_lerp(CCVG* up, CCVG down, uint32_t frac)
+STRICTINLINE void vi_vl_lerp(struct ccvg* up, struct ccvg down, uint32_t frac)
 {
     uint32_t r0, g0, b0;
     if (!frac)
@@ -1112,18 +1112,18 @@ int vi_process_init(void)
 
 void vi_process(void)
 {
-    CCVG viaa_array[0xa10 << 1];
-    CCVG divot_array[0xa10 << 1];
+    struct ccvg viaa_array[0xa10 << 1];
+    struct ccvg divot_array[0xa10 << 1];
 
     int cache_marker = 0, cache_next_marker = 0, divot_cache_marker = 0, divot_cache_next_marker = 0;
     int cache_marker_init = (x_start_init >> 10) - 1;
 
-    CCVG *viaa_cache = &viaa_array[0];
-    CCVG *viaa_cache_next = &viaa_array[0xa10];
-    CCVG *divot_cache = &divot_array[0];
-    CCVG *divot_cache_next = &divot_array[0xa10];
+    struct ccvg *viaa_cache = &viaa_array[0];
+    struct ccvg *viaa_cache_next = &viaa_array[0xa10];
+    struct ccvg *divot_cache = &divot_array[0];
+    struct ccvg *divot_cache_next = &divot_array[0xa10];
 
-    CCVG color, nextcolor, scancolor, scannextcolor;
+    struct ccvg color, nextcolor, scancolor, scannextcolor;
 
     uint32_t pixels = 0, nextpixels = 0, fetchbugstate = 0;
 
@@ -1379,7 +1379,7 @@ void vi_process(void)
                         cache_marker = cache_next_marker;
                         cache_next_marker = cache_marker_init;
 
-                        CCVG* tempccvgptr = viaa_cache;
+                        struct ccvg* tempccvgptr = viaa_cache;
                         viaa_cache = viaa_cache_next;
                         viaa_cache_next = tempccvgptr;
                         if (divot)

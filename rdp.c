@@ -72,7 +72,7 @@ static TLS int32_t pastrawdzmem = 0;
 
 static bool mt_en = true;
 
-typedef struct
+struct span
 {
     int lx, rx;
     int unscrx;
@@ -81,9 +81,9 @@ typedef struct
     int32_t majorx[4];
     int32_t minorx[4];
     int32_t invalyscan[4];
-} SPAN;
+};
 
-static TLS SPAN span[1024];
+static TLS struct span span[1024];
 static TLS uint8_t cvgbuf[1024];
 
 
@@ -104,39 +104,31 @@ static TLS int spans_dsdy, spans_dtdy, spans_dwdy;
 
 
 
-typedef struct
+struct color
 {
     int32_t r, g, b, a;
-} COLOR;
+};
 
-typedef struct
+struct fbcolor
 {
     uint8_t r, g, b;
-} FBCOLOR;
+};
 
-typedef struct
+struct rectangle
 {
     uint16_t xl, yl, xh, yh;
-} RECTANGLE;
+};
 
-typedef struct
+struct tex_rectangle
 {
     int tilenum;
     uint16_t xl, yl, xh, yh;
     int16_t s, t;
     int16_t dsdx, dtdy;
     uint32_t flip;
-} TEX_RECTANGLE;
+};
 
-typedef struct
-{
-    int clampdiffs, clampdifft;
-    int clampens, clampent;
-    int masksclamped, masktclamped;
-    int notlutswitch, tlutswitch;
-} FAKETILE;
-
-typedef struct
+struct tile
 {
     int format;
     int size;
@@ -148,10 +140,16 @@ typedef struct
 
     uint16_t sl, tl, sh, th;
 
-    FAKETILE f;
-} TILE;
+    struct
+    {
+        int clampdiffs, clampdifft;
+        int clampens, clampent;
+        int masksclamped, masktclamped;
+        int notlutswitch, tlutswitch;
+    } f;
+};
 
-typedef struct
+struct combine_modes
 {
     int sub_a_rgb0;
     int sub_b_rgb0;
@@ -170,9 +168,9 @@ typedef struct
     int sub_b_a1;
     int mul_a1;
     int add_a1;
-} COMBINE_MODES;
+};
 
-typedef struct
+struct modederivs
 {
     int stalederivs;
     int dolod;
@@ -183,9 +181,9 @@ typedef struct
     int rgb_alpha_dither;
     int realblendershiftersneeded;
     int interpixelblendershiftersneeded;
-} MODEDERIVS;
+};
 
-typedef struct
+struct other_modes
 {
     int cycle_type;
     int persp_tex_en;
@@ -223,8 +221,8 @@ typedef struct
     int z_source_sel;
     int dither_alpha_en;
     int alpha_compare_en;
-    MODEDERIVS f;
-} OTHER_MODES;
+    struct modederivs f;
+};
 
 
 
@@ -279,21 +277,21 @@ typedef struct
 #define ZMODE_TRANSPARENT       2
 #define ZMODE_DECAL             3
 
-static TLS COMBINE_MODES combine;
-static TLS OTHER_MODES other_modes;
+static TLS struct combine_modes combine;
+static TLS struct other_modes other_modes;
 
-static TLS COLOR blend_color;
-static TLS COLOR prim_color;
-static TLS COLOR env_color;
-static TLS COLOR fog_color;
-static TLS COLOR combined_color;
-static TLS COLOR texel0_color;
-static TLS COLOR texel1_color;
-static TLS COLOR nexttexel_color;
-static TLS COLOR shade_color;
-static TLS COLOR key_scale;
-static TLS COLOR key_center;
-static TLS COLOR key_width;
+static TLS struct color blend_color;
+static TLS struct color prim_color;
+static TLS struct color env_color;
+static TLS struct color fog_color;
+static TLS struct color combined_color;
+static TLS struct color texel0_color;
+static TLS struct color texel1_color;
+static TLS struct color nexttexel_color;
+static TLS struct color shade_color;
+static TLS struct color key_scale;
+static TLS struct color key_center;
+static TLS struct color key_width;
 static TLS int32_t noise = 0;
 static TLS int32_t primitive_lod_frac = 0;
 static int32_t one_color = 0x100;
@@ -332,11 +330,11 @@ static TLS int32_t *blender2a_g[2];
 static TLS int32_t *blender2a_b[2];
 static TLS int32_t *blender2b_a[2];
 
-static TLS COLOR pixel_color;
-static TLS COLOR inv_pixel_color;
-static TLS COLOR blended_pixel_color;
-static TLS COLOR memory_color;
-static TLS COLOR pre_memory_color;
+static TLS struct color pixel_color;
+static TLS struct color inv_pixel_color;
+static TLS struct color blended_pixel_color;
+static TLS struct color memory_color;
+static TLS struct color pre_memory_color;
 
 static TLS uint32_t fill_color;
 
@@ -355,9 +353,9 @@ static TLS uint32_t ti_address = 0;
 
 static TLS uint32_t zb_address = 0;
 
-static TLS TILE tile[8];
+static TLS struct tile tile[8];
 
-static TLS RECTANGLE clip = {0,0,0x2000,0x2000};
+static TLS struct rectangle clip = {0,0,0x2000,0x2000};
 static TLS int scfield = 0;
 static TLS int sckeepodd = 0;
 static TLS int oldscyl = 0;
@@ -368,7 +366,7 @@ static TLS uint8_t TMEM[0x1000];
 
 #define PIXELS_TO_BYTES(pix, siz) (((pix) << (siz)) >> 1)
 
-typedef struct{
+struct spansigs {
     int startspan;
     int endspan;
     int preendspan;
@@ -376,14 +374,14 @@ typedef struct{
     int midspan;
     int longspan;
     int onelessthanmid;
-}SPANSIGS;
+};
 
 
 static void rdp_set_other_modes(const uint32_t* args);
-static INLINE void fetch_texel(COLOR *color, int s, int t, uint32_t tilenum);
-static INLINE void fetch_texel_entlut(COLOR *color, int s, int t, uint32_t tilenum);
-static INLINE void fetch_texel_quadro(COLOR *color0, COLOR *color1, COLOR *color2, COLOR *color3, int s0, int s1, int t0, int t1, uint32_t tilenum);
-static INLINE void fetch_texel_entlut_quadro(COLOR *color0, COLOR *color1, COLOR *color2, COLOR *color3, int s0, int s1, int t0, int t1, uint32_t tilenum);
+static INLINE void fetch_texel(struct color *color, int s, int t, uint32_t tilenum);
+static INLINE void fetch_texel_entlut(struct color *color, int s, int t, uint32_t tilenum);
+static INLINE void fetch_texel_quadro(struct color *color0, struct color *color1, struct color *color2, struct color *color3, int s0, int s1, int t0, int t1, uint32_t tilenum);
+static INLINE void fetch_texel_entlut_quadro(struct color *color0, struct color *color1, struct color *color2, struct color *color3, int s0, int s1, int t0, int t1, uint32_t tilenum);
 static void tile_tlut_common_cs_decoder(const uint32_t* args);
 static void loading_pipeline(int start, int end, int tilenum, int coord_quad, int ltlut);
 static void get_tmem_idx(int s, int t, uint32_t tilenum, uint32_t* idx0, uint32_t* idx1, uint32_t* idx2, uint32_t* idx3, uint32_t* bit3flipped, uint32_t* hibit);
@@ -406,7 +404,7 @@ static STRICTINLINE void combiner_1cycle(int adseed, uint32_t* curpixel_cvg);
 static STRICTINLINE void combiner_2cycle(int adseed, uint32_t* curpixel_cvg, int32_t* acalpha);
 static STRICTINLINE int blender_1cycle(uint32_t* fr, uint32_t* fg, uint32_t* fb, int dith, uint32_t blend_en, uint32_t prewrap, uint32_t curpixel_cvg, uint32_t curpixel_cvbit);
 static STRICTINLINE int blender_2cycle(uint32_t* fr, uint32_t* fg, uint32_t* fb, int dith, uint32_t blend_en, uint32_t prewrap, uint32_t curpixel_cvg, uint32_t curpixel_cvbit, int32_t acalpha);
-static STRICTINLINE void texture_pipeline_cycle(COLOR* TEX, COLOR* prev, int32_t SSS, int32_t SST, uint32_t tilenum, uint32_t cycle);
+static STRICTINLINE void texture_pipeline_cycle(struct color* TEX, struct color* prev, int32_t SSS, int32_t SST, uint32_t tilenum, uint32_t cycle);
 static STRICTINLINE void tc_pipeline_copy(int32_t* sss0, int32_t* sss1, int32_t* sss2, int32_t* sss3, int32_t* sst, int tilenum);
 static STRICTINLINE void tc_pipeline_load(int32_t* sss, int32_t* sst, int tilenum, int coord_quad);
 static STRICTINLINE void tcclamp_generic(int32_t* S, int32_t* T, int32_t* SFRAC, int32_t* TFRAC, int32_t maxs, int32_t maxt, int32_t num);
@@ -458,15 +456,15 @@ static INLINE void tcdiv_nopersp(int32_t ss, int32_t st, int32_t sw, int32_t* ss
 static STRICTINLINE void tclod_4x17_to_15(int32_t scurr, int32_t snext, int32_t tcurr, int32_t tnext, int32_t previous, int32_t* lod);
 static STRICTINLINE void tclod_tcclamp(int32_t* sss, int32_t* sst);
 static STRICTINLINE void lodfrac_lodtile_signals(int lodclamp, int32_t lod, uint32_t* l_tile, uint32_t* magnify, uint32_t* distant, int32_t* lfdst);
-static STRICTINLINE void tclod_1cycle_current(int32_t* sss, int32_t* sst, int32_t nexts, int32_t nextt, int32_t s, int32_t t, int32_t w, int32_t dsinc, int32_t dtinc, int32_t dwinc, int32_t scanline, int32_t prim_tile, int32_t* t1, SPANSIGS* sigs);
-static STRICTINLINE void tclod_1cycle_current_simple(int32_t* sss, int32_t* sst, int32_t s, int32_t t, int32_t w, int32_t dsinc, int32_t dtinc, int32_t dwinc, int32_t scanline, int32_t prim_tile, int32_t* t1, SPANSIGS* sigs);
-static STRICTINLINE void tclod_1cycle_next(int32_t* sss, int32_t* sst, int32_t s, int32_t t, int32_t w, int32_t dsinc, int32_t dtinc, int32_t dwinc, int32_t scanline, int32_t prim_tile, int32_t* t1, SPANSIGS* sigs, int32_t* prelodfrac);
+static STRICTINLINE void tclod_1cycle_current(int32_t* sss, int32_t* sst, int32_t nexts, int32_t nextt, int32_t s, int32_t t, int32_t w, int32_t dsinc, int32_t dtinc, int32_t dwinc, int32_t scanline, int32_t prim_tile, int32_t* t1, struct spansigs* sigs);
+static STRICTINLINE void tclod_1cycle_current_simple(int32_t* sss, int32_t* sst, int32_t s, int32_t t, int32_t w, int32_t dsinc, int32_t dtinc, int32_t dwinc, int32_t scanline, int32_t prim_tile, int32_t* t1, struct spansigs* sigs);
+static STRICTINLINE void tclod_1cycle_next(int32_t* sss, int32_t* sst, int32_t s, int32_t t, int32_t w, int32_t dsinc, int32_t dtinc, int32_t dwinc, int32_t scanline, int32_t prim_tile, int32_t* t1, struct spansigs* sigs, int32_t* prelodfrac);
 static STRICTINLINE void tclod_2cycle_current(int32_t* sss, int32_t* sst, int32_t nexts, int32_t nextt, int32_t s, int32_t t, int32_t w, int32_t dsinc, int32_t dtinc, int32_t dwinc, int32_t prim_tile, int32_t* t1, int32_t* t2);
 static STRICTINLINE void tclod_2cycle_current_simple(int32_t* sss, int32_t* sst, int32_t s, int32_t t, int32_t w, int32_t dsinc, int32_t dtinc, int32_t dwinc, int32_t prim_tile, int32_t* t1, int32_t* t2);
 static STRICTINLINE void tclod_2cycle_current_notexel1(int32_t* sss, int32_t* sst, int32_t s, int32_t t, int32_t w, int32_t dsinc, int32_t dtinc, int32_t dwinc, int32_t prim_tile, int32_t* t1);
 static STRICTINLINE void tclod_2cycle_next(int32_t* sss, int32_t* sst, int32_t s, int32_t t, int32_t w, int32_t dsinc, int32_t dtinc, int32_t dwinc, int32_t prim_tile, int32_t* t1, int32_t* t2, int32_t* prelodfrac);
 static STRICTINLINE void tclod_copy(int32_t* sss, int32_t* sst, int32_t s, int32_t t, int32_t w, int32_t dsinc, int32_t dtinc, int32_t dwinc, int32_t prim_tile, int32_t* t1);
-static STRICTINLINE void get_texel1_1cycle(int32_t* s1, int32_t* t1, int32_t s, int32_t t, int32_t w, int32_t dsinc, int32_t dtinc, int32_t dwinc, int32_t scanline, SPANSIGS* sigs);
+static STRICTINLINE void get_texel1_1cycle(int32_t* s1, int32_t* t1, int32_t s, int32_t t, int32_t w, int32_t dsinc, int32_t dtinc, int32_t dwinc, int32_t scanline, struct spansigs* sigs);
 static STRICTINLINE void get_nexttexel0_2cycle(int32_t* s1, int32_t* t1, int32_t s, int32_t t, int32_t w, int32_t dsinc, int32_t dtinc, int32_t dwinc);
 static INLINE void calculate_clamp_diffs(uint32_t tile);
 static INLINE void calculate_tile_derivs(uint32_t tile);
@@ -549,12 +547,12 @@ static TLS void (*tcdiv_ptr)(int32_t, int32_t, int32_t, int32_t*, int32_t*);
 static TLS void (*render_spans_1cycle_ptr)(int, int, int, int);
 static TLS void (*render_spans_2cycle_ptr)(int, int, int, int);
 
-typedef struct{
+struct cvtcmaskderivative {
     uint8_t cvg;
     uint8_t cvbit;
     uint8_t xoff;
     uint8_t yoff;
-} CVtcmaskDERIVATIVE;
+};
 
 static uint16_t z_com_table[0x40000];
 static uint32_t z_complete_dec_table[0x4000];
@@ -569,7 +567,7 @@ static uint8_t bldiv_hwaccurate_table[0x8000];
 static uint16_t deltaz_comparator_lut[0x10000];
 static int32_t clamp_t_diff[8];
 static int32_t clamp_s_diff[8];
-CVtcmaskDERIVATIVE cvarray[0x100];
+static struct cvtcmaskderivative cvarray[0x100];
 
 static struct
 {
@@ -911,11 +909,11 @@ int rdp_init()
         calculate_clamp_diffs(i);
     }
 
-    memset(&combined_color, 0, sizeof(COLOR));
-    memset(&prim_color, 0, sizeof(COLOR));
-    memset(&env_color, 0, sizeof(COLOR));
-    memset(&key_scale, 0, sizeof(COLOR));
-    memset(&key_center, 0, sizeof(COLOR));
+    memset(&combined_color, 0, sizeof(struct color));
+    memset(&prim_color, 0, sizeof(struct color));
+    memset(&env_color, 0, sizeof(struct color));
+    memset(&key_scale, 0, sizeof(struct color));
+    memset(&key_center, 0, sizeof(struct color));
 
     rdp_pipeline_crashed = 0;
     memset(&onetimewarnings, 0, sizeof(onetimewarnings));
@@ -1051,7 +1049,7 @@ static STRICTINLINE void combiner_1cycle(int adseed, uint32_t* curpixel_cvg)
 {
 
     int32_t redkey, greenkey, bluekey, temp;
-    COLOR chromabypass;
+    struct color chromabypass;
 
     if (other_modes.key_en)
     {
@@ -1182,7 +1180,7 @@ static STRICTINLINE void combiner_1cycle(int adseed, uint32_t* curpixel_cvg)
 static STRICTINLINE void combiner_2cycle(int adseed, uint32_t* curpixel_cvg, int32_t* acalpha)
 {
     int32_t redkey, greenkey, bluekey, temp;
-    COLOR chromabypass;
+    struct color chromabypass;
 
     if (combiner_rgbmul_r[0] != &zero_color)
     {
@@ -1760,7 +1758,7 @@ static STRICTINLINE int blender_2cycle(uint32_t* fr, uint32_t* fg, uint32_t* fb,
 
 
 
-static INLINE void fetch_texel(COLOR *color, int s, int t, uint32_t tilenum)
+static INLINE void fetch_texel(struct color *color, int s, int t, uint32_t tilenum)
 {
     uint32_t tbase = tile[tilenum].line * (t & 0xff) + tile[tilenum].tmem;
 
@@ -2083,7 +2081,7 @@ static INLINE void fetch_texel(COLOR *color, int s, int t, uint32_t tilenum)
     }
 }
 
-static INLINE void fetch_texel_entlut(COLOR *color, int s, int t, uint32_t tilenum)
+static INLINE void fetch_texel_entlut(struct color *color, int s, int t, uint32_t tilenum)
 {
     uint32_t tbase = tile[tilenum].line * (t & 0xff) + tile[tilenum].tmem;
     uint32_t tpal   = tile[tilenum].palette << 4;
@@ -2185,7 +2183,7 @@ static INLINE void fetch_texel_entlut(COLOR *color, int s, int t, uint32_t tilen
 
 
 
-static INLINE void fetch_texel_quadro(COLOR *color0, COLOR *color1, COLOR *color2, COLOR *color3, int s0, int s1, int t0, int t1, uint32_t tilenum)
+static INLINE void fetch_texel_quadro(struct color *color0, struct color *color1, struct color *color2, struct color *color3, int s0, int s1, int t0, int t1, uint32_t tilenum)
 {
 
     uint32_t tbase0 = tile[tilenum].line * (t0 & 0xff) + tile[tilenum].tmem;
@@ -3026,7 +3024,7 @@ static INLINE void fetch_texel_quadro(COLOR *color0, COLOR *color1, COLOR *color
     }
 }
 
-static INLINE void fetch_texel_entlut_quadro(COLOR *color0, COLOR *color1, COLOR *color2, COLOR *color3, int s0, int s1, int t0, int t1, uint32_t tilenum)
+static INLINE void fetch_texel_entlut_quadro(struct color *color0, struct color *color1, struct color *color2, struct color *color3, int s0, int s1, int t0, int t1, uint32_t tilenum)
 {
     uint32_t tbase0 = tile[tilenum].line * (t0 & 0xff) + tile[tilenum].tmem;
     uint32_t tbase2 = tile[tilenum].line * (t1 & 0xff) + tile[tilenum].tmem;
@@ -3623,7 +3621,7 @@ static void fetch_qword_copy(uint32_t* hidword, uint32_t* lowdword, int32_t ssss
     }
 }
 
-static STRICTINLINE void texture_pipeline_cycle(COLOR* TEX, COLOR* prev, int32_t SSS, int32_t SST, uint32_t tilenum, uint32_t cycle)
+static STRICTINLINE void texture_pipeline_cycle(struct color* TEX, struct color* prev, int32_t SSS, int32_t SST, uint32_t tilenum, uint32_t cycle)
 {
 #define TRELATIVE(x, y)     ((x) - ((y) << 3))
 
@@ -3640,7 +3638,7 @@ static STRICTINLINE void texture_pipeline_cycle(COLOR* TEX, COLOR* prev, int32_t
 
     int bilerp = cycle ? other_modes.bi_lerp1 : other_modes.bi_lerp0;
     int convert = other_modes.convert_one && cycle;
-    COLOR t0, t1, t2, t3;
+    struct color t0, t1, t2, t3;
     int sss1, sst1, sss2, sst2;
 
     sss1 = SSS;
@@ -3893,7 +3891,7 @@ static void render_spans_1cycle_complete(int start, int end, int tilenum, int fl
     int zb = zb_address >> 1;
     int zbcur;
     uint8_t offx, offy;
-    SPANSIGS sigs;
+    struct spansigs sigs;
     uint32_t blend_en;
     uint32_t prewrap;
     uint32_t curpixel_cvg, curpixel_cvbit, curpixel_memcvg;
@@ -4106,7 +4104,7 @@ static void render_spans_1cycle_notexel1(int start, int end, int tilenum, int fl
     int zb = zb_address >> 1;
     int zbcur;
     uint8_t offx, offy;
-    SPANSIGS sigs;
+    struct spansigs sigs;
     uint32_t blend_en;
     uint32_t prewrap;
     uint32_t curpixel_cvg, curpixel_cvbit, curpixel_memcvg;
@@ -4406,9 +4404,9 @@ static void render_spans_2cycle_complete(int start, int end, int tilenum, int fl
     int zb = zb_address >> 1;
     int zbcur;
     uint8_t offx, offy;
-    SPANSIGS sigs;
+    struct spansigs sigs;
     int32_t prelodfrac;
-    COLOR nexttexel1_color;
+    struct color nexttexel1_color;
     uint32_t blend_en;
     uint32_t prewrap;
     uint32_t curpixel_cvg, curpixel_cvbit, curpixel_memcvg;
@@ -8325,14 +8323,10 @@ static STRICTINLINE uint16_t decompress_cvmask_frombyte(uint8_t x)
 
 static STRICTINLINE void lookup_cvmask_derivatives(uint32_t mask, uint8_t* offx, uint8_t* offy, uint32_t* curpixel_cvg, uint32_t* curpixel_cvbit)
 {
-    CVtcmaskDERIVATIVE temp = cvarray[mask];
-    *curpixel_cvg = temp.cvg;
-
-
-
-    *curpixel_cvbit = temp.cvbit;
-    *offx = temp.xoff;
-    *offy = temp.yoff;
+    *curpixel_cvg = cvarray[mask].cvg;
+    *curpixel_cvbit = cvarray[mask].cvbit;
+    *offx = cvarray[mask].xoff;
+    *offy = cvarray[mask].yoff;
 }
 
 static STRICTINLINE void z_store(uint32_t zcurpixel, uint32_t z, int dzpixenc)
@@ -9231,7 +9225,7 @@ static STRICTINLINE void tclod_2cycle_next(int32_t* sss, int32_t* sst, int32_t s
     }
 }
 
-static STRICTINLINE void tclod_1cycle_current(int32_t* sss, int32_t* sst, int32_t nexts, int32_t nextt, int32_t s, int32_t t, int32_t w, int32_t dsinc, int32_t dtinc, int32_t dwinc, int32_t scanline, int32_t prim_tile, int32_t* t1, SPANSIGS* sigs)
+static STRICTINLINE void tclod_1cycle_current(int32_t* sss, int32_t* sst, int32_t nexts, int32_t nextt, int32_t s, int32_t t, int32_t w, int32_t dsinc, int32_t dtinc, int32_t dwinc, int32_t scanline, int32_t prim_tile, int32_t* t1, struct spansigs* sigs)
 {
 
 
@@ -9314,7 +9308,7 @@ static STRICTINLINE void tclod_1cycle_current(int32_t* sss, int32_t* sst, int32_
 
 
 
-static STRICTINLINE void tclod_1cycle_current_simple(int32_t* sss, int32_t* sst, int32_t s, int32_t t, int32_t w, int32_t dsinc, int32_t dtinc, int32_t dwinc, int32_t scanline, int32_t prim_tile, int32_t* t1, SPANSIGS* sigs)
+static STRICTINLINE void tclod_1cycle_current_simple(int32_t* sss, int32_t* sst, int32_t s, int32_t t, int32_t w, int32_t dsinc, int32_t dtinc, int32_t dwinc, int32_t scanline, int32_t prim_tile, int32_t* t1, struct spansigs* sigs)
 {
     int fars, fart, farsw, nexts, nextt, nextsw;
     int lodclamp = 0;
@@ -9390,7 +9384,7 @@ static STRICTINLINE void tclod_1cycle_current_simple(int32_t* sss, int32_t* sst,
     }
 }
 
-static STRICTINLINE void tclod_1cycle_next(int32_t* sss, int32_t* sst, int32_t s, int32_t t, int32_t w, int32_t dsinc, int32_t dtinc, int32_t dwinc, int32_t scanline, int32_t prim_tile, int32_t* t1, SPANSIGS* sigs, int32_t* prelodfrac)
+static STRICTINLINE void tclod_1cycle_next(int32_t* sss, int32_t* sst, int32_t s, int32_t t, int32_t w, int32_t dsinc, int32_t dtinc, int32_t dwinc, int32_t scanline, int32_t prim_tile, int32_t* t1, struct spansigs* sigs, int32_t* prelodfrac)
 {
     int nexts, nextt, nextsw, fars, fart, farsw;
     int lodclamp = 0;
@@ -9591,7 +9585,7 @@ static STRICTINLINE void tclod_copy(int32_t* sss, int32_t* sst, int32_t s, int32
 
 }
 
-static STRICTINLINE void get_texel1_1cycle(int32_t* s1, int32_t* t1, int32_t s, int32_t t, int32_t w, int32_t dsinc, int32_t dtinc, int32_t dwinc, int32_t scanline, SPANSIGS* sigs)
+static STRICTINLINE void get_texel1_1cycle(int32_t* s1, int32_t* t1, int32_t s, int32_t t, int32_t w, int32_t dsinc, int32_t dtinc, int32_t dwinc, int32_t scanline, struct spansigs* sigs)
 {
     int32_t nexts, nextt, nextsw;
 
