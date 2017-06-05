@@ -1,6 +1,7 @@
+#include "gfx_1.3.h"
 #include "rdp.h"
 #include "vi.h"
-#include "gfx_1.3.h"
+#include "parallel_c.hpp"
 #include "plugin.h"
 #include "msg.h"
 #include "screen.h"
@@ -45,14 +46,8 @@ static char filter_char(char c)
     }
 }
 
-EXPORT void CALL CaptureScreen(char* Directory)
+EXPORT void CALL CaptureScreen(char* directory)
 {
-    // can't have more than 9999 screenshot files per ROM with four digits
-    if (screenshot_id == 9999) {
-        msg_warning("Screenshots folder overflow.");
-        return;
-    }
-
     // copy game name from ROM header, which is encoded in Shift_JIS.
     // most games just use the ASCII subset, so filter out the rest.
     char rom_name[21];
@@ -85,7 +80,7 @@ EXPORT void CALL CaptureScreen(char* Directory)
     // generate and find an unused file path
     char path[MAX_PATH];
     do {
-        sprintf_s(path, sizeof(path), "%s/%s_%04d.bmp", Directory, rom_name,
+        sprintf_s(path, sizeof(path), "%s/%s_%04d.bmp", directory, rom_name,
             screenshot_id++);
     } while (file_exists(path));
 
@@ -146,12 +141,12 @@ EXPORT void CALL ProcessDList(void)
 
 EXPORT void CALL ProcessRDPList(void)
 {
-    rdp_process_list();
+    rdp_update();
 }
 
 EXPORT void CALL RomClosed(void)
 {
-    rdp_close();
+    parallel_close();
     screen_close();
 }
 
@@ -161,17 +156,26 @@ EXPORT void CALL RomOpen(void)
     screenshot_id = 0;
 
     screen_init();
-    rdp_init();
+    rdram_init(plugin_rdram_size());
+    parallel_init(0);
+
+    struct rdp_config rdp_config;
+    rdp_config.parallel = true;
+    rdp_init(rdp_config);
+
+    struct vi_config vi_config;
+    vi_config.parallel = true;
+    vi_config.tv_fading = false;
+    vi_init(vi_config);
 }
 
 EXPORT void CALL ShowCFB(void)
 {
-    rdp_update();
 }
 
 EXPORT void CALL UpdateScreen(void)
 {
-    rdp_update();
+    vi_update();
 }
 
 EXPORT void CALL ViStatusChanged(void)

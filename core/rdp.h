@@ -1,8 +1,11 @@
 #pragma once
 
-#include <stdint.h>
+#include <stdbool.h>
 
-int rdp_init(void);
-int rdp_close(void);
-int rdp_update(void);
-void rdp_process_list(void);
+struct rdp_config
+{
+    bool parallel;
+};
+
+int rdp_init(struct rdp_config config);
+void rdp_update(void);

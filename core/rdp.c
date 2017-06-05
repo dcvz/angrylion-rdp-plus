@@ -54,6 +54,8 @@ static const int32_t norm_slope_table[64] = {
 #define LOG_RDP_EXECUTION 0
 #define DETAILED_LOGGING 0
 
+static struct rdp_config cfg;
+
 FILE *rdp_exec;
 
 static uint32_t rdp_cmd_data[0x10000];
@@ -69,8 +71,6 @@ static uint32_t rdp_cmd_buf_pos;
 
 static TLS int blshifta = 0, blshiftb = 0, pastblshifta = 0, pastblshiftb = 0;
 static TLS int32_t pastrawdzmem = 0;
-
-static bool mt_en = true;
 
 struct span
 {
@@ -860,8 +860,10 @@ static STRICTINLINE void tcclamp_cycle_light(int32_t* S, int32_t* T, int32_t max
 }
 
 
-int rdp_init()
+int rdp_init(struct rdp_config config)
 {
+    cfg = config;
+
     if (LOG_RDP_EXECUTION)
         rdp_exec = fopen("rdp_execute.txt", "wt");
 
@@ -920,16 +922,6 @@ int rdp_init()
 
     precalculate_everything();
 
-    parallel_init(0);
-    vi_init();
-    rdram_init(plugin_rdram_size());
-
-    return 0;
-}
-
-int rdp_update()
-{
-    vi_update();
     return 0;
 }
 
@@ -5919,7 +5911,7 @@ static void edgewalker_for_prims(int32_t* ewdata)
             {
                 span[j].lx = maxxmx;
                 span[j].rx = minxhx;
-                span[j].validline  = !allinval && !allover && !allunder && (!scfield || (scfield && !(sckeepodd ^ (j & 1)))) && (!mt_en || j % worker_num == worker_id);
+                span[j].validline  = !allinval && !allover && !allunder && (!scfield || (scfield && !(sckeepodd ^ (j & 1)))) && (!cfg.parallel || j % worker_num == worker_id);
 
             }
 
@@ -6006,7 +5998,7 @@ static void edgewalker_for_prims(int32_t* ewdata)
             {
                 span[j].lx = minxmx;
                 span[j].rx = maxxhx;
-                span[j].validline  = !allinval && !allover && !allunder && (!scfield || (scfield && !(sckeepodd ^ (j & 1)))) && (!mt_en || j % worker_num == worker_id);
+                span[j].validline  = !allinval && !allover && !allunder && (!scfield || (scfield && !(sckeepodd ^ (j & 1)))) && (!cfg.parallel || j % worker_num == worker_id);
             }
 
         }
@@ -7423,7 +7415,7 @@ static void rdp_cmd_push(const uint32_t* arg, size_t length)
     }
 }
 
-void rdp_process_list(void)
+void rdp_update(void)
 {
     int i, length;
     uint32_t cmd, cmd_length;
@@ -7538,15 +7530,15 @@ void rdp_process_list(void)
 
 
 
-        if (rdp_command_meta[cmd].sync && mt_en) {
+        if (rdp_command_meta[cmd].sync && cfg.parallel) {
             rdp_cmd_flush();
         }
 
-        if (rdp_command_meta[cmd].singlethread || !mt_en) {
+        if (rdp_command_meta[cmd].singlethread || !cfg.parallel) {
             rdp_cmd_run(rdp_cmd_data + rdp_cmd_cur);
         }
 
-        if (rdp_command_meta[cmd].multithread && mt_en) {
+        if (rdp_command_meta[cmd].multithread && cfg.parallel) {
            rdp_cmd_push(rdp_cmd_data + rdp_cmd_cur, cmd_length);
         }
 
@@ -7849,12 +7841,6 @@ static STRICTINLINE void compute_cvg_noflip(int32_t scanline)
             }
         }
     }
-}
-
-int rdp_close()
-{
-    parallel_close();
-    return 0;
 }
 
 static INLINE void fbwrite_4(uint32_t curpixel, uint32_t r, uint32_t g, uint32_t b, uint32_t blend_en, uint32_t curpixel_cvg, uint32_t curpixel_memcvg)

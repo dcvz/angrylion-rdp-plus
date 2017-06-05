@@ -9,28 +9,22 @@
 
 #include <memory.h>
 
-// CRT fading emulation. Disabled on default, because the visual quality,
-// performance and the code for it is pretty shoddy.
-#define TV_FADE_EMULATION 0
-
 struct ccvg
 {
     uint8_t r, g, b, cvg;
 };
 
+// config
+static struct vi_config cfg;
+
 // states
-static bool mt_en = true;
 static uint32_t prevvicurrent;
 static int emucontrolsvicurrent;
 static int prevserrate;
 static int oldlowerfield;
 static int32_t oldvstart;
 static uint32_t prevwasblank;
-
-#if TV_FADE_EMULATION
 static uint32_t tvfadeoutstate[625];
-#endif
-
 static int pitchindwords;
 static int ispal;
 static int lineshifter;
@@ -681,8 +675,10 @@ uint32_t vi_integer_sqrt(uint32_t a)
     return res;
 }
 
-void vi_init(void)
+void vi_init(struct vi_config config)
 {
+    cfg = config;
+
     for (int i = 0; i < 256; i++)
     {
         gamma_table[i] = vi_integer_sqrt(i << 6);
@@ -1012,9 +1008,9 @@ int vi_process_init(void)
     int i;
     if (!(vitype & 2))
     {
-#if TV_FADE_EMULATION
-        memset(tvfadeoutstate, 0, PRESCALE_HEIGHT * sizeof(uint32_t));
-#endif
+        if (cfg.tv_fading) {
+            memset(tvfadeoutstate, 0, PRESCALE_HEIGHT * sizeof(uint32_t));
+        }
         //for (i = 0; i < PRESCALE_HEIGHT; i++)
         for (i = 0; i < vactivelines; i++)
             memset(&PreScale[i * pitchindwords], 0, PRESCALE_WIDTH * sizeof(int32_t));
@@ -1024,8 +1020,10 @@ int vi_process_init(void)
     {
         prevwasblank = 0;
 
+        if (!cfg.tv_fading) {
+            return 1;
+        }
 
-#if TV_FADE_EMULATION
         int j;
         if (h_start > 0 && h_start < PRESCALE_WIDTH)
         {
@@ -1106,7 +1104,6 @@ int vi_process_init(void)
                 else
                     memset(&PreScale[i * pitchindwords], 0, PRESCALE_WIDTH * sizeof(uint32_t));
         }
-#endif
     }
 
     return 1;
@@ -1171,7 +1168,7 @@ void vi_process(void)
                 int32_t j_end = vres;
                 int32_t j_add = 1;
 
-                if (mt_en) {
+                if (cfg.parallel) {
                     j_start = parallel_worker_id();
                     j_add = parallel_worker_num();
                 }
@@ -1411,7 +1408,7 @@ void vi_update(void)
     }
 
     // run filter update in parallel if enabled
-    if (mt_en) {
+    if (cfg.parallel) {
         parallel_run(vi_process);
     } else {
         vi_process();
