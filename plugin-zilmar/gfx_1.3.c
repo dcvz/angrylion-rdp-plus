@@ -80,7 +80,7 @@ EXPORT void CALL CaptureScreen(char* directory)
     // generate and find an unused file path
     char path[MAX_PATH];
     do {
-        sprintf_s(path, sizeof(path), "%s/%s_%04d.bmp", directory, rom_name,
+        sprintf_s(path, sizeof(path), "%s\\%s_%04d.bmp", directory, rom_name,
             screenshot_id++);
     } while (file_exists(path));
 
