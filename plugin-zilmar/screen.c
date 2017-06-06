@@ -121,10 +121,15 @@ void screen_init(void)
         style |= WS_SIZEBOX | WS_MAXIMIZEBOX;
         SetWindowLong(gfx.hWnd, GWL_STYLE, style);
 
-        // resize window to 640x480
         RECT rect;
-        GetWindowRect(gfx.hWnd, &rect);
 
+        // position window to the middle of the virtual screen
+        int vs_width = GetSystemMetrics(SM_CXVIRTUALSCREEN);
+        int vs_height = GetSystemMetrics(SM_CYVIRTUALSCREEN);
+        rect.left = vs_width / 2 - WINDOW_DEFAULT_WIDTH / 2;
+        rect.top = vs_height / 2 - WINDOW_DEFAULT_HEIGHT / 2;
+
+        // resize window to 640x480
         rect.right = rect.left + WINDOW_DEFAULT_WIDTH;
         rect.bottom = rect.top + WINDOW_DEFAULT_HEIGHT;
 
