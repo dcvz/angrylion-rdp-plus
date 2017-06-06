@@ -990,7 +990,7 @@ int vi_process_init(void)
         return 0;
     }
 
-    screen_get_buffer(PRESCALE_WIDTH, vactivelines, PRESCALE_WIDTH, 480, &PreScale, &pitchindwords);
+    screen_get_buffer(PRESCALE_WIDTH, vactivelines, 480, &PreScale, &pitchindwords);
 
     pitchindwords >>= 2;
     linecount = serration_pulses ? (pitchindwords << 1) : pitchindwords;

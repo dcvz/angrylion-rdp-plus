@@ -29,10 +29,8 @@ static GLuint texture;
 
 // framebuffer texture states
 static uint32_t* tex_buffer;
-static bool tex_buffer_resize;
 static int32_t tex_width;
 static int32_t tex_height;
-static int32_t tex_display_width;
 static int32_t tex_display_height;
 
 // context states
@@ -232,23 +230,24 @@ void screen_init(void)
     gl_check_errors();
 }
 
-void screen_get_buffer(int width, int height, int display_width, int display_height, int** buffer, int* pitch)
+void screen_get_buffer(int width, int height, int display_height, int** buffer, int* pitch)
 {
-    // check if the texture memory needs to be re-allocated to change the size
-    tex_buffer_resize = tex_width != width || tex_height != height;
-
-    if (tex_buffer_resize) {
+    // check if the framebuffer size has changed
+    if (tex_width != width || tex_height != height) {
+        // reallocate and clear local buffer
         size_t tex_buffer_size = width * height * TEX_BYTES_PER_PIXEL;
         tex_buffer = realloc(tex_buffer, tex_buffer_size);
         memset(tex_buffer, 0, tex_buffer_size);
+
+        // reallocate texture buffer on GPU, but don't download anything yet
+        glTexImage2D(GL_TEXTURE_2D, 0, TEX_INTERNAL_FORMAT, width,
+            height, 0, TEX_FORMAT, TEX_TYPE, 0);
+
+        tex_width = width;
+        tex_height = height;
     }
 
-    // texture size for the actual buffer
-    tex_width = width;
-    tex_height = height;
-
-    // texture may have non-square pixels, so save the display size separately
-    tex_display_width = display_width;
+    // texture may have non-square pixels, so save the display height separately
     tex_display_height = display_height;
 
     *buffer = (int*)tex_buffer;
@@ -257,17 +256,9 @@ void screen_get_buffer(int width, int height, int display_width, int display_hei
 
 void screen_swap(void)
 {
-    // copy local framebuffer to texture
-    if (tex_buffer_resize) {
-        // texture size has changed, create new texture
-        glTexImage2D(GL_TEXTURE_2D, 0, TEX_INTERNAL_FORMAT, tex_width,
-            tex_height, 0, TEX_FORMAT, TEX_TYPE, tex_buffer);
-        tex_buffer_resize = false;
-    } else {
-        // same texture size, just update data to reduce overhead
-        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, tex_width, tex_height,
-            TEX_FORMAT, TEX_TYPE, tex_buffer);
-    }
+    // copy local buffer to GPU texture buffer
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, tex_width, tex_height,
+        TEX_FORMAT, TEX_TYPE, tex_buffer);
 
     RECT rect;
     GetClientRect(gfx.hWnd, &rect);
@@ -280,7 +271,7 @@ void screen_swap(void)
     int32_t vp_y = 0;
 
     int32_t hw = tex_display_height * vp_width;
-    int32_t wh = tex_display_width * vp_height;
+    int32_t wh = tex_width * vp_height;
 
     // add letterboxes or pillarboxes if the window has a different aspect ratio
     // than the current display mode
@@ -289,7 +280,7 @@ void screen_swap(void)
         vp_x = (vp_width - w_max) / 2;
         vp_width = w_max;
     } else if (hw < wh) {
-        int32_t h_max = hw / tex_display_width;
+        int32_t h_max = hw / tex_width;
         vp_y = (vp_height - h_max) / 2;
         vp_height = h_max;
     }
@@ -381,10 +372,11 @@ void screen_capture(char* path)
     ihdr.biBitCount = 32;
     ihdr.biSizeImage = img_size;
 
-    // calculate aspect ratio
-    const int32_t ppmbase = 2835; // 72 DPI × 39.3701 inches per meter
-    ihdr.biXPelsPerMeter = (ppmbase * tex_width) / tex_display_width;
-    ihdr.biYPelsPerMeter = (ppmbase * tex_height) / tex_display_height;
+    // calculate aspect ratio for non-square pixel buffers
+    if (tex_height != tex_display_height) {
+        ihdr.biXPelsPerMeter = 2835; // 72 DPI × 39.3701 inches per meter
+        ihdr.biYPelsPerMeter = (ihdr.biXPelsPerMeter * tex_height) / tex_display_height;
+    }
 
     BITMAPFILEHEADER fhdr = {0};
     fhdr.bfType = 'B' | ('M' << 8);
