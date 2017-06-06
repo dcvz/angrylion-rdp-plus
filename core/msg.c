@@ -37,3 +37,17 @@ void msg_warning(const char* err, ...)
 #endif
     va_end(arg);
 }
+
+void msg_debug(const char* err, ...)
+{
+    char buf[MSG_BUFFER_LEN];
+    va_list arg;
+    va_start(arg, err);
+    vsprintf_s(buf, sizeof(buf), err, arg);
+#ifdef WIN32
+    OutputDebugStringA(buf);
+#else
+    printf(buf);
+#endif
+    va_end(arg);
+}

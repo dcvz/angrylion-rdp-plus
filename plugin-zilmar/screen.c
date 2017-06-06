@@ -243,6 +243,9 @@ void screen_get_buffer(int width, int height, int display_height, int** buffer, 
         glTexImage2D(GL_TEXTURE_2D, 0, TEX_INTERNAL_FORMAT, width,
             height, 0, TEX_FORMAT, TEX_TYPE, 0);
 
+        msg_debug("screen: resized framebuffer texture: %dx%d -> %dx%d",
+            tex_width, tex_height, width, height);
+
         tex_width = width;
         tex_height = height;
     }
@@ -360,6 +363,8 @@ void screen_set_full(bool fullscreen)
 
 void screen_capture(char* path)
 {
+    msg_debug("screen: writing screenshot to '%s'", path);
+
     // prepare bitmap headers
     size_t pitch = tex_width * TEX_BYTES_PER_PIXEL;
     size_t img_size = tex_height * pitch;
