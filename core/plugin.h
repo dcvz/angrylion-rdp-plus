@@ -54,6 +54,7 @@ typedef enum _VI_REGISTER
 #define rdram32                 ((uint32_t*)plugin_rdram())
 #define rdram16                 ((uint16_t*)plugin_rdram())
 #define rdram8                  (plugin_rdram())
+#define rdram_hidden            (plugin_rdram_hidden())
 
 // SP memory pointers
 #define sp_dmem32               ((uint32_t*)plugin_dmem())
@@ -86,9 +87,12 @@ typedef enum _VI_REGISTER
 #define vi_x_scale              (*plugin_vi_register(VI_X_SCALE))
 #define vi_y_scale              (*plugin_vi_register(VI_Y_SCALE))
 
+void plugin_init(void);
 void plugin_interrupt(void);
 uint32_t* plugin_dp_register(DP_REGISTER reg);
 uint32_t* plugin_vi_register(VI_REGISTER reg);
 uint8_t* plugin_rdram(void);
+uint8_t* plugin_rdram_hidden(void);
 size_t plugin_rdram_size(void);
 uint8_t* plugin_dmem(void);
+void plugin_close(void);

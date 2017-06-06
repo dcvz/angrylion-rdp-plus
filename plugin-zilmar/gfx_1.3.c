@@ -148,6 +148,7 @@ EXPORT void CALL RomClosed(void)
 {
     parallel_close();
     screen_close();
+    plugin_close();
 }
 
 EXPORT void CALL RomOpen(void)
@@ -156,7 +157,8 @@ EXPORT void CALL RomOpen(void)
     screenshot_id = 0;
 
     screen_init();
-    rdram_init(plugin_rdram_size());
+    plugin_init();
+    rdram_init();
     parallel_init(0);
 
     struct rdp_config rdp_config;

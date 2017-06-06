@@ -14,18 +14,9 @@ static uint32_t idxlim8;
 static uint32_t idxlim16;
 static uint32_t idxlim32;
 
-// bits that are not visible to the programmer, used for storing coverage
-static uint8_t hidden_bits[0x400000];
-
-void rdram_init(size_t size)
+void rdram_init(void)
 {
-    rdram_update_limits(size);
-    memset(&hidden_bits, 3, sizeof(hidden_bits));
-}
-
-void rdram_update_limits(size_t size)
-{
-    idxlim8 = size - 1;
+    idxlim8 = plugin_rdram_size() - 1;
     idxlim16 = (idxlim8 >> 1) & 0xffffffu;
     idxlim32 = (idxlim8 >> 2) & 0xffffffu;
 }
@@ -92,7 +83,7 @@ void rdram_read_pair16(uint16_t* rdst, uint8_t* hdst, uint32_t in)
     in &= RDRAM_MASK >> 1;
     if (rdram_valid_idx16(in)) {
         *rdst = rdram16[in ^ WORD_ADDR_XOR];
-        *hdst = hidden_bits[in];
+        *hdst = rdram_hidden[in];
     } else {
         *rdst = *hdst = 0;
     }
@@ -104,7 +95,7 @@ void rdram_write_pair8(uint32_t in, uint8_t rval, uint8_t hval)
     if (rdram_valid_idx8(in)) {
         rdram8[in ^ BYTE_ADDR_XOR] = rval;
         if (in & 1) {
-            hidden_bits[in >> 1] = hval;
+            rdram_hidden[in >> 1] = hval;
         }
     }
 }
@@ -114,7 +105,7 @@ void rdram_write_pair16(uint32_t in, uint16_t rval, uint8_t hval)
     in &= RDRAM_MASK >> 1;
     if (rdram_valid_idx16(in)) {
         rdram16[in ^ WORD_ADDR_XOR] = rval;
-        hidden_bits[in] = hval;
+        rdram_hidden[in] = hval;
     }
 }
 
@@ -123,7 +114,7 @@ void rdram_write_pair32(uint32_t in, uint32_t rval, uint8_t hval0, uint8_t hval1
     in &= RDRAM_MASK >> 2;
     if (rdram_valid_idx32(in)) {
         rdram32[in] = rval;
-        hidden_bits[in << 1] = hval0;
-        hidden_bits[(in << 1) + 1] = hval1;
+        rdram_hidden[in << 1] = hval0;
+        rdram_hidden[(in << 1) + 1] = hval1;
     }
 }

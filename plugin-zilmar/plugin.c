@@ -11,6 +11,7 @@
 extern GFX_INFO gfx;
 
 static size_t rdram_size;
+static uint8_t* rdram_hidden_bits;
 
 static struct {
     DP_REGISTER reg;
@@ -73,6 +74,17 @@ static bool is_valid_ptr(void *ptr, uint32_t bytes)
     return true;
 }
 
+void plugin_init(void)
+{
+    // Zilmar plugins can't know how much RDRAM is allocated, so use a Win32 hack
+    // to detect it
+    rdram_size = is_valid_ptr(&gfx.RDRAM[0x7f0000], 16) ? 0x800000 : 0x400000;
+
+    // Zilmar plugins also can't access the hidden bits, so allocate it on our own
+    rdram_hidden_bits = malloc(rdram_size);
+    memset(rdram_hidden_bits, 3, rdram_size);
+}
+
 void plugin_interrupt(void)
 {
     *gfx.MI_INTR_REG |= DP_INTERRUPT;
@@ -94,17 +106,25 @@ uint8_t* plugin_rdram(void)
     return gfx.RDRAM;
 }
 
+uint8_t* plugin_rdram_hidden(void)
+{
+    return rdram_hidden_bits;
+}
+
 size_t plugin_rdram_size(void)
 {
-    if (!rdram_size) {
-        // Any current plugin specifications have never told the graphics plugin
-        // how much RDRAM is allocated, so use a Win32 hack to detect it.
-        rdram_size = is_valid_ptr(&gfx.RDRAM[0x7f0000], 16) ? 0x800000 : 0x400000;
-    }
     return rdram_size;
 }
 
 uint8_t* plugin_dmem(void)
 {
     return gfx.DMEM;
+}
+
+void plugin_close(void)
+{
+    if (rdram_hidden_bits) {
+        free(rdram_hidden_bits);
+        rdram_hidden_bits = NULL;
+    }
 }
