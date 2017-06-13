@@ -1,14 +1,11 @@
 #include "gfx_1.3.h"
-#include "rdp.h"
-#include "vi.h"
+#include "core.h"
 #include "parallel_c.hpp"
 #include "plugin.h"
 #include "msg.h"
-#include "screen.h"
 #include "rdram.h"
 
 #include <stdio.h>
-#include <stdbool.h>
 #include <ctype.h>
 
 #define PLUGIN_BASE_NAME "angrylion's RDP Plus"
@@ -20,22 +17,9 @@
 #endif
 
 static bool warn_hle;
-static bool fullscreen;
-static int32_t screenshot_id;
+static struct core_config config;
 
 GFX_INFO gfx;
-
-static bool file_exists(char* path)
-{
-    FILE* fp = fopen(path, "rb");
-
-    if (!fp) {
-        return false;
-    }
-
-    fclose(fp);
-    return true;
-}
 
 static char filter_char(char c)
 {
@@ -77,20 +61,12 @@ EXPORT void CALL CaptureScreen(char* directory)
         rom_name[i] = 0;
     }
 
-    // generate and find an unused file path
-    char path[MAX_PATH];
-    do {
-        sprintf_s(path, sizeof(path), "%s\\%s_%04d.bmp", directory, rom_name,
-            screenshot_id++);
-    } while (file_exists(path));
-
-    screen_capture(path);
+    core_screenshot(directory, rom_name);
 }
 
 EXPORT void CALL ChangeWindow(void)
 {
-    fullscreen = !fullscreen;
-    screen_set_full(fullscreen);
+    core_toggle_fullscreen();
 }
 
 EXPORT void CALL CloseDLL(void)
@@ -141,34 +117,19 @@ EXPORT void CALL ProcessDList(void)
 
 EXPORT void CALL ProcessRDPList(void)
 {
-    rdp_update();
+    core_update_dp();
 }
 
 EXPORT void CALL RomClosed(void)
 {
-    parallel_close();
-    screen_close();
-    plugin_close();
+    core_close();
 }
 
 EXPORT void CALL RomOpen(void)
 {
-    // game name might have changed, so reset the screenshot ID
-    screenshot_id = 0;
+    config.parallel = true;
 
-    screen_init();
-    plugin_init();
-    rdram_init();
-    parallel_init(0);
-
-    struct rdp_config rdp_config;
-    rdp_config.parallel = true;
-    rdp_init(rdp_config);
-
-    struct vi_config vi_config;
-    vi_config.parallel = true;
-    vi_config.tv_fading = false;
-    vi_init(vi_config);
+    core_init(&config);
 }
 
 EXPORT void CALL ShowCFB(void)
@@ -177,7 +138,7 @@ EXPORT void CALL ShowCFB(void)
 
 EXPORT void CALL UpdateScreen(void)
 {
-    vi_update();
+    core_update_vi();
 }
 
 EXPORT void CALL ViStatusChanged(void)

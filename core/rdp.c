@@ -50,7 +50,7 @@ static const int32_t norm_slope_table[64] = {
 #define GET_HI_RGBA16_TMEM(x)   (replicated_rgba[(x) >> 11])
 
 
-static struct rdp_config cfg;
+static struct core_config* cfg;
 
 static uint32_t rdp_cmd_data[0x10000];
 static uint32_t rdp_cmd_ptr = 0;
@@ -851,7 +851,7 @@ static STRICTINLINE void tcclamp_cycle_light(int32_t* S, int32_t* T, int32_t max
 }
 
 
-int rdp_init(struct rdp_config config)
+int rdp_init(struct core_config* config)
 {
     cfg = config;
 
@@ -5897,7 +5897,7 @@ static void edgewalker_for_prims(int32_t* ewdata)
             {
                 span[j].lx = maxxmx;
                 span[j].rx = minxhx;
-                span[j].validline  = !allinval && !allover && !allunder && (!scfield || (scfield && !(sckeepodd ^ (j & 1)))) && (!cfg.parallel || j % worker_num == worker_id);
+                span[j].validline  = !allinval && !allover && !allunder && (!scfield || (scfield && !(sckeepodd ^ (j & 1)))) && (!cfg->parallel || j % worker_num == worker_id);
 
             }
 
@@ -5984,7 +5984,7 @@ static void edgewalker_for_prims(int32_t* ewdata)
             {
                 span[j].lx = minxmx;
                 span[j].rx = maxxhx;
-                span[j].validline  = !allinval && !allover && !allunder && (!scfield || (scfield && !(sckeepodd ^ (j & 1)))) && (!cfg.parallel || j % worker_num == worker_id);
+                span[j].validline  = !allinval && !allover && !allunder && (!scfield || (scfield && !(sckeepodd ^ (j & 1)))) && (!cfg->parallel || j % worker_num == worker_id);
             }
 
         }
@@ -7045,15 +7045,15 @@ void rdp_update(void)
         }
 
 
-        if (rdp_commands[cmd].sync && cfg.parallel) {
+        if (rdp_commands[cmd].sync && cfg->parallel) {
             rdp_cmd_flush();
         }
 
-        if (rdp_commands[cmd].singlethread || !cfg.parallel) {
+        if (rdp_commands[cmd].singlethread || !cfg->parallel) {
             rdp_cmd_run(rdp_cmd_data + rdp_cmd_cur);
         }
 
-        if (rdp_commands[cmd].multithread && cfg.parallel) {
+        if (rdp_commands[cmd].multithread && cfg->parallel) {
            rdp_cmd_push(rdp_cmd_data + rdp_cmd_cur, cmd_length);
         }
 

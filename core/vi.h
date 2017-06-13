@@ -1,12 +1,6 @@
 #pragma once
 
-#include <stdbool.h>
+#include "core.h"
 
-struct vi_config
-{
-    bool parallel;
-    bool tv_fading;
-};
-
-void vi_init(struct vi_config config);
+void vi_init(struct core_config* config);
 void vi_update(void);

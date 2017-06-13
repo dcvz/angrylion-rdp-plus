@@ -15,7 +15,7 @@ struct ccvg
 };
 
 // config
-static struct vi_config cfg;
+static struct core_config* cfg;
 
 // states
 static uint32_t prevvicurrent;
@@ -675,7 +675,7 @@ uint32_t vi_integer_sqrt(uint32_t a)
     return res;
 }
 
-void vi_init(struct vi_config config)
+void vi_init(struct core_config* config)
 {
     cfg = config;
 
@@ -1008,7 +1008,7 @@ int vi_process_init(void)
     int i;
     if (!(vitype & 2))
     {
-        if (cfg.tv_fading) {
+        if (cfg->tv_fading) {
             memset(tvfadeoutstate, 0, PRESCALE_HEIGHT * sizeof(uint32_t));
         }
         //for (i = 0; i < PRESCALE_HEIGHT; i++)
@@ -1020,7 +1020,7 @@ int vi_process_init(void)
     {
         prevwasblank = 0;
 
-        if (!cfg.tv_fading) {
+        if (!cfg->tv_fading) {
             return 1;
         }
 
@@ -1168,7 +1168,7 @@ void vi_process(void)
                 int32_t j_end = vres;
                 int32_t j_add = 1;
 
-                if (cfg.parallel) {
+                if (cfg->parallel) {
                     j_start = parallel_worker_id();
                     j_add = parallel_worker_num();
                 }
@@ -1408,7 +1408,7 @@ void vi_update(void)
     }
 
     // run filter update in parallel if enabled
-    if (cfg.parallel) {
+    if (cfg->parallel) {
         parallel_run(vi_process);
     } else {
         vi_process();
