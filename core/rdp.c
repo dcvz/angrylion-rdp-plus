@@ -63,10 +63,9 @@ static uint32_t rdp_cmd_ptr = 0;
 static uint32_t rdp_cmd_cur = 0;
 static uint32_t ptr_onstart = 0;
 
-#define CMD_BUFFER_SIZE 44
 #define CMD_BUFFER_COUNT 1024
 
-static uint32_t rdp_cmd_buf[CMD_BUFFER_COUNT][CMD_BUFFER_SIZE];
+static uint32_t rdp_cmd_buf[CMD_BUFFER_COUNT][CMD_MAX_INTS];
 static uint32_t rdp_cmd_buf_pos;
 
 static TLS int blshifta = 0, blshiftb = 0, pastblshifta = 0, pastblshiftb = 0;
@@ -6607,7 +6606,7 @@ static void rdp_noop(const uint32_t* args)
 
 static void rdp_tri_noshade(const uint32_t* args)
 {
-    int32_t ewdata[44];
+    int32_t ewdata[CMD_MAX_INTS];
     memcpy(&ewdata[0], args, 8 * sizeof(int32_t));
     memset(&ewdata[8], 0, 36 * sizeof(int32_t));
     edgewalker_for_prims(ewdata);
@@ -6615,7 +6614,7 @@ static void rdp_tri_noshade(const uint32_t* args)
 
 static void rdp_tri_noshade_z(const uint32_t* args)
 {
-    int32_t ewdata[44];
+    int32_t ewdata[CMD_MAX_INTS];
     memcpy(&ewdata[0], args, 8 * sizeof(int32_t));
     memset(&ewdata[8], 0, 32 * sizeof(int32_t));
     memcpy(&ewdata[40], args + 8, 4 * sizeof(int32_t));
@@ -6624,7 +6623,7 @@ static void rdp_tri_noshade_z(const uint32_t* args)
 
 static void rdp_tri_tex(const uint32_t* args)
 {
-    int32_t ewdata[44];
+    int32_t ewdata[CMD_MAX_INTS];
     memcpy(&ewdata[0], args, 8 * sizeof(int32_t));
     memset(&ewdata[8], 0, 16 * sizeof(int32_t));
     memcpy(&ewdata[24], args + 8, 16 * sizeof(int32_t));
@@ -6634,7 +6633,7 @@ static void rdp_tri_tex(const uint32_t* args)
 
 static void rdp_tri_tex_z(const uint32_t* args)
 {
-    int32_t ewdata[44];
+    int32_t ewdata[CMD_MAX_INTS];
     memcpy(&ewdata[0], args, 8 * sizeof(int32_t));
     memset(&ewdata[8], 0, 16 * sizeof(int32_t));
     memcpy(&ewdata[24], args + 8, 16 * sizeof(int32_t));
@@ -6652,7 +6651,7 @@ static void rdp_tri_tex_z(const uint32_t* args)
 
 static void rdp_tri_shade(const uint32_t* args)
 {
-    int32_t ewdata[44];
+    int32_t ewdata[CMD_MAX_INTS];
     memcpy(&ewdata[0], args, 24 * sizeof(int32_t));
     memset(&ewdata[24], 0, 20 * sizeof(int32_t));
     edgewalker_for_prims(ewdata);
@@ -6660,7 +6659,7 @@ static void rdp_tri_shade(const uint32_t* args)
 
 static void rdp_tri_shade_z(const uint32_t* args)
 {
-    int32_t ewdata[44];
+    int32_t ewdata[CMD_MAX_INTS];
     memcpy(&ewdata[0], args, 24 * sizeof(int32_t));
     memset(&ewdata[24], 0, 16 * sizeof(int32_t));
     memcpy(&ewdata[40], args + 24, 4 * sizeof(int32_t));
@@ -6669,7 +6668,7 @@ static void rdp_tri_shade_z(const uint32_t* args)
 
 static void rdp_tri_texshade(const uint32_t* args)
 {
-    int32_t ewdata[44];
+    int32_t ewdata[CMD_MAX_INTS];
     memcpy(&ewdata[0], args, 40 * sizeof(int32_t));
     memset(&ewdata[40], 0, 4 * sizeof(int32_t));
     edgewalker_for_prims(ewdata);
@@ -6677,8 +6676,8 @@ static void rdp_tri_texshade(const uint32_t* args)
 
 static void rdp_tri_texshade_z(const uint32_t* args)
 {
-    int32_t ewdata[44];
-    memcpy(&ewdata[0], args, 44 * sizeof(int32_t));
+    int32_t ewdata[CMD_MAX_INTS];
+    memcpy(&ewdata[0], args, CMD_MAX_SIZE);
 
 
 
@@ -6711,7 +6710,7 @@ static void rdp_tex_rect(const uint32_t* args)
     uint32_t xlint = (xl >> 2) & 0x3ff;
     uint32_t xhint = (xh >> 2) & 0x3ff;
 
-    int32_t ewdata[44];
+    int32_t ewdata[CMD_MAX_INTS];
     ewdata[0] = (0x24 << 24) | ((0x80 | tilenum) << 16) | yl;
     ewdata[1] = (yl << 16) | yh;
     ewdata[2] = (xlint << 16) | ((xl & 3) << 14);
@@ -6767,7 +6766,7 @@ static void rdp_tex_rect_flip(const uint32_t* args)
     uint32_t xlint = (xl >> 2) & 0x3ff;
     uint32_t xhint = (xh >> 2) & 0x3ff;
 
-    int32_t ewdata[44];
+    int32_t ewdata[CMD_MAX_INTS];
     ewdata[0] = (0x25 << 24) | ((0x80 | tilenum) << 16) | yl;
     ewdata[1] = (yl << 16) | yh;
     ewdata[2] = (xlint << 16) | ((xl & 3) << 14);
@@ -7153,7 +7152,7 @@ static void rdp_fill_rect(const uint32_t* args)
     uint32_t xlint = (xl >> 2) & 0x3ff;
     uint32_t xhint = (xh >> 2) & 0x3ff;
 
-    int32_t ewdata[44];
+    int32_t ewdata[CMD_MAX_INTS];
     ewdata[0] = (0x3680 << 16) | yl;
     ewdata[1] = (yl << 16) | yh;
     ewdata[2] = (xlint << 16) | ((xl & 3) << 14);
