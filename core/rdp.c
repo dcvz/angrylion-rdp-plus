@@ -6965,6 +6965,23 @@ static void rdp_cmd_push(const uint32_t* arg, size_t length)
     }
 }
 
+void rdp_cmd(const uint32_t* arg, size_t length)
+{
+    uint32_t cmd = (arg[0] >> 24) & 0x3f;
+
+    if (rdp_commands[cmd].sync && cfg->parallel) {
+        rdp_cmd_flush();
+    }
+
+    if (rdp_commands[cmd].singlethread || !cfg->parallel) {
+        rdp_cmd_run(arg);
+    }
+
+    if (rdp_commands[cmd].multithread && cfg->parallel) {
+        rdp_cmd_push(arg, length);
+    }
+}
+
 void rdp_update(void)
 {
     int i, length;
@@ -7061,18 +7078,7 @@ void rdp_update(void)
             }
         }
 
-
-        if (rdp_commands[cmd].sync && cfg->parallel) {
-            rdp_cmd_flush();
-        }
-
-        if (rdp_commands[cmd].singlethread || !cfg->parallel) {
-            rdp_cmd_run(rdp_cmd_data + rdp_cmd_cur);
-        }
-
-        if (rdp_commands[cmd].multithread && cfg->parallel) {
-           rdp_cmd_push(rdp_cmd_data + rdp_cmd_cur, cmd_length);
-        }
+        rdp_cmd(rdp_cmd_data + rdp_cmd_cur, cmd_length);
 
         if (trace_write_is_open()) {
             trace_write_cmd(rdp_cmd_data + rdp_cmd_cur, cmd_length);

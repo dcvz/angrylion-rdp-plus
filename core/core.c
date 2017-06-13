@@ -11,6 +11,7 @@
 
 static bool fullscreen;
 static int32_t screenshot_id;
+static struct core_config* cfg;
 
 static bool file_exists(char* path)
 {
@@ -26,7 +27,10 @@ static bool file_exists(char* path)
 
 void core_init(struct core_config* config)
 {
-    screen_init();
+    cfg = config;
+    if (!cfg->headless) {
+        screen_init();
+    }
     plugin_init();
     rdram_init();
     parallel_init(0);
@@ -48,6 +52,10 @@ void core_update_vi(void)
 
 void core_screenshot(char* directory, char* name)
 {
+    if (cfg->headless) {
+        return;
+    }
+
     // generate and find an unused file path
     char path[256];
     do {
@@ -60,13 +68,18 @@ void core_screenshot(char* directory, char* name)
 
 void core_toggle_fullscreen(void)
 {
-    fullscreen = !fullscreen;
-    screen_set_full(fullscreen);
+    if (!cfg->headless) {
+        fullscreen = !fullscreen;
+        screen_set_full(fullscreen);
+    }
 }
 
 void core_close(void)
 {
     parallel_close();
     plugin_close();
-    screen_close();
+    vi_close();
+    if (!cfg->headless) {
+        screen_close();
+    }
 }

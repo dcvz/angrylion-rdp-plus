@@ -1,0 +1,62 @@
+#include "plugin.h"
+#include "retrace.h"
+
+#include <memory.h>
+
+#define RDRAM_MAX_SIZE 0x800000
+
+static uint8_t rdram[RDRAM_MAX_SIZE];
+static uint8_t rdram_hidden_bits[RDRAM_MAX_SIZE];
+static uint8_t dmem[0x1000];
+
+static uint32_t dp_reg[DP_NUM_REG];
+static uint32_t vi_reg[VI_NUM_REG];
+
+static size_t rdram_size;
+
+void plugin_init(void)
+{
+}
+
+void plugin_interrupt(void)
+{
+}
+
+uint32_t* plugin_dp_register(enum dp_register reg)
+{
+    return &dp_reg[reg];
+}
+
+uint32_t* plugin_vi_register(enum vi_register reg)
+{
+    return &vi_reg[reg];
+}
+
+uint8_t* plugin_rdram(void)
+{
+    return rdram;
+}
+
+uint8_t* plugin_rdram_hidden(void)
+{
+    return rdram_hidden_bits;
+}
+
+size_t plugin_rdram_size(void)
+{
+    return rdram_size;
+}
+
+uint8_t* plugin_dmem(void)
+{
+    return dmem;
+}
+
+void plugin_close(void)
+{
+}
+
+void plugin_set_rdram_size(size_t size)
+{
+    rdram_size = size;
+}

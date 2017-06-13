@@ -8,6 +8,7 @@
 #include "irand.h"
 #include "parallel_c.hpp"
 
+#include <stdlib.h>
 #include <memory.h>
 
 struct ccvg
@@ -702,6 +703,11 @@ void vi_init(struct core_config* config)
             vi_restore_table[i] = 0;
     }
 
+    if (cfg->headless) {
+        PreScale = malloc(PRESCALE_WIDTH * PRESCALE_HEIGHT * sizeof(int32_t));
+        pitchindwords = PRESCALE_WIDTH;
+    }
+
     prevvicurrent = 0;
     emucontrolsvicurrent = -1;
     prevserrate = 0;
@@ -990,9 +996,11 @@ int vi_process_init(void)
         return 0;
     }
 
-    screen_get_buffer(PRESCALE_WIDTH, vactivelines, 480, &PreScale, &pitchindwords);
+    if (!cfg->headless) {
+        screen_get_buffer(PRESCALE_WIDTH, vactivelines, 480, &PreScale, &pitchindwords);
+        pitchindwords >>= 2;
+    }
 
-    pitchindwords >>= 2;
     linecount = serration_pulses ? (pitchindwords << 1) : pitchindwords;
     prescale_ptr = v_start * linecount + h_start + (lowerfield ? pitchindwords : 0);
 
@@ -1419,5 +1427,15 @@ void vi_update(void)
     }
 
     // render frame to screen
-    screen_swap();
+    if (!cfg->headless) {
+        screen_swap();
+    }
+}
+
+void vi_close(void)
+{
+    if (cfg->headless && PreScale) {
+        free(PreScale);
+        PreScale = NULL;
+    }
 }
