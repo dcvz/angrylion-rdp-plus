@@ -3,6 +3,7 @@
 #include "common.h"
 #include "plugin.h"
 #include "rdram.h"
+#include "trace_write.h"
 #include "msg.h"
 #include "irand.h"
 #include "parallel_c.hpp"
@@ -51,6 +52,7 @@ static const int32_t norm_slope_table[64] = {
 
 
 static struct core_config* cfg;
+static bool trace_parallel;
 
 static uint32_t rdp_cmd_data[0x10000];
 static uint32_t rdp_cmd_ptr = 0;
@@ -5371,6 +5373,9 @@ static void loading_pipeline(int start, int end, int tilenum, int coord_quad, in
 
         length = (xstart - xend + 1) & 0xfff;
 
+        if (trace_write_is_open()) {
+            trace_write_rdram((tiptr >> 2), length);
+        }
 
         for (j = 0; j < length; j+= spanadvance)
         {
@@ -6401,6 +6406,18 @@ static void rdp_sync_tile(const uint32_t* args)
 
 static void rdp_sync_full(const uint32_t* args)
 {
+    if (cfg->trace && !trace_write_is_open()) {
+        trace_write_open("trace.dpt");
+        trace_write_header(plugin_rdram_size());
+        trace_parallel = cfg->parallel;
+        cfg->parallel = false;
+    }
+
+    if (!cfg->trace && trace_write_is_open()) {
+        trace_write_close();
+        cfg->parallel = trace_parallel;
+    }
+
     plugin_interrupt();
 }
 
@@ -7055,6 +7072,10 @@ void rdp_update(void)
 
         if (rdp_commands[cmd].multithread && cfg->parallel) {
            rdp_cmd_push(rdp_cmd_data + rdp_cmd_cur, cmd_length);
+        }
+
+        if (trace_write_is_open()) {
+            trace_write_cmd(rdp_cmd_data + rdp_cmd_cur, cmd_length);
         }
 
         rdp_cmd_cur += cmd_length;

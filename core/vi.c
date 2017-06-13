@@ -2,6 +2,7 @@
 #include "common.h"
 #include "plugin.h"
 #include "rdram.h"
+#include "trace_write.h"
 #include "msg.h"
 #include "screen.h"
 #include "irand.h"
@@ -1401,6 +1402,10 @@ void vi_process(void)
 
 void vi_update(void)
 {
+    if (trace_write_is_open()) {
+        trace_write_vi();
+    }
+
     // try to init VI frame, abort if there's nothing to display
     if (!vi_process_init()) {
         return;

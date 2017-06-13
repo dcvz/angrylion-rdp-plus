@@ -7,6 +7,7 @@ struct core_config
 {
     bool parallel;
     bool tv_fading;
+    bool trace;
 };
 
 void core_init(struct core_config* config);
