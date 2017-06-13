@@ -16,7 +16,7 @@
 #define DP_STATUS_END_VALID     0x200   // Unknown
 #define DP_STATUS_START_VALID   0x400   // Unknown
 
-typedef enum _DP_REGISTER
+enum dp_register
 {
     DP_START,
     DP_END,
@@ -26,11 +26,10 @@ typedef enum _DP_REGISTER
     DP_BUFBUSY,
     DP_PIPEBUSY,
     DP_TMEM,
-
     DP_NUM_REG
-} DP_REGISTER;
+};
 
-typedef enum _VI_REGISTER
+enum vi_register
 {
     VI_STATUS,
     VI_ORIGIN,
@@ -46,9 +45,8 @@ typedef enum _VI_REGISTER
     VI_V_BURST,
     VI_X_SCALE,
     VI_Y_SCALE,
-
     VI_NUM_REG
-} VI_REGISTER;
+};
 
 // RDRAM pointers
 #define rdram32                 ((uint32_t*)plugin_rdram())
@@ -89,8 +87,8 @@ typedef enum _VI_REGISTER
 
 void plugin_init(void);
 void plugin_interrupt(void);
-uint32_t* plugin_dp_register(DP_REGISTER reg);
-uint32_t* plugin_vi_register(VI_REGISTER reg);
+uint32_t* plugin_dp_register(enum dp_register reg);
+uint32_t* plugin_vi_register(enum vi_register reg);
 uint8_t* plugin_rdram(void);
 uint8_t* plugin_rdram_hidden(void);
 size_t plugin_rdram_size(void);

@@ -14,7 +14,7 @@ static size_t rdram_size;
 static uint8_t* rdram_hidden_bits;
 
 static struct {
-    DP_REGISTER reg;
+    enum dp_register reg;
     PDWORD* ptr;
 } dp_reg[] = {
     {DP_START,          &gfx.DPC_START_REG},
@@ -28,7 +28,7 @@ static struct {
 };
 
 static struct {
-    VI_REGISTER reg;
+    enum vi_register reg;
     PDWORD* ptr;
 } vi_reg[] = {
     {VI_STATUS,         &gfx.VI_STATUS_REG},
@@ -91,12 +91,12 @@ void plugin_interrupt(void)
     gfx.CheckInterrupts();
 }
 
-uint32_t* plugin_dp_register(DP_REGISTER reg)
+uint32_t* plugin_dp_register(enum dp_register reg)
 {
     return (uint32_t*)*dp_reg[reg].ptr;
 }
 
-uint32_t* plugin_vi_register(VI_REGISTER reg)
+uint32_t* plugin_vi_register(enum vi_register reg)
 {
     return (uint32_t*)*vi_reg[reg].ptr;
 }
