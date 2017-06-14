@@ -6036,9 +6036,9 @@ static void edgewalker_for_loads(int32_t* lewdata)
     int32_t xl = 0, xm = 0, xh = 0;
     int32_t dxldy = 0, dxhdy = 0, dxmdy = 0;
 
-    int commandcode = (lewdata[0] >> 24) & 0x3f;
-    int ltlut = (commandcode == 0x30);
-    int coord_quad = ltlut || (commandcode == 0x33);
+    int cmd_id = CMD_ID(lewdata);
+    int ltlut = (cmd_id == 0x30);
+    int coord_quad = ltlut || (cmd_id == 0x33);
     flip = 1;
     max_level = 0;
     tilenum = (lewdata[0] >> 16) & 7;
@@ -6931,8 +6931,8 @@ static const struct
 
 static void rdp_cmd_run(const uint32_t* arg)
 {
-    uint32_t cmd = (arg[0] >> 24) & 0x3f;
-    rdp_commands[cmd].handler(arg);
+    uint32_t cmd_id = CMD_ID(arg);
+    rdp_commands[cmd_id].handler(arg);
 }
 
 static void rdp_cmd_run_buffered(void)
@@ -6967,17 +6967,17 @@ static void rdp_cmd_push(const uint32_t* arg, size_t length)
 
 void rdp_cmd(const uint32_t* arg, size_t length)
 {
-    uint32_t cmd = (arg[0] >> 24) & 0x3f;
+    uint32_t cmd_id = CMD_ID(arg);
 
-    if (rdp_commands[cmd].sync && cfg->parallel) {
+    if (rdp_commands[cmd_id].sync && cfg->parallel) {
         rdp_cmd_flush();
     }
 
-    if (rdp_commands[cmd].singlethread || !cfg->parallel) {
+    if (rdp_commands[cmd_id].singlethread || !cfg->parallel) {
         rdp_cmd_run(arg);
     }
 
-    if (rdp_commands[cmd].multithread && cfg->parallel) {
+    if (rdp_commands[cmd_id].multithread && cfg->parallel) {
         rdp_cmd_push(arg, length);
     }
 }
@@ -7057,7 +7057,7 @@ void rdp_update(void)
 
     while (rdp_cmd_cur < rdp_cmd_ptr && !rdp_pipeline_crashed)
     {
-        cmd = (rdp_cmd_data[rdp_cmd_cur] >> 24) & 0x3f;
+        cmd = CMD_ID(rdp_cmd_data + rdp_cmd_cur);
         cmd_length = rdp_commands[cmd].length >> 2;
 
 

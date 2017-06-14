@@ -32,7 +32,7 @@ bool retrace_frame(uint64_t* num_cmds)
                 rdp_cmd(cmd, length);
                 (*num_cmds)++;
 
-                uint32_t cmd_id = (cmd[0] >> 24) & 0x3f;
+                uint32_t cmd_id = CMD_ID(cmd);
                 if (cmd_id == 0x29) {
                     return true;
                 }
