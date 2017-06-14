@@ -1,6 +1,7 @@
 #include "core.h"
 #include "rdp.h"
 #include "vi.h"
+#include "screen.h"
 #include "trace_read.h"
 #include "retrace.h"
 
@@ -53,14 +54,52 @@ bool retrace_frame(uint64_t* num_cmds)
 
 void retrace_frames(void)
 {
-    uint64_t cmds_per_frame;
-    while (retrace_frame(&cmds_per_frame)) {
+    bool run = true;
+    bool pause = false;
+
+    while (run) {
+        bool render = !pause;
+
         SDL_Event event;
         while (SDL_PollEvent(&event)) {
             switch (event.type) {
+                case SDL_KEYDOWN:
+                    switch (event.key.keysym.sym) {
+                        // toggle fullscreen mode
+                        case SDLK_RETURN: {
+                            if (SDL_GetModState() & KMOD_ALT) {
+                                core_toggle_fullscreen();
+                            }
+                            break;
+                        }
+
+                        // toggle pause mode
+                        case SDLK_PAUSE:
+                            render = pause = !pause;
+                            break;
+
+                        // render one frame while paused
+                        case SDLK_SPACE:
+                            if (pause) {
+                                render = true;
+                            }
+                            break;
+                    }
+                    break;
+
                 case SDL_QUIT:
-                    return;
+                    run = false;
+                    break;
             }
+        }
+
+        if (render) {
+            uint64_t cmds_per_frame;
+            if (!retrace_frame(&cmds_per_frame)) {
+                run = false;
+            }
+        } else {
+            screen_swap();
         }
     }
 }
