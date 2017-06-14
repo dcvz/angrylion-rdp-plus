@@ -5,7 +5,7 @@
 #include "rdp.h"
 
 #include <stdio.h>
-#include <stdlib.h>
+#include <memory.h>
 
 static FILE* fp;
 

@@ -4,7 +4,7 @@
 #include "rdram.h"
 
 #include <stdio.h>
-#include <stdlib.h>
+#include <memory.h>
 
 static FILE* fp;
 static uint32_t trace_rdram[0x200000];
