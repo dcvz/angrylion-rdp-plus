@@ -41,6 +41,9 @@
     <ClCompile Include="trace_write.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="file.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="common.h">
@@ -80,6 +83,9 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="trace_write.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="file.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

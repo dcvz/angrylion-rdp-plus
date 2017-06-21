@@ -5,25 +5,15 @@
 #include "screen.h"
 #include "rdram.h"
 #include "plugin.h"
+#include "file.h"
+#include "trace_write.h"
 #include "parallel_c.hpp"
 
 #include <stdio.h>
 
 static bool fullscreen;
-static int32_t screenshot_id;
+static uint32_t screenshot_index;
 static struct core_config* cfg;
-
-static bool file_exists(char* path)
-{
-    FILE* fp = fopen(path, "rb");
-
-    if (!fp) {
-        return false;
-    }
-
-    fclose(fp);
-    return true;
-}
 
 void core_init(struct core_config* config)
 {
@@ -37,7 +27,7 @@ void core_init(struct core_config* config)
     rdp_init(config);
     vi_init(config);
 
-    screenshot_id = 0;
+    screenshot_index = 0;
 }
 
 void core_update_dp(void)
@@ -58,12 +48,9 @@ void core_screenshot(char* directory, char* name)
 
     // generate and find an unused file path
     char path[256];
-    do {
-        sprintf_s(path, sizeof(path), "%s\\%s_%04d.bmp", directory, name,
-            screenshot_id++);
-    } while (file_exists(path));
-
-    screen_capture(path);
+    if (file_path_indexed(path, sizeof(path), directory, name, "bmp", &screenshot_index)) {
+        screen_capture(path);
+    }
 }
 
 void core_toggle_fullscreen(void)
@@ -81,5 +68,8 @@ void core_close(void)
     vi_close();
     if (!cfg->headless) {
         screen_close();
+    }
+    if (trace_write_is_open()) {
+        trace_write_close();
     }
 }

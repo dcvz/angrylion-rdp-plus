@@ -6,9 +6,11 @@
 #include "trace_write.h"
 #include "msg.h"
 #include "irand.h"
+#include "file.h"
 #include "parallel_c.hpp"
 
 #include <memory.h>
+#include <string.h>
 
 // tctables.h
 static const int32_t norm_point_table[64] = {
@@ -53,6 +55,7 @@ static const int32_t norm_slope_table[64] = {
 
 static struct core_config* cfg;
 static bool trace_parallel;
+static uint32_t trace_index;
 
 static uint32_t rdp_cmd_data[0x10000];
 static uint32_t rdp_cmd_ptr = 0;
@@ -907,6 +910,8 @@ int rdp_init(struct core_config* config)
 
     rdp_pipeline_crashed = 0;
     memset(&onetimewarnings, 0, sizeof(onetimewarnings));
+
+    trace_index = 0;
 
     precalculate_everything();
 
@@ -6406,13 +6411,26 @@ static void rdp_sync_tile(const uint32_t* args)
 
 static void rdp_sync_full(const uint32_t* args)
 {
+    // open trace file when tracing has been enabled with no file open
     if (cfg->trace && !trace_write_is_open()) {
-        trace_write_open("trace.dpt");
+        // get ROM name from plugin and use placeholder if empty
+        char rom_name[32];
+        if (!plugin_rom_name(rom_name, sizeof(rom_name))) {
+            strcpy_s(rom_name, sizeof(rom_name), "trace");
+        }
+
+        // generate trace path
+        char trace_path[256];
+        file_path_indexed(trace_path, sizeof(trace_path), ".", rom_name,
+            "dpt", &trace_index);
+
+        trace_write_open(trace_path);
         trace_write_header(plugin_rdram_size());
         trace_parallel = cfg->parallel;
         cfg->parallel = false;
     }
 
+    // close trace file when tracing has been disabled
     if (!cfg->trace && trace_write_is_open()) {
         trace_write_close();
         cfg->parallel = trace_parallel;

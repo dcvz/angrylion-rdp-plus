@@ -1,5 +1,8 @@
 #include "plugin.h"
+#include "rdram.h"
 #include "gfx_1.3.h"
+
+#include <ctype.h>
 
 #define SP_INTERRUPT    0x1
 #define SI_INTERRUPT    0x2
@@ -74,6 +77,15 @@ static bool is_valid_ptr(void *ptr, uint32_t bytes)
     return true;
 }
 
+static char filter_char(char c)
+{
+    if (isalnum(c) || c == '_' || c == '-' || c == '.') {
+        return c;
+    } else {
+        return ' ';
+    }
+}
+
 void plugin_init(void)
 {
     // Zilmar plugins can't know how much RDRAM is allocated, so use a Win32 hack
@@ -119,6 +131,44 @@ size_t plugin_rdram_size(void)
 uint8_t* plugin_dmem(void)
 {
     return gfx.DMEM;
+}
+
+size_t plugin_rom_name(char* name, size_t name_size)
+{
+    if (name_size < 21) {
+        // buffer too small
+        return 0;
+    }
+
+    // copy game name from ROM header, which is encoded in Shift_JIS.
+    // most games just use the ASCII subset, so filter out the rest.
+    int i = 0;
+    for (; i < 20; i++) {
+        name[i] = filter_char(gfx.HEADER[(32 + i) ^ BYTE_ADDR_XOR]);
+    }
+
+    // make sure there's at least one whitespace that will terminate the string
+    // below
+    name[i] = ' ';
+
+    // trim trailing whitespaces
+    for (; i > 0; i--) {
+        if (name[i] != ' ') {
+            break;
+        }
+        name[i] = 0;
+    }
+
+    // game title is empty or invalid, use safe fallback using the four-character
+    // game ID
+    if (i == 0) {
+        for (; i < 4; i++) {
+            name[i] = filter_char(gfx.HEADER[(59 + i) ^ BYTE_ADDR_XOR]);
+        }
+        name[i] = 0;
+    }
+
+    return i;
 }
 
 void plugin_close(void)

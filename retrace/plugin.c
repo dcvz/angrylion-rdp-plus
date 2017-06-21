@@ -56,6 +56,11 @@ void plugin_close(void)
 {
 }
 
+size_t plugin_rom_name(char* name, size_t name_size)
+{
+    return 0;
+}
+
 void plugin_set_rdram_size(size_t size)
 {
     rdram_size = size;

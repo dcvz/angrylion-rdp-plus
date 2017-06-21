@@ -93,4 +93,5 @@ uint8_t* plugin_rdram(void);
 uint8_t* plugin_rdram_hidden(void);
 size_t plugin_rdram_size(void);
 uint8_t* plugin_dmem(void);
+size_t plugin_rom_name(char* name, size_t name_size);
 void plugin_close(void);

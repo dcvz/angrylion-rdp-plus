@@ -6,7 +6,6 @@
 #include "rdram.h"
 
 #include <stdio.h>
-#include <ctype.h>
 
 #define PLUGIN_BASE_NAME "angrylion's RDP Plus"
 
@@ -21,47 +20,12 @@ static struct core_config config;
 
 GFX_INFO gfx;
 
-static char filter_char(char c)
-{
-    if (isalnum(c) || c == '_' || c == '-' || c == '.') {
-        return c;
-    } else {
-        return ' ';
-    }
-}
-
 EXPORT void CALL CaptureScreen(char* directory)
 {
-    // copy game name from ROM header, which is encoded in Shift_JIS.
-    // most games just use the ASCII subset, so filter out the rest.
-    char rom_name[21];
-    int i;
-    for (i = 0; i < 20; i++) {
-        rom_name[i] = filter_char(gfx.HEADER[(32 + i) ^ BYTE_ADDR_XOR]);
+    char rom_name[32];
+    if (plugin_rom_name(rom_name, sizeof(rom_name))) {
+        core_screenshot(directory, rom_name);
     }
-
-    // make sure there's at least one whitespace that will terminate the string
-    // below
-    rom_name[i] = ' ';
-
-    // trim trailing whitespaces
-    for (; i > 0; i--) {
-        if (rom_name[i] != ' ') {
-            break;
-        }
-        rom_name[i] = 0;
-    }
-
-    // game title is empty or invalid, use safe fallback using the four-character
-    // game ID
-    if (i == 0) {
-        for (; i < 4; i++) {
-            rom_name[i] = filter_char(gfx.HEADER[(59 + i) ^ BYTE_ADDR_XOR]);
-        }
-        rom_name[i] = 0;
-    }
-
-    core_screenshot(directory, rom_name);
 }
 
 EXPORT void CALL ChangeWindow(void)
