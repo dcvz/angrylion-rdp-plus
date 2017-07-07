@@ -26,7 +26,7 @@ bool retrace_frame(uint64_t* num_cmds)
 
             case TRACE_CMD: {
                 uint32_t cmd[CMD_MAX_INTS];
-                size_t length;
+                uint32_t length;
                 trace_read_cmd(cmd, &length);
 
                 rdp_cmd(cmd, length);
@@ -191,7 +191,7 @@ int main(int argc, char** argv)
 
     config.parallel = true;
 
-    size_t rdram_size;
+    uint32_t rdram_size;
     trace_read_header(&rdram_size);
     plugin_set_rdram_size(rdram_size);
 

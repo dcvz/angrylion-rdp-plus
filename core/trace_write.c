@@ -26,20 +26,20 @@ bool trace_write_is_open(void)
     return fp != NULL;
 }
 
-void trace_write_header(size_t rdram_size)
+void trace_write_header(uint32_t rdram_size)
 {
     fwrite(TRACE_HEADER, 4, 1, fp);
     fwrite(&rdram_size, sizeof(rdram_size), 1, fp);
 }
 
-void trace_write_cmd(uint32_t* cmd, size_t length)
+void trace_write_cmd(uint32_t* cmd, uint32_t length)
 {
     trace_write_id(TRACE_CMD);
     fputc(length & 0xff, fp);
-    fwrite(cmd, sizeof(uint32_t), length, fp);
+    fwrite(cmd, sizeof(*cmd), length, fp);
 }
 
-void trace_write_rdram(size_t offset, size_t length)
+void trace_write_rdram(uint32_t offset, uint32_t length)
 {
     // drop invalid addresses
     if (!rdram_valid_idx32(offset) || !rdram_valid_idx32(offset + length - 1)) {
@@ -49,7 +49,7 @@ void trace_write_rdram(size_t offset, size_t length)
 
     // only write changes that aren't covered by the trace file yet
     bool changed = false;
-    for (size_t i = offset; i < offset + length; i++) {
+    for (uint32_t i = offset; i < offset + length; i++) {
         uint32_t v = rdram_read_idx32(i);
         changed = changed || trace_rdram[i] != v;
         trace_rdram[i] = v;
@@ -64,7 +64,7 @@ void trace_write_rdram(size_t offset, size_t length)
     fwrite(&offset, sizeof(offset), 1, fp);
     fwrite(&length, sizeof(length), 1, fp);
 
-    for (size_t i = offset; i < offset + length; i++) {
+    for (uint32_t i = offset; i < offset + length; i++) {
         uint32_t v = rdram_read_idx32(i);
         fwrite(&v, sizeof(v), 1, fp);
     }

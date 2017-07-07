@@ -6972,7 +6972,7 @@ static void rdp_cmd_flush(void)
     }
 }
 
-static void rdp_cmd_push(const uint32_t* arg, size_t length)
+static void rdp_cmd_push(const uint32_t* arg, uint32_t length)
 {
     // copy command data to current buffer position
     memcpy(rdp_cmd_buf + rdp_cmd_buf_pos, arg, length * sizeof(uint32_t));
@@ -6983,7 +6983,7 @@ static void rdp_cmd_push(const uint32_t* arg, size_t length)
     }
 }
 
-void rdp_cmd(const uint32_t* arg, size_t length)
+void rdp_cmd(const uint32_t* arg, uint32_t length)
 {
     uint32_t cmd_id = CMD_ID(arg);
 

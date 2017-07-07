@@ -7,5 +7,5 @@
 #define CMD_ID(cmd) ((*(cmd) >> 24) & 0x3f)
 
 int rdp_init(struct core_config* config);
-void rdp_cmd(const uint32_t* arg, size_t length);
+void rdp_cmd(const uint32_t* arg, uint32_t length);
 void rdp_update(void);

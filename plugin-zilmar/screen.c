@@ -371,8 +371,8 @@ void screen_capture(char* path)
     msg_debug("screen: writing screenshot to '%s'", path);
 
     // prepare bitmap headers
-    size_t pitch = tex_width * TEX_BYTES_PER_PIXEL;
-    size_t img_size = tex_height * pitch;
+    uint32_t pitch = tex_width * TEX_BYTES_PER_PIXEL;
+    uint32_t img_size = tex_height * pitch;
 
     BITMAPINFOHEADER ihdr = {0};
     ihdr.biSize = sizeof(ihdr);

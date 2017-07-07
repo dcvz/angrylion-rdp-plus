@@ -12,7 +12,7 @@ static uint8_t dmem[0x1000];
 static uint32_t dp_reg[DP_NUM_REG];
 static uint32_t vi_reg[VI_NUM_REG];
 
-static size_t rdram_size;
+static uint32_t rdram_size;
 
 void plugin_init(void)
 {
@@ -42,7 +42,7 @@ uint8_t* plugin_rdram_hidden(void)
     return rdram_hidden_bits;
 }
 
-size_t plugin_rdram_size(void)
+uint32_t plugin_rdram_size(void)
 {
     return rdram_size;
 }
@@ -56,12 +56,12 @@ void plugin_close(void)
 {
 }
 
-size_t plugin_rom_name(char* name, size_t name_size)
+uint32_t plugin_rom_name(char* name, uint32_t name_size)
 {
     return 0;
 }
 
-void plugin_set_rdram_size(size_t size)
+void plugin_set_rdram_size(uint32_t size)
 {
     rdram_size = size;
 }

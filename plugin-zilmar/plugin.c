@@ -13,7 +13,7 @@
 
 extern GFX_INFO gfx;
 
-static size_t rdram_size;
+static uint32_t rdram_size;
 static uint8_t* rdram_hidden_bits;
 
 static struct {
@@ -123,7 +123,7 @@ uint8_t* plugin_rdram_hidden(void)
     return rdram_hidden_bits;
 }
 
-size_t plugin_rdram_size(void)
+uint32_t plugin_rdram_size(void)
 {
     return rdram_size;
 }
@@ -133,7 +133,7 @@ uint8_t* plugin_dmem(void)
     return gfx.DMEM;
 }
 
-size_t plugin_rom_name(char* name, size_t name_size)
+uint32_t plugin_rom_name(char* name, uint32_t name_size)
 {
     if (name_size < 21) {
         // buffer too small

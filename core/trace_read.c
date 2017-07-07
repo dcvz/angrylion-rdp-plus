@@ -21,7 +21,7 @@ bool trace_read_is_open(void)
     return fp != NULL;
 }
 
-void trace_read_header(size_t* rdram_size)
+void trace_read_header(uint32_t* rdram_size)
 {
     char header[4];
     fread(header, sizeof(header), 1, fp);
@@ -29,7 +29,7 @@ void trace_read_header(size_t* rdram_size)
         msg_error("trace_read_header: Invalid trace file header or unsupported version.");
     }
 
-    fread(rdram_size, sizeof(rdram_size), 1, fp);
+    fread(rdram_size, sizeof(*rdram_size), 1, fp);
 }
 
 char trace_read_id(void)
@@ -47,7 +47,7 @@ char trace_read_id(void)
     return id;
 }
 
-void trace_read_cmd(uint32_t* cmd, size_t* length)
+void trace_read_cmd(uint32_t* cmd, uint32_t* length)
 {
     *length = fgetc(fp);
 
@@ -55,18 +55,18 @@ void trace_read_cmd(uint32_t* cmd, size_t* length)
         msg_error("trace_read_cmd: Command is too long (%d)", *length);
     }
 
-    fread(cmd, sizeof(uint32_t), *length, fp);
+    fread(cmd, sizeof(*cmd), *length, fp);
 }
 
 void trace_read_rdram(void)
 {
-    size_t offset;
-    size_t length;
+    uint32_t offset;
+    uint32_t length;
     fread(&offset, sizeof(offset), 1, fp);
     fread(&length, sizeof(length), 1, fp);
 
     uint32_t v;
-    for (size_t i = offset; i < offset + length; i++) {
+    for (uint32_t i = offset; i < offset + length; i++) {
         fread(&v, sizeof(v), 1, fp);
         rdram_write_idx32(i, v);
     }
