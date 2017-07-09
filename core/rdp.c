@@ -6042,8 +6042,8 @@ static void edgewalker_for_loads(int32_t* lewdata)
     int32_t dxldy = 0, dxhdy = 0, dxmdy = 0;
 
     int cmd_id = CMD_ID(lewdata);
-    int ltlut = (cmd_id == 0x30);
-    int coord_quad = ltlut || (cmd_id == 0x33);
+    int ltlut = (cmd_id == CMD_ID_LOAD_TLUT);
+    int coord_quad = ltlut || (cmd_id == CMD_ID_LOAD_BLOCK);
     flip = 1;
     max_level = 0;
     tilenum = (lewdata[0] >> 16) & 7;
