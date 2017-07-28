@@ -91,8 +91,6 @@ EXPORT void CALL RomClosed(void)
 
 EXPORT void CALL RomOpen(void)
 {
-    config.parallel = true;
-
     core_init(&config);
 }
 

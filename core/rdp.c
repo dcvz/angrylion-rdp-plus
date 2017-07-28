@@ -54,8 +54,6 @@ static const int32_t norm_slope_table[64] = {
 
 
 static struct core_config* cfg;
-static bool trace_parallel;
-static uint32_t trace_index;
 
 static uint32_t rdp_cmd_data[0x10000];
 static uint32_t rdp_cmd_ptr = 0;
@@ -910,8 +908,6 @@ int rdp_init(struct core_config* config)
 
     rdp_pipeline_crashed = 0;
     memset(&onetimewarnings, 0, sizeof(onetimewarnings));
-
-    trace_index = 0;
 
     precalculate_everything();
 
@@ -5907,7 +5903,7 @@ static void edgewalker_for_prims(int32_t* ewdata)
             {
                 span[j].lx = maxxmx;
                 span[j].rx = minxhx;
-                span[j].validline  = !allinval && !allover && !allunder && (!scfield || (scfield && !(sckeepodd ^ (j & 1)))) && (!cfg->parallel || j % worker_num == worker_id);
+                span[j].validline  = !allinval && !allover && !allunder && (!scfield || (scfield && !(sckeepodd ^ (j & 1)))) && (cfg->num_workers == 1 || j % worker_num == worker_id);
 
             }
 
@@ -5994,7 +5990,7 @@ static void edgewalker_for_prims(int32_t* ewdata)
             {
                 span[j].lx = minxmx;
                 span[j].rx = maxxhx;
-                span[j].validline  = !allinval && !allover && !allunder && (!scfield || (scfield && !(sckeepodd ^ (j & 1)))) && (!cfg->parallel || j % worker_num == worker_id);
+                span[j].validline  = !allinval && !allover && !allunder && (!scfield || (scfield && !(sckeepodd ^ (j & 1)))) && (cfg->num_workers == 1 || j % worker_num == worker_id);
             }
 
         }
@@ -6411,31 +6407,7 @@ static void rdp_sync_tile(const uint32_t* args)
 
 static void rdp_sync_full(const uint32_t* args)
 {
-    // open trace file when tracing has been enabled with no file open
-    if (cfg->trace && !trace_write_is_open()) {
-        // get ROM name from plugin and use placeholder if empty
-        char rom_name[32];
-        if (!plugin_rom_name(rom_name, sizeof(rom_name))) {
-            strcpy_s(rom_name, sizeof(rom_name), "trace");
-        }
-
-        // generate trace path
-        char trace_path[256];
-        file_path_indexed(trace_path, sizeof(trace_path), ".", rom_name,
-            "dpt", &trace_index);
-
-        trace_write_open(trace_path);
-        trace_write_header(plugin_rdram_size());
-        trace_parallel = cfg->parallel;
-        cfg->parallel = false;
-    }
-
-    // close trace file when tracing has been disabled
-    if (!cfg->trace && trace_write_is_open()) {
-        trace_write_close();
-        cfg->parallel = trace_parallel;
-    }
-
+    core_update();
     plugin_interrupt();
 }
 
@@ -6987,15 +6959,17 @@ void rdp_cmd(const uint32_t* arg, uint32_t length)
 {
     uint32_t cmd_id = CMD_ID(arg);
 
-    if (rdp_commands[cmd_id].sync && cfg->parallel) {
+    bool parallel = cfg->num_workers != 1;
+
+    if (rdp_commands[cmd_id].sync && parallel) {
         rdp_cmd_flush();
     }
 
-    if (rdp_commands[cmd_id].singlethread || !cfg->parallel) {
+    if (rdp_commands[cmd_id].singlethread || !parallel) {
         rdp_cmd_run(arg);
     }
 
-    if (rdp_commands[cmd_id].multithread && cfg->parallel) {
+    if (rdp_commands[cmd_id].multithread && parallel) {
         rdp_cmd_push(arg, length);
     }
 }

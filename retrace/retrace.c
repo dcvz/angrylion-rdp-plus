@@ -188,8 +188,6 @@ int main(int argc, char** argv)
         }
     }
 
-    config.parallel = true;
-
     uint32_t rdram_size;
     trace_read_header(&rdram_size);
     plugin_set_rdram_size(rdram_size);

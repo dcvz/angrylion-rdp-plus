@@ -1176,7 +1176,7 @@ void vi_process(void)
                 int32_t j_end = vres;
                 int32_t j_add = 1;
 
-                if (cfg->parallel) {
+                if (cfg->num_workers != 1) {
                     j_start = parallel_worker_id();
                     j_add = parallel_worker_num();
                 }
@@ -1420,7 +1420,7 @@ void vi_update(void)
     }
 
     // run filter update in parallel if enabled
-    if (cfg->parallel) {
+    if (cfg->num_workers != 1) {
         parallel_run(vi_process);
     } else {
         vi_process();
