@@ -53,7 +53,7 @@ static const int32_t norm_slope_table[64] = {
 #define GET_HI_RGBA16_TMEM(x)   (replicated_rgba[(x) >> 11])
 
 
-static struct core_config* cfg;
+static struct core_config* config;
 
 static uint32_t rdp_cmd_data[0x10000];
 static uint32_t rdp_cmd_ptr = 0;
@@ -854,9 +854,9 @@ static STRICTINLINE void tcclamp_cycle_light(int32_t* S, int32_t* T, int32_t max
 }
 
 
-int rdp_init(struct core_config* config)
+int rdp_init(struct core_config* _config)
 {
-    cfg = config;
+    config = _config;
 
     fbread1_ptr = fbread_func[0];
     fbread2_ptr = fbread2_func[0];
@@ -5903,7 +5903,7 @@ static void edgewalker_for_prims(int32_t* ewdata)
             {
                 span[j].lx = maxxmx;
                 span[j].rx = minxhx;
-                span[j].validline  = !allinval && !allover && !allunder && (!scfield || (scfield && !(sckeepodd ^ (j & 1)))) && (cfg->num_workers == 1 || j % worker_num == worker_id);
+                span[j].validline  = !allinval && !allover && !allunder && (!scfield || (scfield && !(sckeepodd ^ (j & 1)))) && (config->num_workers == 1 || j % worker_num == worker_id);
 
             }
 
@@ -5990,7 +5990,7 @@ static void edgewalker_for_prims(int32_t* ewdata)
             {
                 span[j].lx = minxmx;
                 span[j].rx = maxxhx;
-                span[j].validline  = !allinval && !allover && !allunder && (!scfield || (scfield && !(sckeepodd ^ (j & 1)))) && (cfg->num_workers == 1 || j % worker_num == worker_id);
+                span[j].validline  = !allinval && !allover && !allunder && (!scfield || (scfield && !(sckeepodd ^ (j & 1)))) && (config->num_workers == 1 || j % worker_num == worker_id);
             }
 
         }
@@ -6959,7 +6959,7 @@ void rdp_cmd(const uint32_t* arg, uint32_t length)
 {
     uint32_t cmd_id = CMD_ID(arg);
 
-    bool parallel = cfg->num_workers != 1;
+    bool parallel = config->num_workers != 1;
 
     if (rdp_commands[cmd_id].sync && parallel) {
         rdp_cmd_flush();
