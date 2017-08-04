@@ -4,7 +4,6 @@
 #include "rdram.h"
 #include "trace_write.h"
 #include "msg.h"
-#include "screen.h"
 #include "irand.h"
 #include "parallel_c.hpp"
 
@@ -18,6 +17,7 @@ struct ccvg
 
 // config
 static struct core_config* cfg;
+static struct screen_api* screen;
 
 // states
 static uint32_t prevvicurrent;
@@ -677,9 +677,10 @@ uint32_t vi_integer_sqrt(uint32_t a)
     return res;
 }
 
-void vi_init(struct core_config* config)
+void vi_init(struct core_config* _config, struct screen_api* _screen)
 {
-    cfg = config;
+    cfg = _config;
+    screen = _screen;
 
     for (int i = 0; i < 256; i++)
     {
@@ -701,11 +702,6 @@ void vi_init(struct core_config* config)
             vi_restore_table[i] = -1;
         else
             vi_restore_table[i] = 0;
-    }
-
-    if (cfg->headless) {
-        PreScale = malloc(PRESCALE_WIDTH * PRESCALE_HEIGHT * sizeof(int32_t));
-        pitchindwords = PRESCALE_WIDTH;
     }
 
     prevvicurrent = 0;
@@ -996,10 +992,8 @@ int vi_process_init(void)
         return 0;
     }
 
-    if (!cfg->headless) {
-        screen_get_buffer(PRESCALE_WIDTH, vactivelines, 480, &PreScale, &pitchindwords);
-        pitchindwords >>= 2;
-    }
+    screen->get_buffer(PRESCALE_WIDTH, vactivelines, 480, &PreScale, &pitchindwords);
+    pitchindwords >>= 2;
 
     linecount = serration_pulses ? (pitchindwords << 1) : pitchindwords;
     prescale_ptr = v_start * linecount + h_start + (lowerfield ? pitchindwords : 0);
@@ -1427,15 +1421,9 @@ void vi_update(void)
     }
 
     // render frame to screen
-    if (!cfg->headless) {
-        screen_swap();
-    }
+    screen->swap();
 }
 
 void vi_close(void)
 {
-    if (cfg->headless && PreScale) {
-        free(PreScale);
-        PreScale = NULL;
-    }
 }

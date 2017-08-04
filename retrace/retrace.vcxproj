@@ -171,13 +171,14 @@
   <ItemGroup>
     <ClCompile Include="plugin.c" />
     <ClCompile Include="retrace.c" />
-    <ClCompile Include="screen.c" />
+    <ClCompile Include="screen_sdl.c" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="retrace.h" />
+    <ClInclude Include="screen_sdl.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

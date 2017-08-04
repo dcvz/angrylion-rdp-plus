@@ -1,4 +1,4 @@
-#include "screen.h"
+#include "screen_sdl.h"
 #include "msg.h"
 #include "retrace.h"
 
@@ -14,8 +14,9 @@ static SDL_Texture* texture = NULL;
 
 static int32_t texture_width;
 static int32_t texture_height;
+static bool fullscreen;
 
-void screen_init(void)
+static void screen_init(void)
 {
     SDL_Init(SDL_INIT_VIDEO);
     SDL_SetThreadPriority(SDL_THREAD_PRIORITY_HIGH);
@@ -44,14 +45,14 @@ void screen_init(void)
     texture_height = 0;
 }
 
-void screen_swap(void)
+static void screen_swap(void)
 {
     SDL_UnlockTexture(texture);
     SDL_RenderCopy(renderer, texture, NULL, NULL);
     SDL_RenderPresent(renderer);
 }
 
-void screen_get_buffer(int width, int height, int display_height, int** buffer, int* pitch)
+static void screen_get_buffer(int width, int height, int display_height, int** buffer, int* pitch)
 {
     if (texture_width != width || texture_height != height) {
         SDL_DisplayMode mode;
@@ -86,17 +87,23 @@ void screen_get_buffer(int width, int height, int display_height, int** buffer, 
     SDL_LockTexture(texture, NULL, buffer, pitch);
 }
 
-void screen_set_full(bool fullscreen)
+static void screen_set_fullscreen(bool _fullscreen)
 {
-    uint32_t flags = fullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0;
+    uint32_t flags = _fullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0;
     SDL_SetWindowFullscreen(window, flags);
+    fullscreen = _fullscreen;
 }
 
-void screen_capture(char* path)
+static bool screen_get_fullscreen(void)
+{
+    return fullscreen;
+}
+
+static void screen_capture(char* path)
 {
 }
 
-void screen_close(void)
+static void screen_close(void)
 {
     SDL_DestroyTexture(texture);
     texture = NULL;
@@ -106,4 +113,15 @@ void screen_close(void)
 
     SDL_DestroyWindow(window);
     window = NULL;
+}
+
+void screen_sdl(struct screen_api* api)
+{
+    api->init = screen_init;
+    api->swap = screen_swap;
+    api->get_buffer = screen_get_buffer;
+    api->set_fullscreen = screen_set_fullscreen;
+    api->get_fullscreen = screen_get_fullscreen;
+    api->capture = screen_capture;
+    api->close = screen_close;
 }

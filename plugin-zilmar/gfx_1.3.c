@@ -4,6 +4,7 @@
 #include "plugin.h"
 #include "msg.h"
 #include "rdram.h"
+#include "screen_opengl.h"
 
 #include <stdio.h>
 
@@ -91,6 +92,7 @@ EXPORT void CALL RomClosed(void)
 
 EXPORT void CALL RomOpen(void)
 {
+    config.screen_api = screen_opengl;
     core_init(&config);
 }
 

@@ -1,4 +1,4 @@
-#include "screen.h"
+#include "screen_opengl.h"
 #include "msg.h"
 #include "gfx_1.3.h"
 #include "gl_core_3_3.h"
@@ -37,7 +37,7 @@ static int32_t tex_display_height;
 static HDC dc;
 static HGLRC glrc;
 static HGLRC glrc_core;
-static bool prev_fullscreen;
+static bool fullscreen;
 
 static GLuint gl_shader_compile(GLenum type, const GLchar* source)
 {
@@ -107,7 +107,7 @@ static void gl_check_errors(void)
     }
 }
 
-void screen_init(void)
+static void screen_init(void)
 {
     BOOL zoomed = IsZoomed(gfx.hWnd);
 
@@ -115,7 +115,7 @@ void screen_init(void)
         ShowWindow(gfx.hWnd, SW_RESTORE);
     }
 
-    if (!prev_fullscreen) {
+    if (!fullscreen) {
         // make window resizable for the user
         LONG style = GetWindowLong(gfx.hWnd, GWL_STYLE);
         style |= WS_SIZEBOX | WS_MAXIMIZEBOX;
@@ -235,7 +235,7 @@ void screen_init(void)
     gl_check_errors();
 }
 
-void screen_get_buffer(int width, int height, int display_height, int** buffer, int* pitch)
+static void screen_get_buffer(int width, int height, int display_height, int** buffer, int* pitch)
 {
     // check if the framebuffer size has changed
     if (tex_width != width || tex_height != height) {
@@ -262,7 +262,7 @@ void screen_get_buffer(int width, int height, int display_height, int** buffer, 
     *pitch = width * TEX_BYTES_PER_PIXEL;
 }
 
-void screen_swap(void)
+static void screen_swap(void)
 {
     // copy local buffer to GPU texture buffer
     glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, tex_width, tex_height,
@@ -306,13 +306,13 @@ void screen_swap(void)
     gl_check_errors();
 }
 
-void screen_set_full(bool fullscreen)
+static void screen_set_fullscreen(bool _fullscreen)
 {
     static HMENU old_menu;
     static LONG old_style;
     static WINDOWPLACEMENT old_pos;
 
-    if (fullscreen) {
+    if (_fullscreen) {
         // hide curser
         ShowCursor(FALSE);
 
@@ -363,10 +363,15 @@ void screen_set_full(bool fullscreen)
         SetWindowPlacement(gfx.hWnd, &old_pos);
     }
 
-    prev_fullscreen = fullscreen;
+    fullscreen = _fullscreen;
 }
 
-void screen_capture(char* path)
+static bool screen_get_fullscreen(void)
+{
+    return fullscreen;
+}
+
+static void screen_capture(char* path)
 {
     msg_debug("screen: writing screenshot to '%s'", path);
 
@@ -410,7 +415,7 @@ void screen_capture(char* path)
     fclose(fp);
 }
 
-void screen_close(void)
+static void screen_close(void)
 {
     if (tex_buffer) {
         free(tex_buffer);
@@ -429,4 +434,15 @@ void screen_close(void)
     }
 
     wglDeleteContext(glrc);
+}
+
+void screen_opengl(struct screen_api* api)
+{
+    api->init = screen_init;
+    api->swap = screen_swap;
+    api->get_buffer = screen_get_buffer;
+    api->set_fullscreen = screen_set_fullscreen;
+    api->get_fullscreen = screen_get_fullscreen;
+    api->capture = screen_capture;
+    api->close = screen_close;
 }

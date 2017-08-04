@@ -21,13 +21,14 @@
   <ItemGroup>
     <ClInclude Include="gfx_1.3.h" />
     <ClInclude Include="gl_core_3_3.h" />
+    <ClInclude Include="screen_opengl.h" />
     <ClInclude Include="wgl_ext.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="gfx_1.3.c" />
     <ClCompile Include="gl_core_3_3.c" />
     <ClCompile Include="plugin.c" />
-    <ClCompile Include="screen.c" />
+    <ClCompile Include="screen_opengl.c" />
     <ClCompile Include="wgl_ext.c" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

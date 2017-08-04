@@ -1,7 +1,7 @@
 #include "core.h"
 #include "rdp.h"
 #include "vi.h"
-#include "screen.h"
+#include "screen_sdl.h"
 #include "trace_read.h"
 #include "retrace.h"
 
@@ -97,8 +97,6 @@ void retrace_frames(void)
             if (!retrace_frame(&cmds_per_frame)) {
                 run = false;
             }
-        } else {
-            screen_swap();
         }
     }
 }
@@ -183,9 +181,13 @@ int main(int argc, char** argv)
 
     for (int i = 1; i < argc - 1; i++) {
         if (!strcmp(argv[i], "--benchmark")) {
-            config.headless = true;
             benchmark = true;
         }
+    }
+
+    // skip screen adapter in benchmarks for headless mode
+    if (!benchmark) {
+        config.screen_api = screen_sdl;
     }
 
     uint32_t rdram_size;

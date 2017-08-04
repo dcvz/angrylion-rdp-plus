@@ -205,6 +205,7 @@
     <ClCompile Include="parallel_c.cpp" />
     <ClCompile Include="rdp.c" />
     <ClCompile Include="rdram.c" />
+    <ClCompile Include="screen_headless.c" />
     <ClCompile Include="trace_read.c" />
     <ClCompile Include="trace_write.c" />
     <ClCompile Include="vi.c" />
@@ -219,7 +220,7 @@
     <ClInclude Include="plugin.h" />
     <ClInclude Include="rdram.h" />
     <ClInclude Include="rdp.h" />
-    <ClInclude Include="screen.h" />
+    <ClInclude Include="screen_headless.h" />
     <ClInclude Include="trace.h" />
     <ClInclude Include="trace_read.h" />
     <ClInclude Include="trace_write.h" />

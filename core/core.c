@@ -2,7 +2,7 @@
 
 #include "rdp.h"
 #include "vi.h"
-#include "screen.h"
+#include "screen_headless.h"
 #include "rdram.h"
 #include "plugin.h"
 #include "file.h"
@@ -12,27 +12,31 @@
 #include <stdio.h>
 #include <string.h>
 
-static bool fullscreen;
 static uint32_t screenshot_index;
 static uint32_t trace_num_workers;
 static uint32_t trace_index;
 static uint32_t num_workers;
 
 static struct core_config* cfg;
+static struct screen_api screen;
 
-void core_init(struct core_config* config)
+void core_init(struct core_config* _config)
 {
-    cfg = config;
+    cfg = _config;
 
-    if (!cfg->headless) {
-        screen_init();
+    // use headless mode if no screen adapter has been defined
+    if (!cfg->screen_api) {
+        cfg->screen_api = screen_headless;
     }
+
+    cfg->screen_api(&screen);
+    screen.init();
 
     plugin_init();
     rdram_init();
 
-    rdp_init(config);
-    vi_init(config);
+    rdp_init(cfg);
+    vi_init(cfg, &screen);
 
     num_workers = cfg->num_workers;
 
@@ -94,23 +98,16 @@ void core_update_vi(void)
 
 void core_screenshot(char* directory, char* name)
 {
-    if (cfg->headless) {
-        return;
-    }
-
     // generate and find an unused file path
     char path[256];
     if (file_path_indexed(path, sizeof(path), directory, name, "bmp", &screenshot_index)) {
-        screen_capture(path);
+        screen.capture(path);
     }
 }
 
 void core_toggle_fullscreen(void)
 {
-    if (!cfg->headless) {
-        fullscreen = !fullscreen;
-        screen_set_full(fullscreen);
-    }
+    screen.set_fullscreen(!screen.get_fullscreen());
 }
 
 void core_close(void)
@@ -118,9 +115,7 @@ void core_close(void)
     parallel_close();
     plugin_close();
     vi_close();
-    if (!cfg->headless) {
-        screen_close();
-    }
+    screen.close();
     if (trace_write_is_open()) {
         trace_write_close();
     }

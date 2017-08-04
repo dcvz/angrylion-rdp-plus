@@ -21,7 +21,7 @@
     <ClCompile Include="retrace.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="screen.c">
+    <ClCompile Include="screen_sdl.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -30,6 +30,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="retrace.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="screen_sdl.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

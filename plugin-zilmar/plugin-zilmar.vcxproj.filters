@@ -20,6 +20,9 @@
     <ClInclude Include="wgl_ext.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="screen_opengl.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="gfx_1.3.c">
@@ -31,10 +34,10 @@
     <ClCompile Include="plugin.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="screen.c">
+    <ClCompile Include="wgl_ext.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="wgl_ext.c">
+    <ClCompile Include="screen_opengl.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

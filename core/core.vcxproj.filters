@@ -44,6 +44,9 @@
     <ClCompile Include="file.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="screen_headless.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="common.h">
@@ -70,9 +73,6 @@
     <ClInclude Include="plugin.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="screen.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="core.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -86,6 +86,9 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="file.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="screen_headless.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
