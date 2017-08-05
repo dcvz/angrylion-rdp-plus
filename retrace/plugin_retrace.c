@@ -27,7 +27,7 @@ static void plugin_init(void)
     }
 }
 
-static void plugin_interrupt(void)
+static void plugin_sync_dp(void)
 {
 }
 
@@ -78,7 +78,7 @@ void plugin_set_rdram_size(uint32_t size)
 void plugin_retrace(struct plugin_api* api)
 {
     api->init = plugin_init;
-    api->interrupt = plugin_interrupt;
+    api->sync_dp = plugin_sync_dp;
     api->get_dp_registers = plugin_get_dp_registers;
     api->get_vi_registers = plugin_get_vi_registers;
     api->get_rdram = plugin_get_rdram;

@@ -49,7 +49,7 @@ struct screen_api
 struct plugin_api
 {
     void (*init)(void);
-    void (*interrupt)(void);
+    void (*sync_dp)(void);
     uint32_t** (*get_dp_registers)(void);
     uint32_t** (*get_vi_registers)(void);
     uint8_t* (*get_rdram)(void);
@@ -71,7 +71,7 @@ struct core_config
 
 void core_init(struct core_config* config);
 void core_close(void);
-void core_update(void);
+void core_sync_dp(void);
 void core_update_dp(void);
 void core_update_vi(void);
 void core_screenshot(char* directory);

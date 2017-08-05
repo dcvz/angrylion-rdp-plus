@@ -55,7 +55,7 @@ void core_init(struct core_config* _config)
     trace_index = 0;
 }
 
-void core_update(void)
+void core_sync_dp(void)
 {
     // open trace file when tracing has been enabled with no file open
     if (config->trace && !trace_write_is_open()) {
@@ -91,6 +91,9 @@ void core_update(void)
             parallel_init(num_workers);
         }
     }
+
+    // signal plugin to handle interrupts
+    plugin.sync_dp();
 }
 
 void core_update_dp(void)

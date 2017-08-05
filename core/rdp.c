@@ -6420,8 +6420,7 @@ static void rdp_sync_tile(const uint32_t* args)
 
 static void rdp_sync_full(const uint32_t* args)
 {
-    core_update();
-    plugin->interrupt();
+    core_sync_dp();
 }
 
 static void rdp_set_key_gb(const uint32_t* args)

@@ -63,7 +63,7 @@ static void plugin_init(void)
     memset(rdram_hidden_bits, 3, rdram_size);
 }
 
-static void plugin_interrupt(void)
+static void plugin_sync_dp(void)
 {
     *gfx.MI_INTR_REG |= DP_INTERRUPT;
     gfx.CheckInterrupts();
@@ -148,7 +148,7 @@ static void plugin_close(void)
 void plugin_zilmar(struct plugin_api* api)
 {
     api->init = plugin_init;
-    api->interrupt = plugin_interrupt;
+    api->sync_dp = plugin_sync_dp;
     api->get_dp_registers = plugin_get_dp_registers;
     api->get_vi_registers = plugin_get_vi_registers;
     api->get_rdram = plugin_get_rdram;
