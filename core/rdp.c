@@ -6927,7 +6927,7 @@ static const struct
     {rdp_set_env_color,     8,   false, true,  false, "Set_Env_Color"},
     {rdp_set_combine,       8,   false, true,  false, "Set_Combine"},
     {rdp_set_texture_image, 8,   false, true,  false, "Set_Texture_Image"},
-    {rdp_set_mask_image,    8,   false, true,  true,  "Set_Mask_Image"},
+    {rdp_set_mask_image,    8,   true,  true,  true,  "Set_Mask_Image"},
     {rdp_set_color_image,   8,   false, true,  true,  "Set_Color_Image"}
 };
 
@@ -6983,6 +6983,11 @@ void rdp_cmd(const uint32_t* arg, uint32_t length)
 
     if (rdp_commands[cmd_id].multithread && parallel) {
         rdp_cmd_push(arg, length);
+    }
+
+    // send z-buffer address to VI for VI_MODE_COVERAGE
+    if (cmd_id == CMD_ID_SET_MASK_IMAGE) {
+        vi_set_zb_address(zb_address);
     }
 }
 

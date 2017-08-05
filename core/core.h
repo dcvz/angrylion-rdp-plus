@@ -35,6 +35,16 @@ enum vi_register
     VI_NUM_REG
 };
 
+enum vi_mode
+{
+    VI_MODE_NORMAL,     // color buffer with VI filter
+    VI_MODE_COLOR,      // direct color buffer, unfiltered
+    VI_MODE_DEPTH,      // depth buffer as grayscale
+    VI_MODE_COVERAGE,   // coverage as grayscale
+    VI_OUTPUT_NUM
+};
+
+
 struct screen_api
 {
     void (*init)(void);
@@ -65,6 +75,7 @@ struct core_config
     uint32_t num_workers;
     bool tv_fading;
     bool trace;
+    enum vi_mode vi_mode;
     void (*screen_api)(struct screen_api* api);
     void (*plugin_api)(struct plugin_api* api);
 };

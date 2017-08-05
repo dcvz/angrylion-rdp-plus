@@ -9,6 +9,14 @@
 #include <stdlib.h>
 #include <memory.h>
 
+enum vi_type
+{
+    VI_TYPE_BLANK,
+    VI_TYPE_RESERVED,
+    VI_TYPE_RGBA5551,
+    VI_TYPE_RGBA8888
+};
+
 struct ccvg
 {
     uint8_t r, g, b, cvg;
@@ -38,9 +46,10 @@ static uint32_t x_add;
 static uint32_t x_start_init;
 static uint32_t y_add;
 static uint32_t y_start;
+static uint32_t zb_address;
 
 // prescale buffer
-static int32_t* PreScale;
+static int32_t* prescale;
 static uint32_t prescale_ptr;
 static int linecount;
 
@@ -52,10 +61,11 @@ static int gamma;
 static int gamma_dither;
 static int lerp_en;
 static int extralines;
-static int vitype;
+static enum vi_type vitype;
 static int serration_pulses;
 static int gamma_and_dither;
 static int32_t hres, vres;
+static int32_t hres_raw, vres_raw;
 static int32_t v_start;
 static int32_t h_start;
 
@@ -758,6 +768,12 @@ int vi_process_init(void)
     extralines = !((vi_control >> 8) & 1);
 
     vitype = vi_control & 3;
+
+    // check for unexpected VI type bits set
+    if (vitype & ~3) {
+        msg_warning("Unknown framebuffer format %d\n", vitype);
+    }
+
     serration_pulses = (vi_control >> 6) & 1;
     gamma_and_dither = (gamma << 1) | gamma_dither;
     if (((vi_control >> 5) & 1) && !onetimewarnings.vbusclock)
@@ -818,7 +834,7 @@ int vi_process_init(void)
 
 
 
-    if (!lerp_en && vitype == 2 && !onetimewarnings.nolerp && h_start < 0x80 && x_add <= 0x200)
+    if (!lerp_en && vitype == VI_TYPE_RGBA5551 && !onetimewarnings.nolerp && h_start < 0x80 && x_add <= 0x200)
     {
         msg_warning("Disabling VI interpolation in 16-bit color modes causes glitches on hardware if h_start is less than 128 pixels and x_scale is less or equal to 0x200.");
         onetimewarnings.nolerp = 1;
@@ -995,7 +1011,7 @@ int vi_process_init(void)
         return 0;
     }
 
-    screen->get_buffer(PRESCALE_WIDTH, vactivelines, 480, &PreScale, &pitchindwords);
+    screen->get_buffer(PRESCALE_WIDTH, vactivelines, 480, &prescale, &pitchindwords);
     pitchindwords >>= 2;
 
     linecount = serration_pulses ? (pitchindwords << 1) : pitchindwords;
@@ -1018,7 +1034,7 @@ int vi_process_init(void)
         }
         //for (i = 0; i < PRESCALE_HEIGHT; i++)
         for (i = 0; i < vactivelines; i++)
-            memset(&PreScale[i * pitchindwords], 0, PRESCALE_WIDTH * sizeof(int32_t));
+            memset(&prescale[i * pitchindwords], 0, PRESCALE_WIDTH * sizeof(int32_t));
         prevwasblank = 1;
     }
     else
@@ -1033,12 +1049,12 @@ int vi_process_init(void)
         if (h_start > 0 && h_start < PRESCALE_WIDTH)
         {
             for (i = 0; i < vactivelines; i++)
-                memset(&PreScale[i * pitchindwords], 0, h_start * sizeof(uint32_t));
+                memset(&prescale[i * pitchindwords], 0, h_start * sizeof(uint32_t));
         }
         if (h_end >= 0 && h_end < PRESCALE_WIDTH)
         {
             for (i = 0; i < vactivelines; i++)
-                memset(&PreScale[i * pitchindwords + h_end], 0, hrightblank * sizeof(uint32_t));
+                memset(&prescale[i * pitchindwords + h_end], 0, hrightblank * sizeof(uint32_t));
         }
 
         for (i = 0; i < ((v_start << twolines) + (lowerfield ? 1 : 0)); i++)
@@ -1049,9 +1065,9 @@ int vi_process_init(void)
                 if (!tvfadeoutstate[i])
                 {
                     if (validh)
-                        memset(&PreScale[i * pitchindwords + h_start], 0, hres * sizeof(uint32_t));
+                        memset(&prescale[i * pitchindwords + h_start], 0, hres * sizeof(uint32_t));
                     else
-                        memset(&PreScale[i * pitchindwords], 0, PRESCALE_WIDTH * sizeof(uint32_t));
+                        memset(&prescale[i * pitchindwords], 0, PRESCALE_WIDTH * sizeof(uint32_t));
                 }
             }
         }
@@ -1066,7 +1082,7 @@ int vi_process_init(void)
                     tvfadeoutstate[i]--;
                     if (!tvfadeoutstate[i])
                     {
-                        memset(&PreScale[i * pitchindwords], 0, PRESCALE_WIDTH * sizeof(uint32_t));
+                        memset(&prescale[i * pitchindwords], 0, PRESCALE_WIDTH * sizeof(uint32_t));
                     }
                 }
 
@@ -1083,7 +1099,7 @@ int vi_process_init(void)
                 {
                     tvfadeoutstate[i]--;
                     if (!tvfadeoutstate[i])
-                        memset(&PreScale[i * pitchindwords], 0, PRESCALE_WIDTH * sizeof(uint32_t));
+                        memset(&prescale[i * pitchindwords], 0, PRESCALE_WIDTH * sizeof(uint32_t));
                 }
 
                 if (tvfadeoutstate[i + 1])
@@ -1091,9 +1107,9 @@ int vi_process_init(void)
                     tvfadeoutstate[i + 1]--;
                     if (!tvfadeoutstate[i + 1])
                         if (validh)
-                            memset(&PreScale[(i + 1) * pitchindwords + h_start], 0, hres * sizeof(uint32_t));
+                            memset(&prescale[(i + 1) * pitchindwords + h_start], 0, hres * sizeof(uint32_t));
                         else
-                            memset(&PreScale[(i + 1) * pitchindwords], 0, PRESCALE_WIDTH * sizeof(uint32_t));
+                            memset(&prescale[(i + 1) * pitchindwords], 0, PRESCALE_WIDTH * sizeof(uint32_t));
                 }
 
                 i += 2;
@@ -1105,9 +1121,9 @@ int vi_process_init(void)
                 tvfadeoutstate[i]--;
             if (!tvfadeoutstate[i])
                 if (validh)
-                    memset(&PreScale[i * pitchindwords + h_start], 0, hres * sizeof(uint32_t));
+                    memset(&prescale[i * pitchindwords + h_start], 0, hres * sizeof(uint32_t));
                 else
-                    memset(&PreScale[i * pitchindwords], 0, PRESCALE_WIDTH * sizeof(uint32_t));
+                    memset(&prescale[i * pitchindwords], 0, PRESCALE_WIDTH * sizeof(uint32_t));
         }
     }
 
@@ -1140,268 +1156,364 @@ void vi_process(void)
 
     bool cache_init = false;
 
-    switch (vitype)
-    {
-        case 0:
-        case 1:
+    if (vitype & 2) {
+        pixels = 0;
+//#undef RENDER_CVG_BITS16
+//#undef RENDER_CVG_BITS32
+//#undef RENDER_MIN_CVG_ONLY
+//#undef RENDER_MAX_CVG_ONLY
+//
+//#undef MONITOR_Z
+//#undef BW_ZBUFFER
+//#undef ZBUFF_AS_16B_IATEXTURE
+//
+//#ifdef MONITOR_Z
+//        uint32_t frame_buffer = zb_address;
+//#else
+        uint32_t frame_buffer = *vi_reg_ptr[VI_ORIGIN] & 0xffffff;
+//#endif
+
+        if (frame_buffer)
         {
-            break;
-        }
+            int32_t j_start = 0;
+            int32_t j_end = vres;
+            int32_t j_add = 1;
 
-        case 2:
-        case 3:
-        {
-            pixels = 0;
-#undef RENDER_CVG_BITS16
-#undef RENDER_CVG_BITS32
-#undef RENDER_MIN_CVG_ONLY
-#undef RENDER_MAX_CVG_ONLY
+            if (config->num_workers != 1) {
+                j_start = parallel_worker_id();
+                j_add = parallel_worker_num();
+            }
 
-#undef MONITOR_Z
-#undef BW_ZBUFFER
-#undef ZBUFF_AS_16B_IATEXTURE
+            for (int32_t j = j_start; j < j_end; j += j_add) {
+                uint32_t x_start = x_start_init;
+                uint32_t curry = y_start + j * y_add;
+                uint32_t nexty = y_start + (j + 1) * y_add;
+                uint32_t prevy = curry >> 10;
 
-#ifdef MONITOR_Z
-            uint32_t frame_buffer = zb_address;
-#else
-            uint32_t frame_buffer = *vi_reg_ptr[VI_ORIGIN] & 0xffffff;
-#endif
+                cache_marker = cache_next_marker = cache_marker_init;
+                if (divot)
+                    divot_cache_marker = divot_cache_next_marker = cache_marker_init;
 
-            if (frame_buffer)
-            {
-                int32_t j_start = 0;
-                int32_t j_end = vres;
-                int32_t j_add = 1;
+                int* d = prescale + prescale_ptr + linecount * j;
 
-                if (config->num_workers != 1) {
-                    j_start = parallel_worker_id();
-                    j_add = parallel_worker_num();
+                yfrac = (curry >> 5) & 0x1f;
+                pixels = vi_width_low * prevy;
+                nextpixels = vi_width_low + pixels;
+
+                if (prevy == (nexty >> 10))
+                    fetchbugstate = 2;
+                else
+                    fetchbugstate >>= 1;
+
+                for (int i = 0; i < hres; i++, x_start += x_add)
+                {
+                    line_x = x_start >> 10;
+                    prev_line_x = line_x - 1;
+                    next_line_x = line_x + 1;
+                    far_line_x = line_x + 2;
+
+                    cur_x = pixels + line_x;
+                    prev_x = pixels + prev_line_x;
+                    next_x = pixels + next_line_x;
+                    far_x = pixels + far_line_x;
+
+
+                    scan_x = nextpixels + line_x;
+                    prev_scan_x = nextpixels + prev_line_x;
+                    next_scan_x = nextpixels + next_line_x;
+                    far_scan_x = nextpixels + far_line_x;
+
+
+                    line_x++;
+                    prev_line_x++;
+                    next_line_x++;
+                    far_line_x++;
+
+                    xfrac = (x_start >> 5) & 0x1f;
+
+                    int lerping = lerp_en && (xfrac || yfrac);
+
+
+                    if (prev_line_x > cache_marker)
+                    {
+                        vi_fetch_filter_ptr(&viaa_cache[prev_line_x], frame_buffer, prev_x, fsaa, dither_filter, vres, 0);
+                        vi_fetch_filter_ptr(&viaa_cache[line_x], frame_buffer, cur_x, fsaa, dither_filter, vres, 0);
+                        vi_fetch_filter_ptr(&viaa_cache[next_line_x], frame_buffer, next_x, fsaa, dither_filter, vres, 0);
+                        cache_marker = next_line_x;
+                    }
+                    else if (line_x > cache_marker)
+                    {
+                        vi_fetch_filter_ptr(&viaa_cache[line_x], frame_buffer, cur_x, fsaa, dither_filter, vres, 0);
+                        vi_fetch_filter_ptr(&viaa_cache[next_line_x], frame_buffer, next_x, fsaa, dither_filter, vres, 0);
+                        cache_marker = next_line_x;
+                    }
+                    else if (next_line_x > cache_marker)
+                    {
+                        vi_fetch_filter_ptr(&viaa_cache[next_line_x], frame_buffer, next_x, fsaa, dither_filter, vres, 0);
+                        cache_marker = next_line_x;
+                    }
+
+                    if (prev_line_x > cache_next_marker)
+                    {
+                        vi_fetch_filter_ptr(&viaa_cache_next[prev_line_x], frame_buffer, prev_scan_x, fsaa, dither_filter, vres, fetchbugstate);
+                        vi_fetch_filter_ptr(&viaa_cache_next[line_x], frame_buffer, scan_x, fsaa, dither_filter, vres, fetchbugstate);
+                        vi_fetch_filter_ptr(&viaa_cache_next[next_line_x], frame_buffer, next_scan_x, fsaa, dither_filter, vres, fetchbugstate);
+                        cache_next_marker = next_line_x;
+                    }
+                    else if (line_x > cache_next_marker)
+                    {
+                        vi_fetch_filter_ptr(&viaa_cache_next[line_x], frame_buffer, scan_x, fsaa, dither_filter, vres, fetchbugstate);
+                        vi_fetch_filter_ptr(&viaa_cache_next[next_line_x], frame_buffer, next_scan_x, fsaa, dither_filter, vres, fetchbugstate);
+                        cache_next_marker = next_line_x;
+                    }
+                    else if (next_line_x > cache_next_marker)
+                    {
+                        vi_fetch_filter_ptr(&viaa_cache_next[next_line_x], frame_buffer, next_scan_x, fsaa, dither_filter, vres, fetchbugstate);
+                        cache_next_marker = next_line_x;
+                    }
+
+
+                    if (divot)
+                    {
+                        if (far_line_x > cache_marker)
+                        {
+                            vi_fetch_filter_ptr(&viaa_cache[far_line_x], frame_buffer, far_x, fsaa, dither_filter, vres, 0);
+                            cache_marker = far_line_x;
+                        }
+
+                        if (far_line_x > cache_next_marker)
+                        {
+                            vi_fetch_filter_ptr(&viaa_cache_next[far_line_x], frame_buffer, far_scan_x, fsaa, dither_filter, vres, fetchbugstate);
+                            cache_next_marker = far_line_x;
+                        }
+
+                        if (line_x > divot_cache_marker)
+                        {
+                            divot_filter(&divot_cache[line_x], viaa_cache[line_x], viaa_cache[prev_line_x], viaa_cache[next_line_x]);
+                            divot_filter(&divot_cache[next_line_x], viaa_cache[next_line_x], viaa_cache[line_x], viaa_cache[far_line_x]);
+                            divot_cache_marker = next_line_x;
+                        }
+                        else if (next_line_x > divot_cache_marker)
+                        {
+                            divot_filter(&divot_cache[next_line_x], viaa_cache[next_line_x], viaa_cache[line_x], viaa_cache[far_line_x]);
+                            divot_cache_marker = next_line_x;
+                        }
+
+                        if (line_x > divot_cache_next_marker)
+                        {
+                            divot_filter(&divot_cache_next[line_x], viaa_cache_next[line_x], viaa_cache_next[prev_line_x], viaa_cache_next[next_line_x]);
+                            divot_filter(&divot_cache_next[next_line_x], viaa_cache_next[next_line_x], viaa_cache_next[line_x], viaa_cache_next[far_line_x]);
+                            divot_cache_next_marker = next_line_x;
+                        }
+                        else if (next_line_x > divot_cache_next_marker)
+                        {
+                            divot_filter(&divot_cache_next[next_line_x], viaa_cache_next[next_line_x], viaa_cache_next[line_x], viaa_cache_next[far_line_x]);
+                            divot_cache_next_marker = next_line_x;
+                        }
+
+                        color = divot_cache[line_x];
+
+                    }
+                    else
+                    {
+                        color = viaa_cache[line_x];
+                    }
+
+                    if (lerping)
+                    {
+                        if (divot)
+                        {
+                            nextcolor = divot_cache[next_line_x];
+                            scancolor = divot_cache_next[line_x];
+                            scannextcolor = divot_cache_next[next_line_x];
+                        }
+                        else
+                        {
+                            nextcolor = viaa_cache[next_line_x];
+                            scancolor = viaa_cache_next[line_x];
+                            scannextcolor = viaa_cache_next[next_line_x];
+                        }
+
+
+
+                        vi_vl_lerp(&color, scancolor, yfrac);
+                        vi_vl_lerp(&nextcolor, scannextcolor, yfrac);
+                        vi_vl_lerp(&color, nextcolor, xfrac);
+                    }
+
+                    r = color.r;
+                    g = color.g;
+                    b = color.b;
+
+                    gamma_filters(&r, &g, &b, gamma_and_dither);
+
+
+//#ifdef BW_ZBUFFER
+//                    uint32_t tempz = RREADIDX16((frame_buffer >> 1) + cur_x);
+//                    pix = tempz;
+//
+//                    r = g = b = pix >> 8;
+//
+//#endif
+//#ifdef ZBUFF_AS_16B_IATEXTURE
+//                    r = g = b = (((pix >> 8) & 0xff) * (pix & 0xff)) >> 8;
+//#endif
+//#ifdef RENDER_CVG_BITS16
+//
+//                    r = g = b = cur_cvg << 5;
+//#endif
+//#ifdef RENDER_CVG_BITS32
+//
+//                    r = g = b = cur_cvg << 5;
+//#endif
+//#ifdef RENDER_MIN_CVG_ONLY
+//                    if (!cur_cvg)
+//                        r = g = b = 0;
+//                    else
+//                        r = g =  b = 0xff;
+//#endif
+//#ifdef RENDER_MAX_CVG_ONLY
+//                    if (cur_cvg != 7)
+//                        r = g = b = 0;
+//                    else
+//                        r = g = b = 0xff;
+//#endif
+
+                    if (i >= minhpass && i < maxhpass)
+                        d[i] = (r << 16) | (g << 8) | b;
+                    else
+                        d[i] = 0;
                 }
 
-                for (int32_t j = j_start; j < j_end; j += j_add) {
-                    uint32_t x_start = x_start_init;
-                    uint32_t curry = y_start + j * y_add;
-                    uint32_t nexty = y_start + (j + 1) * y_add;
-                    uint32_t prevy = curry >> 10;
+                if (!cache_init && y_add == 0x400) {
+                    cache_marker = cache_next_marker;
+                    cache_next_marker = cache_marker_init;
 
-                    cache_marker = cache_next_marker = cache_marker_init;
+                    struct ccvg* tempccvgptr = viaa_cache;
+                    viaa_cache = viaa_cache_next;
+                    viaa_cache_next = tempccvgptr;
                     if (divot)
-                        divot_cache_marker = divot_cache_next_marker = cache_marker_init;
-
-                    int* d = PreScale + prescale_ptr + linecount * j;
-
-                    yfrac = (curry >> 5) & 0x1f;
-                    pixels = vi_width_low * prevy;
-                    nextpixels = vi_width_low + pixels;
-
-                    if (prevy == (nexty >> 10))
-                        fetchbugstate = 2;
-                    else
-                        fetchbugstate >>= 1;
-
-                    for (int i = 0; i < hres; i++, x_start += x_add)
                     {
-                        line_x = x_start >> 10;
-                        prev_line_x = line_x - 1;
-                        next_line_x = line_x + 1;
-                        far_line_x = line_x + 2;
-
-                        cur_x = pixels + line_x;
-                        prev_x = pixels + prev_line_x;
-                        next_x = pixels + next_line_x;
-                        far_x = pixels + far_line_x;
-
-
-                        scan_x = nextpixels + line_x;
-                        prev_scan_x = nextpixels + prev_line_x;
-                        next_scan_x = nextpixels + next_line_x;
-                        far_scan_x = nextpixels + far_line_x;
-
-
-                        line_x++;
-                        prev_line_x++;
-                        next_line_x++;
-                        far_line_x++;
-
-                        xfrac = (x_start >> 5) & 0x1f;
-
-                        int lerping = lerp_en && (xfrac || yfrac);
-
-
-                        if (prev_line_x > cache_marker)
-                        {
-                            vi_fetch_filter_ptr(&viaa_cache[prev_line_x], frame_buffer, prev_x, fsaa, dither_filter, vres, 0);
-                            vi_fetch_filter_ptr(&viaa_cache[line_x], frame_buffer, cur_x, fsaa, dither_filter, vres, 0);
-                            vi_fetch_filter_ptr(&viaa_cache[next_line_x], frame_buffer, next_x, fsaa, dither_filter, vres, 0);
-                            cache_marker = next_line_x;
-                        }
-                        else if (line_x > cache_marker)
-                        {
-                            vi_fetch_filter_ptr(&viaa_cache[line_x], frame_buffer, cur_x, fsaa, dither_filter, vres, 0);
-                            vi_fetch_filter_ptr(&viaa_cache[next_line_x], frame_buffer, next_x, fsaa, dither_filter, vres, 0);
-                            cache_marker = next_line_x;
-                        }
-                        else if (next_line_x > cache_marker)
-                        {
-                            vi_fetch_filter_ptr(&viaa_cache[next_line_x], frame_buffer, next_x, fsaa, dither_filter, vres, 0);
-                            cache_marker = next_line_x;
-                        }
-
-                        if (prev_line_x > cache_next_marker)
-                        {
-                            vi_fetch_filter_ptr(&viaa_cache_next[prev_line_x], frame_buffer, prev_scan_x, fsaa, dither_filter, vres, fetchbugstate);
-                            vi_fetch_filter_ptr(&viaa_cache_next[line_x], frame_buffer, scan_x, fsaa, dither_filter, vres, fetchbugstate);
-                            vi_fetch_filter_ptr(&viaa_cache_next[next_line_x], frame_buffer, next_scan_x, fsaa, dither_filter, vres, fetchbugstate);
-                            cache_next_marker = next_line_x;
-                        }
-                        else if (line_x > cache_next_marker)
-                        {
-                            vi_fetch_filter_ptr(&viaa_cache_next[line_x], frame_buffer, scan_x, fsaa, dither_filter, vres, fetchbugstate);
-                            vi_fetch_filter_ptr(&viaa_cache_next[next_line_x], frame_buffer, next_scan_x, fsaa, dither_filter, vres, fetchbugstate);
-                            cache_next_marker = next_line_x;
-                        }
-                        else if (next_line_x > cache_next_marker)
-                        {
-                            vi_fetch_filter_ptr(&viaa_cache_next[next_line_x], frame_buffer, next_scan_x, fsaa, dither_filter, vres, fetchbugstate);
-                            cache_next_marker = next_line_x;
-                        }
-
-
-                        if (divot)
-                        {
-                            if (far_line_x > cache_marker)
-                            {
-                                vi_fetch_filter_ptr(&viaa_cache[far_line_x], frame_buffer, far_x, fsaa, dither_filter, vres, 0);
-                                cache_marker = far_line_x;
-                            }
-
-                            if (far_line_x > cache_next_marker)
-                            {
-                                vi_fetch_filter_ptr(&viaa_cache_next[far_line_x], frame_buffer, far_scan_x, fsaa, dither_filter, vres, fetchbugstate);
-                                cache_next_marker = far_line_x;
-                            }
-
-                            if (line_x > divot_cache_marker)
-                            {
-                                divot_filter(&divot_cache[line_x], viaa_cache[line_x], viaa_cache[prev_line_x], viaa_cache[next_line_x]);
-                                divot_filter(&divot_cache[next_line_x], viaa_cache[next_line_x], viaa_cache[line_x], viaa_cache[far_line_x]);
-                                divot_cache_marker = next_line_x;
-                            }
-                            else if (next_line_x > divot_cache_marker)
-                            {
-                                divot_filter(&divot_cache[next_line_x], viaa_cache[next_line_x], viaa_cache[line_x], viaa_cache[far_line_x]);
-                                divot_cache_marker = next_line_x;
-                            }
-
-                            if (line_x > divot_cache_next_marker)
-                            {
-                                divot_filter(&divot_cache_next[line_x], viaa_cache_next[line_x], viaa_cache_next[prev_line_x], viaa_cache_next[next_line_x]);
-                                divot_filter(&divot_cache_next[next_line_x], viaa_cache_next[next_line_x], viaa_cache_next[line_x], viaa_cache_next[far_line_x]);
-                                divot_cache_next_marker = next_line_x;
-                            }
-                            else if (next_line_x > divot_cache_next_marker)
-                            {
-                                divot_filter(&divot_cache_next[next_line_x], viaa_cache_next[next_line_x], viaa_cache_next[line_x], viaa_cache_next[far_line_x]);
-                                divot_cache_next_marker = next_line_x;
-                            }
-
-                            color = divot_cache[line_x];
-
-                        }
-                        else
-                        {
-                            color = viaa_cache[line_x];
-                        }
-
-                        if (lerping)
-                        {
-                            if (divot)
-                            {
-                                nextcolor = divot_cache[next_line_x];
-                                scancolor = divot_cache_next[line_x];
-                                scannextcolor = divot_cache_next[next_line_x];
-                            }
-                            else
-                            {
-                                nextcolor = viaa_cache[next_line_x];
-                                scancolor = viaa_cache_next[line_x];
-                                scannextcolor = viaa_cache_next[next_line_x];
-                            }
-
-
-
-                            vi_vl_lerp(&color, scancolor, yfrac);
-                            vi_vl_lerp(&nextcolor, scannextcolor, yfrac);
-                            vi_vl_lerp(&color, nextcolor, xfrac);
-                        }
-
-                        r = color.r;
-                        g = color.g;
-                        b = color.b;
-
-                        gamma_filters(&r, &g, &b, gamma_and_dither);
-
-
-#ifdef BW_ZBUFFER
-                        uint32_t tempz = RREADIDX16((frame_buffer >> 1) + cur_x);
-                        pix = tempz;
-
-                        r = g = b = pix >> 8;
-
-#endif
-#ifdef ZBUFF_AS_16B_IATEXTURE
-                        r = g = b = (((pix >> 8) & 0xff) * (pix & 0xff)) >> 8;
-#endif
-#ifdef RENDER_CVG_BITS16
-
-                        r = g = b = cur_cvg << 5;
-#endif
-#ifdef RENDER_CVG_BITS32
-
-                        r = g = b = cur_cvg << 5;
-#endif
-#ifdef RENDER_MIN_CVG_ONLY
-                        if (!cur_cvg)
-                            r = g = b = 0;
-                        else
-                            r = g =  b = 0xff;
-#endif
-#ifdef RENDER_MAX_CVG_ONLY
-                        if (cur_cvg != 7)
-                            r = g = b = 0;
-                        else
-                            r = g = b = 0xff;
-#endif
-
-                        if (i >= minhpass && i < maxhpass)
-                            d[i] = (r << 16) | (g << 8) | b;
-                        else
-                            d[i] = 0;
+                        divot_cache_marker = divot_cache_next_marker;
+                        divot_cache_next_marker = cache_marker_init;
+                        tempccvgptr = divot_cache;
+                        divot_cache = divot_cache_next;
+                        divot_cache_next = tempccvgptr;
                     }
 
-                    if (!cache_init && y_add == 0x400) {
-                        cache_marker = cache_next_marker;
-                        cache_next_marker = cache_marker_init;
-
-                        struct ccvg* tempccvgptr = viaa_cache;
-                        viaa_cache = viaa_cache_next;
-                        viaa_cache_next = tempccvgptr;
-                        if (divot)
-                        {
-                            divot_cache_marker = divot_cache_next_marker;
-                            divot_cache_next_marker = cache_marker_init;
-                            tempccvgptr = divot_cache;
-                            divot_cache = divot_cache_next;
-                            divot_cache_next = tempccvgptr;
-                        }
-
-                        cache_init = true;
-                    }
+                    cache_init = true;
                 }
             }
-            break;
         }
-        default:    msg_warning("Unknown framebuffer format %d\n", *vi_reg_ptr[VI_STATUS] & 0x3);
+    }
+}
+
+int vi_process_init_fast(void)
+{
+    int32_t v_start = (*vi_reg_ptr[VI_V_START] >> 16) & 0x3ff;
+    int32_t h_start = (*vi_reg_ptr[VI_H_START] >> 16) & 0x3ff;
+
+    int32_t v_end = *vi_reg_ptr[VI_V_START] & 0x3ff;
+    int32_t h_end = *vi_reg_ptr[VI_H_START] & 0x3ff;
+
+    hres =  h_end - h_start;
+    vres = (v_end - v_start) >> 1; // vertical is measured in half-lines
+
+    x_add = *vi_reg_ptr[VI_X_SCALE] & 0xfff;
+    y_add = *vi_reg_ptr[VI_Y_SCALE] & 0xfff;
+
+    hres_raw = x_add * hres / 1024;
+    vres_raw = y_add * vres / 1024;
+
+    if (hres_raw <= 0 || vres_raw <= 0 || *vi_reg_ptr[VI_V_CURRENT_LINE] & 1) {
+        return 0;
+    }
+
+    screen->get_buffer(hres_raw, vres_raw, vres_raw, &prescale, &pitchindwords);
+    pitchindwords >>= 2;
+
+    uint32_t vi_control = *vi_reg_ptr[VI_STATUS];
+    vitype = vi_control & 3;
+
+    // check for unexpected VI type bits set
+    if (vitype & ~3) {
+        msg_warning("Unknown framebuffer format %d\n", vitype);
+    }
+
+    gamma = (vi_control >> 3) & 1;
+    gamma_dither = (vi_control >> 2) & 1;
+    gamma_and_dither = (gamma << 1) | gamma_dither;
+
+    return 1;
+}
+
+static void vi_process_fast(void)
+{
+    int32_t width = *vi_reg_ptr[VI_WIDTH] & 0xfff;
+    uint32_t origin = *vi_reg_ptr[VI_ORIGIN] & 0xffffff;
+
+    int32_t y_start = 0;
+    int32_t y_end = vres_raw;
+    int32_t y_add = 1;
+
+    if (config->num_workers != 1) {
+        y_start = parallel_worker_id();
+        y_add = parallel_worker_num();
+    }
+
+    for (int32_t y = y_start; y < y_end; y += y_add) {
+        int32_t line = y * width;
+        uint32_t* dst = prescale + y * pitchindwords;
+
+        for (int32_t x = 0; x < hres_raw; x++) {
+            uint32_t r, g, b;
+
+            switch (config->vi_mode) {
+                case VI_MODE_COLOR:
+                    switch (vitype) {
+                        case VI_TYPE_RGBA5551: {
+                            uint16_t pix = rdram_read_idx16((origin >> 1) + line + x);
+                            r = ((pix >> 11) & 0x1f) << 3;
+                            g = ((pix >>  6) & 0x1f) << 3;
+                            b = ((pix >>  1) & 0x1f) << 3;
+                            break;
+                        }
+
+                        case VI_TYPE_RGBA8888: {
+                            uint32_t pix = rdram_read_idx32((origin >> 2) + line + x);
+                            r = (pix >> 24) & 0xff;
+                            g = (pix >> 16) & 0xff;
+                            b = (pix >>  8) & 0xff;
+                            break;
+                        }
+
+                        default:
+                            msg_warning("Invalid framebuffer format %d", vitype);
+                    }
+                    break;
+
+                case VI_MODE_DEPTH: {
+                    r = g = b = rdram_read_idx16((zb_address >> 1) + line + x) >> 8;
+                    break;
+                }
+
+                case VI_MODE_COVERAGE: {
+                    // TODO: incorrect for RGBA8888?
+                    uint8_t hval;
+                    uint16_t pix;
+                    rdram_read_pair16(&pix, &hval, (origin >> 1) + line + x);
+                    r = g = b = (((pix & 1) << 2) | hval) << 5;
+                    break;
+                }
+
+                default:
+                    msg_warning("Unknown VI mode %d\n", config->vi_mode);
+            }
+
+            gamma_filters(&r, &g, &b, gamma_and_dither);
+
+            dst[x] = (r << 16) | (g << 8) | b;
+        }
     }
 }
 
@@ -1411,20 +1523,37 @@ void vi_update(void)
         trace_write_vi(vi_reg_ptr);
     }
 
+    // select filter functions based on config
+    int (*vi_process_init_ptr)(void);
+    void (*vi_process_ptr)(void);
+
+    if (config->vi_mode == VI_MODE_NORMAL) {
+        vi_process_init_ptr = vi_process_init;
+        vi_process_ptr = vi_process;
+    } else {
+        vi_process_init_ptr = vi_process_init_fast;
+        vi_process_ptr = vi_process_fast;
+    }
+
     // try to init VI frame, abort if there's nothing to display
-    if (!vi_process_init()) {
+    if (!vi_process_init_ptr()) {
         return;
     }
 
     // run filter update in parallel if enabled
     if (config->num_workers != 1) {
-        parallel_run(vi_process);
+        parallel_run(vi_process_ptr);
     } else {
-        vi_process();
+        vi_process_ptr();
     }
 
     // render frame to screen
     screen->swap();
+}
+
+void vi_set_zb_address(uint32_t _zb_address)
+{
+    zb_address = _zb_address;
 }
 
 void vi_close(void)
