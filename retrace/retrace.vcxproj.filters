@@ -15,13 +15,13 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="plugin.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="retrace.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="screen_sdl.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="plugin_retrace.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -33,6 +33,9 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="screen_sdl.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="plugin_retrace.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

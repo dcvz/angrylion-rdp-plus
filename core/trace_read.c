@@ -1,5 +1,4 @@
 #include "trace_read.h"
-#include "plugin.h"
 #include "msg.h"
 #include "rdram.h"
 #include "rdp.h"
@@ -72,10 +71,10 @@ void trace_read_rdram(void)
     }
 }
 
-void trace_read_vi(void)
+void trace_read_vi(uint32_t** vi_reg)
 {
     for (int32_t i = 0; i < VI_NUM_REG; i++) {
-        fread(plugin_vi_register(i), sizeof(uint32_t), 1, fp);
+        fread(vi_reg[i], sizeof(uint32_t), 1, fp);
     }
 }
 

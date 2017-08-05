@@ -1,5 +1,5 @@
 #include "trace_write.h"
-#include "plugin.h"
+#include "core.h"
 #include "msg.h"
 #include "rdram.h"
 
@@ -70,12 +70,12 @@ void trace_write_rdram(uint32_t offset, uint32_t length)
     }
 }
 
-void trace_write_vi(void)
+void trace_write_vi(uint32_t** vi_reg)
 {
     trace_write_id(TRACE_VI);
 
     for (int32_t i = 0; i < VI_NUM_REG; i++) {
-        fwrite(plugin_vi_register(i), sizeof(uint32_t), 1, fp);
+        fwrite(vi_reg[i], sizeof(uint32_t), 1, fp);
     }
 }
 

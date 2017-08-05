@@ -4,6 +4,7 @@
 #include "screen_sdl.h"
 #include "trace_read.h"
 #include "retrace.h"
+#include "plugin_retrace.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -44,7 +45,7 @@ bool retrace_frame(uint64_t* num_cmds)
                 break;
 
             case TRACE_VI:
-                trace_read_vi();
+                trace_read_vi(plugin_get_vi_registers());
                 vi_update();
                 break;
         }
@@ -189,6 +190,8 @@ int main(int argc, char** argv)
     if (!benchmark) {
         config.screen_api = screen_sdl;
     }
+
+    config.plugin_api = plugin_retrace;
 
     uint32_t rdram_size;
     trace_read_header(&rdram_size);

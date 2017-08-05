@@ -1,7 +1,6 @@
 #include "rdp.h"
 #include "vi.h"
 #include "common.h"
-#include "plugin.h"
 #include "rdram.h"
 #include "trace_write.h"
 #include "msg.h"
@@ -52,8 +51,21 @@ static const int32_t norm_slope_table[64] = {
 #define GET_MED_RGBA16_TMEM(x)  (replicated_rgba[((x) >> 6) & 0x1f])
 #define GET_HI_RGBA16_TMEM(x)   (replicated_rgba[(x) >> 11])
 
+// bit constants for DP_STATUS
+#define DP_STATUS_XBUS_DMA      0x001   // DMEM DMA mode is set
+#define DP_STATUS_FREEZE        0x002   // Freeze has been set
+#define DP_STATUS_FLUSH         0x004   // Flush has been set
+#define DP_STATUS_START_GCLK    0x008   // Unknown
+#define DP_STATUS_TMEM_BUSY     0x010   // TMEM is in use on the RDP
+#define DP_STATUS_PIPE_BUSY     0x020   // Graphics pipe is in use on the RDP
+#define DP_STATUS_CMD_BUSY      0x040   // RDP is currently executing a command
+#define DP_STATUS_CBUF_BUSY     0x080   // RDRAM RDP command buffer is in use
+#define DP_STATUS_DMA_BUSY      0x100   // DMEM RDP command buffer is in use
+#define DP_STATUS_END_VALID     0x200   // Unknown
+#define DP_STATUS_START_VALID   0x400   // Unknown
 
 static struct core_config* config;
+static struct plugin_api* plugin;
 
 static uint32_t rdp_cmd_data[0x10000];
 static uint32_t rdp_cmd_ptr = 0;
@@ -854,9 +866,10 @@ static STRICTINLINE void tcclamp_cycle_light(int32_t* S, int32_t* T, int32_t max
 }
 
 
-int rdp_init(struct core_config* _config)
+int rdp_init(struct core_config* _config, struct plugin_api* _plugin)
 {
     config = _config;
+    plugin = _plugin;
 
     fbread1_ptr = fbread_func[0];
     fbread2_ptr = fbread2_func[0];
@@ -6408,7 +6421,7 @@ static void rdp_sync_tile(const uint32_t* args)
 static void rdp_sync_full(const uint32_t* args)
 {
     core_update();
-    plugin_interrupt();
+    plugin->interrupt();
 }
 
 static void rdp_set_key_gb(const uint32_t* args)
@@ -6978,9 +6991,11 @@ void rdp_update(void)
 {
     int i, length;
     uint32_t cmd, cmd_length;
-    uint32_t dp_current_al = dp_current & ~7, dp_end_al = dp_end & ~7;
 
-    dp_status &= ~DP_STATUS_FREEZE;
+    uint32_t** dp_reg = plugin->get_dp_registers();
+    uint32_t dp_current_al = *dp_reg[DP_CURRENT] & ~7, dp_end_al = *dp_reg[DP_END] & ~7;
+
+    *dp_reg[DP_STATUS] &= ~DP_STATUS_FREEZE;
 
 
 
@@ -7021,11 +7036,12 @@ void rdp_update(void)
 
     int toload = remaining_length > 0x10000 ? 0x10000 : remaining_length;
 
-    if (dp_status & DP_STATUS_XBUS_DMA)
+    if (*dp_reg[DP_STATUS] & DP_STATUS_XBUS_DMA)
     {
+        uint8_t* dmem = plugin->get_dmem();
         for (i = 0; i < toload; i ++)
         {
-            rdp_cmd_data[rdp_cmd_ptr] = sp_dmem32[dp_current_al & 0x3ff];
+            rdp_cmd_data[rdp_cmd_ptr] = dmem[dp_current_al & 0x3ff];
             rdp_cmd_ptr++;
             dp_current_al++;
         }
@@ -7059,7 +7075,7 @@ void rdp_update(void)
             if (!remaining_length)
             {
 
-                dp_start = dp_current = dp_end;
+                *dp_reg[DP_START] = *dp_reg[DP_CURRENT] = *dp_reg[DP_END];
                 return;
             }
             else
@@ -7082,10 +7098,7 @@ void rdp_update(void)
     rdp_cmd_cur = 0;
     };
 
-    dp_start = dp_current = dp_end;
-
-
-
+    *dp_reg[DP_START] = *dp_reg[DP_CURRENT] = *dp_reg[DP_END];
 }
 
 static STRICTINLINE int alpha_compare(int32_t comb_alpha)

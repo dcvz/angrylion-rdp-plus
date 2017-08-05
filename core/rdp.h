@@ -44,6 +44,6 @@
 #define CMD_MAX_SIZE (CMD_MAX_INTS * sizeof(int32_t))
 #define CMD_ID(cmd) ((*(cmd) >> 24) & 0x3f)
 
-int rdp_init(struct core_config* config);
+int rdp_init(struct core_config* config, struct plugin_api* plugin);
 void rdp_cmd(const uint32_t* arg, uint32_t length);
 void rdp_update(void);

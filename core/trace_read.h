@@ -11,5 +11,5 @@ void trace_read_header(uint32_t* rdram_size);
 char trace_read_id(void);
 void trace_read_cmd(uint32_t* cmd, uint32_t* length);
 void trace_read_rdram(void);
-void trace_read_vi(void);
+void trace_read_vi(uint32_t** vi_reg);
 void trace_read_close(void);

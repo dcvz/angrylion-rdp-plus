@@ -1,6 +1,5 @@
 #include "vi.h"
 #include "common.h"
-#include "plugin.h"
 #include "rdram.h"
 #include "trace_write.h"
 #include "msg.h"
@@ -18,6 +17,9 @@ struct ccvg
 // config
 static struct core_config* config;
 static struct screen_api* screen;
+static struct plugin_api* plugin;
+
+static uint32_t** vi_reg_ptr;
 
 // states
 static uint32_t prevvicurrent;
@@ -130,8 +132,7 @@ STRICTINLINE void restore_filter16(int* r, int* g, int* b, uint32_t fboffset, ui
 
 #define VI_COMPARE_OPT(x)                                           \
 {                                                                   \
-    addr = (x);                                                     \
-    pix = rdram16[addr ^ WORD_ADDR_XOR];                            \
+    pix = rdram_read_idx16((x));                                    \
     tempr = (pix >> 11) & 0x1f;                                     \
     tempg = (pix >> 6) & 0x1f;                                      \
     tempb = (pix >> 1) & 0x1f;                                      \
@@ -212,10 +213,9 @@ STRICTINLINE void restore_filter32(int* r, int* g, int* b, uint32_t fboffset, ui
     bend += blueptr[tempb];                                             \
 }
 
-#define VI_COMPARE32_OPT(x)                                                 \
+#define VI_COMPARE32_OPT(x)                                             \
 {                                                                       \
-    addr = (x);                                                         \
-    pix = rdram32[addr];                                                \
+    pix = rdram_read_idx32((x));                                        \
     tempr = (pix >> 27) & 0x1f;                                         \
     tempg = (pix >> 19) & 0x1f;                                         \
     tempb = (pix >> 11) & 0x1f;                                         \
@@ -502,7 +502,7 @@ STRICTINLINE void vi_fetch_filter16(struct ccvg* res, uint32_t fboffset, uint32_
     g = GET_MED(pix);
     b = GET_LOW(pix);
 
-    uint32_t fbw = vi_width & 0xfff;
+    uint32_t fbw = *vi_reg_ptr[VI_WIDTH] & 0xfff;
 
     if (cur_cvg == 7)
     {
@@ -535,7 +535,7 @@ STRICTINLINE void vi_fetch_filter32(struct ccvg* res, uint32_t fboffset, uint32_
     g = (pix >> 16) & 0xff;
     b = (pix >> 8) & 0xff;
 
-    uint32_t fbw = vi_width & 0xfff;
+    uint32_t fbw = *vi_reg_ptr[VI_WIDTH] & 0xfff;
 
     if (cur_cvg == 7)
     {
@@ -677,10 +677,13 @@ uint32_t vi_integer_sqrt(uint32_t a)
     return res;
 }
 
-void vi_init(struct core_config* _config, struct screen_api* _screen)
+void vi_init(struct core_config* _config, struct plugin_api* _plugin, struct screen_api* _screen)
 {
     config = _config;
     screen = _screen;
+    plugin = _plugin;
+
+    vi_reg_ptr = plugin->get_vi_registers();
 
     for (int i = 0; i < 256; i++)
     {
@@ -737,15 +740,15 @@ int vi_process_init(void)
 
 
 
-    hres = (vi_h_start & 0x3ff) - ((vi_h_start >> 16) & 0x3ff);
+    hres = (*vi_reg_ptr[VI_H_START] & 0x3ff) - ((*vi_reg_ptr[VI_H_START] >> 16) & 0x3ff);
 
-    vres = (vi_v_start & 0x3ff) - ((vi_v_start >> 16) & 0x3ff);
+    vres = (*vi_reg_ptr[VI_V_START] & 0x3ff) - ((*vi_reg_ptr[VI_V_START] >> 16) & 0x3ff);
     vres >>= 1;
 
 
 
 
-
+    uint32_t vi_control = *vi_reg_ptr[VI_STATUS];
     dither_filter = (vi_control >> 16) & 1;
     fsaa = !((vi_control >> 9) & 1);
     divot = (vi_control >> 4) & 1;
@@ -781,7 +784,7 @@ int vi_process_init(void)
 
     vi_fetch_filter_ptr = vi_fetch_filter_func[vitype & 1];
 
-    ispal = (vi_v_sync & 0x3ff) > 550;
+    ispal = (*vi_reg_ptr[VI_V_SYNC] & 0x3ff) > 550;
 
 
 
@@ -792,10 +795,10 @@ int vi_process_init(void)
 
 
 
-    v_start = (vi_v_start >> 16) & 0x3ff;
-    h_start = (vi_h_start >> 16) & 0x3ff;
+    v_start = (*vi_reg_ptr[VI_V_START] >> 16) & 0x3ff;
+    h_start = (*vi_reg_ptr[VI_H_START] >> 16) & 0x3ff;
 
-    x_add = vi_x_scale & 0xfff;
+    x_add = *vi_reg_ptr[VI_X_SCALE] & 0xfff;
 
 
 
@@ -823,7 +826,7 @@ int vi_process_init(void)
 
     h_start -= (ispal ? 128 : 108);
 
-    x_start_init = (vi_x_scale >> 16) & 0xfff;
+    x_start_init = (*vi_reg_ptr[VI_X_SCALE] >> 16) & 0xfff;
 
     int h_start_clamped = 0;
 
@@ -840,8 +843,8 @@ int vi_process_init(void)
 
 
 
-    int32_t v_end = vi_v_start & 0x3ff;
-    int32_t v_sync = vi_v_sync & 0x3ff;
+    int32_t v_end = *vi_reg_ptr[VI_V_START] & 0x3ff;
+    int32_t v_sync = *vi_reg_ptr[VI_V_SYNC] & 0x3ff;
 
 
 
@@ -868,13 +871,13 @@ int vi_process_init(void)
 
     int validinterlace = (vitype & 2) && serration_pulses;
     if (validinterlace && prevserrate && emucontrolsvicurrent < 0)
-        emucontrolsvicurrent = (vi_v_current_line & 1) != prevvicurrent ? 1 : 0;
+        emucontrolsvicurrent = (*vi_reg_ptr[VI_V_CURRENT_LINE] & 1) != prevvicurrent ? 1 : 0;
 
     int lowerfield = 0;
     if (validinterlace)
     {
         if (emucontrolsvicurrent == 1)
-            lowerfield = (vi_v_current_line & 1) ^ 1;
+            lowerfield = (*vi_reg_ptr[VI_V_CURRENT_LINE] & 1) ^ 1;
         else if (!emucontrolsvicurrent)
         {
             if (v_start == oldvstart)
@@ -890,7 +893,7 @@ int vi_process_init(void)
     if (validinterlace)
     {
         prevserrate = 1;
-        prevvicurrent = vi_v_current_line & 1;
+        prevvicurrent = *vi_reg_ptr[VI_V_CURRENT_LINE] & 1;
         oldvstart = v_start;
     }
     else
@@ -919,8 +922,8 @@ int vi_process_init(void)
 
 
 
-    y_start = (vi_y_scale >> 16) & 0xfff;
-    y_add = vi_y_scale & 0xfff;
+    y_start = (*vi_reg_ptr[VI_Y_SCALE] >> 16) & 0xfff;
+    y_add = *vi_reg_ptr[VI_Y_SCALE] & 0xfff;
 
     if (v_start < 0)
     {
@@ -942,13 +945,13 @@ int vi_process_init(void)
     if ((vres + v_start) > PRESCALE_HEIGHT)
     {
         vres = PRESCALE_HEIGHT - v_start;
-        msg_warning("vres = %d v_start = %d v_video_start = %d", vres, v_start, (vi_v_start >> 16) & 0x3ff);
+        msg_warning("vres = %d v_start = %d v_video_start = %d", vres, v_start, (*vi_reg_ptr[VI_V_START] >> 16) & 0x3ff);
     }
 
     int32_t h_end = hres + h_start;
     int32_t hrightblank = PRESCALE_WIDTH - h_end;
 
-    int vactivelines = (vi_v_sync & 0x3ff) - vstartoffset;
+    int vactivelines = (*vi_reg_ptr[VI_V_SYNC] & 0x3ff) - vstartoffset;
     if (vactivelines > PRESCALE_HEIGHT)
         msg_error("VI_V_SYNC_REG too big");
     if (vactivelines < 0)
@@ -1130,7 +1133,7 @@ void vi_process(void)
 
     int r = 0, g = 0, b = 0;
     int xfrac = 0, yfrac = 0;
-    int vi_width_low = vi_width & 0xfff;
+    int vi_width_low = *vi_reg_ptr[VI_WIDTH] & 0xfff;
     int line_x = 0, next_line_x = 0, prev_line_x = 0, far_line_x = 0;
     int prev_scan_x = 0, scan_x = 0, next_scan_x = 0, far_scan_x = 0;
     int prev_x = 0, cur_x = 0, next_x = 0, far_x = 0;
@@ -1161,7 +1164,7 @@ void vi_process(void)
 #ifdef MONITOR_Z
             uint32_t frame_buffer = zb_address;
 #else
-            uint32_t frame_buffer = vi_origin & 0xffffff;
+            uint32_t frame_buffer = *vi_reg_ptr[VI_ORIGIN] & 0xffffff;
 #endif
 
             if (frame_buffer)
@@ -1398,14 +1401,14 @@ void vi_process(void)
             }
             break;
         }
-        default:    msg_warning("Unknown framebuffer format %d\n", vi_control & 0x3);
+        default:    msg_warning("Unknown framebuffer format %d\n", *vi_reg_ptr[VI_STATUS] & 0x3);
     }
 }
 
 void vi_update(void)
 {
     if (trace_write_is_open()) {
-        trace_write_vi();
+        trace_write_vi(vi_reg_ptr);
     }
 
     // try to init VI frame, abort if there's nothing to display

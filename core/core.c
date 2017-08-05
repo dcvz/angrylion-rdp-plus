@@ -4,8 +4,8 @@
 #include "vi.h"
 #include "screen_headless.h"
 #include "rdram.h"
-#include "plugin.h"
 #include "file.h"
+#include "msg.h"
 #include "trace_write.h"
 #include "parallel_c.hpp"
 
@@ -19,6 +19,7 @@ static uint32_t num_workers;
 
 static struct core_config* config;
 static struct screen_api screen;
+static struct plugin_api plugin;
 
 void core_init(struct core_config* _config)
 {
@@ -32,11 +33,17 @@ void core_init(struct core_config* _config)
     config->screen_api(&screen);
     screen.init();
 
-    plugin_init();
-    rdram_init();
+    if (!config->plugin_api) {
+        msg_error("core: plugin API not defined!");
+    }
 
-    rdp_init(config);
-    vi_init(config, &screen);
+    config->plugin_api(&plugin);
+    plugin.init();
+
+    rdram_init(&plugin);
+
+    rdp_init(config, &plugin);
+    vi_init(config, &plugin, &screen);
 
     num_workers = config->num_workers;
 
@@ -54,7 +61,7 @@ void core_update(void)
     if (config->trace && !trace_write_is_open()) {
         // get ROM name from plugin and use placeholder if empty
         char rom_name[32];
-        if (!plugin_rom_name(rom_name, sizeof(rom_name))) {
+        if (!plugin.get_rom_name(rom_name, sizeof(rom_name))) {
             strcpy_s(rom_name, sizeof(rom_name), "trace");
         }
 
@@ -64,7 +71,7 @@ void core_update(void)
             "dpt", &trace_index);
 
         trace_write_open(trace_path);
-        trace_write_header(plugin_rdram_size());
+        trace_write_header(plugin.get_rdram_size());
         trace_num_workers = config->num_workers;
         config->num_workers = 1;
     }
@@ -96,11 +103,17 @@ void core_update_vi(void)
     vi_update();
 }
 
-void core_screenshot(char* directory, char* name)
+void core_screenshot(char* directory)
 {
+    // get ROM name from plugin and use placeholder if empty
+    char rom_name[32];
+    if (!plugin.get_rom_name(rom_name, sizeof(rom_name))) {
+        strcpy_s(rom_name, sizeof(rom_name), "screenshot");
+    }
+
     // generate and find an unused file path
     char path[256];
-    if (file_path_indexed(path, sizeof(path), directory, name, "bmp", &screenshot_index)) {
+    if (file_path_indexed(path, sizeof(path), directory, rom_name, "bmp", &screenshot_index)) {
         screen.capture(path);
     }
 }
@@ -113,8 +126,8 @@ void core_toggle_fullscreen(void)
 void core_close(void)
 {
     parallel_close();
-    plugin_close();
     vi_close();
+    plugin.close();
     screen.close();
     if (trace_write_is_open()) {
         trace_write_close();

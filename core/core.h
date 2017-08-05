@@ -3,6 +3,38 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+enum dp_register
+{
+    DP_START,
+    DP_END,
+    DP_CURRENT,
+    DP_STATUS,
+    DP_CLOCK,
+    DP_BUFBUSY,
+    DP_PIPEBUSY,
+    DP_TMEM,
+    DP_NUM_REG
+};
+
+enum vi_register
+{
+    VI_STATUS,
+    VI_ORIGIN,
+    VI_WIDTH,
+    VI_INTR,
+    VI_V_CURRENT_LINE,
+    VI_TIMING,
+    VI_V_SYNC,
+    VI_H_SYNC,
+    VI_LEAP,
+    VI_H_START,
+    VI_V_START,
+    VI_V_BURST,
+    VI_X_SCALE,
+    VI_Y_SCALE,
+    VI_NUM_REG
+};
+
 struct screen_api
 {
     void (*init)(void);
@@ -14,12 +46,27 @@ struct screen_api
     void (*close)(void);
 };
 
+struct plugin_api
+{
+    void (*init)(void);
+    void (*interrupt)(void);
+    uint32_t** (*get_dp_registers)(void);
+    uint32_t** (*get_vi_registers)(void);
+    uint8_t* (*get_rdram)(void);
+    uint8_t* (*get_rdram_hidden)(void);
+    uint32_t (*get_rdram_size)(void);
+    uint8_t* (*get_dmem)(void);
+    uint32_t (*get_rom_name)(char* name, uint32_t name_size);
+    void (*close)(void);
+};
+
 struct core_config
 {
     uint32_t num_workers;
     bool tv_fading;
     bool trace;
     void (*screen_api)(struct screen_api* api);
+    void (*plugin_api)(struct plugin_api* api);
 };
 
 void core_init(struct core_config* config);
@@ -27,5 +74,5 @@ void core_close(void);
 void core_update(void);
 void core_update_dp(void);
 void core_update_vi(void);
-void core_screenshot(char* directory, char* name);
+void core_screenshot(char* directory);
 void core_toggle_fullscreen(void);

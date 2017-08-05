@@ -169,7 +169,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="plugin.c" />
+    <ClCompile Include="plugin_retrace.c" />
     <ClCompile Include="retrace.c" />
     <ClCompile Include="screen_sdl.c" />
   </ItemGroup>
@@ -177,6 +177,7 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="plugin_retrace.h" />
     <ClInclude Include="retrace.h" />
     <ClInclude Include="screen_sdl.h" />
   </ItemGroup>

@@ -70,9 +70,6 @@
     <ClInclude Include="msg.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="plugin.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="core.h">
       <Filter>Source Files</Filter>
     </ClInclude>

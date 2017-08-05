@@ -1,7 +1,7 @@
 #include "gfx_1.3.h"
 #include "core.h"
 #include "parallel_c.hpp"
-#include "plugin.h"
+#include "plugin_zilmar.h"
 #include "msg.h"
 #include "rdram.h"
 #include "screen_opengl.h"
@@ -23,10 +23,7 @@ GFX_INFO gfx;
 
 EXPORT void CALL CaptureScreen(char* directory)
 {
-    char rom_name[32];
-    if (plugin_rom_name(rom_name, sizeof(rom_name))) {
-        core_screenshot(directory, rom_name);
-    }
+    core_screenshot(directory);
 }
 
 EXPORT void CALL ChangeWindow(void)
@@ -93,6 +90,7 @@ EXPORT void CALL RomClosed(void)
 EXPORT void CALL RomOpen(void)
 {
     config.screen_api = screen_opengl;
+    config.plugin_api = plugin_zilmar;
     core_init(&config);
 }
 

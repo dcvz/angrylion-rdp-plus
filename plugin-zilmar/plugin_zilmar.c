@@ -1,4 +1,4 @@
-#include "plugin.h"
+#include "plugin_zilmar.h"
 #include "rdram.h"
 #include "gfx_1.3.h"
 
@@ -15,40 +15,6 @@ extern GFX_INFO gfx;
 
 static uint32_t rdram_size;
 static uint8_t* rdram_hidden_bits;
-
-static struct {
-    enum dp_register reg;
-    PDWORD* ptr;
-} dp_reg[] = {
-    {DP_START,          &gfx.DPC_START_REG},
-    {DP_END,            &gfx.DPC_END_REG},
-    {DP_CURRENT,        &gfx.DPC_CURRENT_REG},
-    {DP_STATUS,         &gfx.DPC_STATUS_REG},
-    {DP_CLOCK,          &gfx.DPC_CLOCK_REG},
-    {DP_BUFBUSY,        &gfx.DPC_BUFBUSY_REG},
-    {DP_PIPEBUSY,       &gfx.DPC_PIPEBUSY_REG},
-    {DP_TMEM,           &gfx.DPC_TMEM_REG},
-};
-
-static struct {
-    enum vi_register reg;
-    PDWORD* ptr;
-} vi_reg[] = {
-    {VI_STATUS,         &gfx.VI_STATUS_REG},
-    {VI_ORIGIN,         &gfx.VI_ORIGIN_REG},
-    {VI_WIDTH,          &gfx.VI_WIDTH_REG},
-    {VI_INTR,           &gfx.VI_INTR_REG},
-    {VI_V_CURRENT_LINE, &gfx.VI_V_CURRENT_LINE_REG},
-    {VI_TIMING,         &gfx.VI_TIMING_REG},
-    {VI_V_SYNC,         &gfx.VI_V_SYNC_REG},
-    {VI_H_SYNC,         &gfx.VI_H_SYNC_REG},
-    {VI_LEAP,           &gfx.VI_LEAP_REG},
-    {VI_H_START,        &gfx.VI_H_START_REG},
-    {VI_V_START,        &gfx.VI_V_START_REG},
-    {VI_V_BURST,        &gfx.VI_V_BURST_REG},
-    {VI_X_SCALE,        &gfx.VI_X_SCALE_REG},
-    {VI_Y_SCALE,        &gfx.VI_Y_SCALE_REG},
-};
 
 static bool is_valid_ptr(void *ptr, uint32_t bytes)
 {
@@ -86,7 +52,7 @@ static char filter_char(char c)
     }
 }
 
-void plugin_init(void)
+static void plugin_init(void)
 {
     // Zilmar plugins can't know how much RDRAM is allocated, so use a Win32 hack
     // to detect it
@@ -97,43 +63,43 @@ void plugin_init(void)
     memset(rdram_hidden_bits, 3, rdram_size);
 }
 
-void plugin_interrupt(void)
+static void plugin_interrupt(void)
 {
     *gfx.MI_INTR_REG |= DP_INTERRUPT;
     gfx.CheckInterrupts();
 }
 
-uint32_t* plugin_dp_register(enum dp_register reg)
+static uint32_t** plugin_get_dp_registers(void)
 {
-    return (uint32_t*)*dp_reg[reg].ptr;
+    return (uint32_t**)&gfx.DPC_START_REG;
 }
 
-uint32_t* plugin_vi_register(enum vi_register reg)
+static uint32_t** plugin_get_vi_registers(void)
 {
-    return (uint32_t*)*vi_reg[reg].ptr;
+    return (uint32_t**)&gfx.VI_STATUS_REG;
 }
 
-uint8_t* plugin_rdram(void)
+static uint8_t* plugin_get_rdram(void)
 {
     return gfx.RDRAM;
 }
 
-uint8_t* plugin_rdram_hidden(void)
+static uint8_t* plugin_get_rdram_hidden(void)
 {
     return rdram_hidden_bits;
 }
 
-uint32_t plugin_rdram_size(void)
+static uint32_t plugin_get_rdram_size(void)
 {
     return rdram_size;
 }
 
-uint8_t* plugin_dmem(void)
+static uint8_t* plugin_get_dmem(void)
 {
     return gfx.DMEM;
 }
 
-uint32_t plugin_rom_name(char* name, uint32_t name_size)
+static uint32_t plugin_get_rom_name(char* name, uint32_t name_size)
 {
     if (name_size < 21) {
         // buffer too small
@@ -171,10 +137,24 @@ uint32_t plugin_rom_name(char* name, uint32_t name_size)
     return i;
 }
 
-void plugin_close(void)
+static void plugin_close(void)
 {
     if (rdram_hidden_bits) {
         free(rdram_hidden_bits);
         rdram_hidden_bits = NULL;
     }
+}
+
+void plugin_zilmar(struct plugin_api* api)
+{
+    api->init = plugin_init;
+    api->interrupt = plugin_interrupt;
+    api->get_dp_registers = plugin_get_dp_registers;
+    api->get_vi_registers = plugin_get_vi_registers;
+    api->get_rdram = plugin_get_rdram;
+    api->get_rdram_hidden = plugin_get_rdram_hidden;
+    api->get_rdram_size = plugin_get_rdram_size;
+    api->get_dmem = plugin_get_dmem;
+    api->get_rom_name = plugin_get_rom_name;
+    api->close = plugin_close;
 }
