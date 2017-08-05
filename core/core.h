@@ -76,3 +76,5 @@ void core_update_dp(void);
 void core_update_vi(void);
 void core_screenshot(char* directory);
 void core_toggle_fullscreen(void);
+struct screen_api* core_get_screen(void);
+struct plugin_api* core_get_plugin(void);

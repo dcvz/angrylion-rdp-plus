@@ -45,7 +45,7 @@ bool retrace_frame(uint64_t* num_cmds)
                 break;
 
             case TRACE_VI:
-                trace_read_vi(plugin_get_vi_registers());
+                trace_read_vi(core_get_plugin()->get_vi_registers());
                 vi_update();
                 break;
         }

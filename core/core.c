@@ -133,3 +133,13 @@ void core_close(void)
         trace_write_close();
     }
 }
+
+struct screen_api* core_get_screen(void)
+{
+    return &screen;
+}
+
+struct plugin_api* core_get_plugin(void)
+{
+    return &plugin;
+}
