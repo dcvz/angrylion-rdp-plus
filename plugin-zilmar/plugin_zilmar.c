@@ -71,11 +71,15 @@ static void plugin_sync_dp(void)
 
 static uint32_t** plugin_get_dp_registers(void)
 {
+    // HACK: this only works because the ordering of registers in GFX_INFO is
+    // the same as in dp_register
     return (uint32_t**)&gfx.DPC_START_REG;
 }
 
 static uint32_t** plugin_get_vi_registers(void)
 {
+    // HACK: this only works because the ordering of registers in GFX_INFO is
+    // the same as in vi_register
     return (uint32_t**)&gfx.VI_STATUS_REG;
 }
 
