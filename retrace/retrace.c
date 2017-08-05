@@ -69,8 +69,8 @@ void retrace_frames(void)
                         case SDLK_RETURN: {
                             if (SDL_GetModState() & KMOD_ALT) {
                                 core_toggle_fullscreen();
+                                break;
                             }
-                            break;
                         }
 
                         // toggle pause mode
@@ -98,6 +98,8 @@ void retrace_frames(void)
             if (!retrace_frame(&cmds_per_frame)) {
                 run = false;
             }
+        } else {
+            core_get_screen()->swap();
         }
     }
 }
