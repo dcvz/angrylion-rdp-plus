@@ -7042,7 +7042,7 @@ void rdp_update(void)
 
     if (*dp_reg[DP_STATUS] & DP_STATUS_XBUS_DMA)
     {
-        uint8_t* dmem = plugin->get_dmem();
+        uint32_t* dmem = (uint32_t*)plugin->get_dmem();
         for (i = 0; i < toload; i ++)
         {
             rdp_cmd_data[rdp_cmd_ptr] = dmem[dp_current_al & 0x3ff];
