@@ -41,7 +41,7 @@ enum vi_mode
     VI_MODE_COLOR,      // direct color buffer, unfiltered
     VI_MODE_DEPTH,      // depth buffer as grayscale
     VI_MODE_COVERAGE,   // coverage as grayscale
-    VI_OUTPUT_NUM
+    VI_MODE_NUM
 };
 
 
