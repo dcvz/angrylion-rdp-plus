@@ -5,7 +5,9 @@
 #include "msg.h"
 #include "rdram.h"
 #include "screen_opengl.h"
+#include "resource.h"
 
+#include <Commctrl.h>
 #include <stdio.h>
 
 #define PLUGIN_BASE_NAME "angrylion's RDP Plus"
@@ -18,8 +20,70 @@
 
 static bool warn_hle;
 static struct core_config config;
+static HINSTANCE hinst;
 
 GFX_INFO gfx;
+
+BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
+{
+    switch (fdwReason) {
+        case DLL_PROCESS_ATTACH:
+            hinst = hinstDLL;
+            break;
+    }
+    return TRUE;
+}
+
+BOOL CALLBACK ConfigDialogProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
+{
+    switch (iMessage) {
+        case WM_INITDIALOG: {
+            SetWindowText(hwnd, PLUGIN_NAME " Config");
+
+            TCHAR vi_mode_strings[VI_MODE_NUM][16] = {
+                TEXT("Filtered"),   // VI_MODE_NORMAL
+                TEXT("Unfiltered"), // VI_MODE_COLOR
+                TEXT("Depth"),      // VI_MODE_DEPTH
+                TEXT("Coverage")    // VI_MODE_COVERAGE
+            };
+
+            HWND hCombo1 = GetDlgItem(hwnd, IDC_COMBO1);
+            SendMessage(hCombo1, CB_RESETCONTENT, 0, 0);
+            for (int i = 0; i < VI_MODE_NUM; i++) {
+                SendMessage(hCombo1, CB_ADDSTRING, i, (LPARAM)vi_mode_strings[i]);
+            }
+            SendMessage(hCombo1, CB_SETCURSEL, (WPARAM)config.vi_mode, 0);
+
+            HWND hCheck1 = GetDlgItem(hwnd, IDC_CHECK1);
+            SendMessage(hCheck1, BM_SETCHECK, (WPARAM)config.trace, 0);
+
+            SetDlgItemInt(hwnd, IDC_EDIT1, config.num_workers, FALSE);
+
+            HWND hSpin1 = GetDlgItem(hwnd, IDC_SPIN1);
+            SendMessage(hSpin1, UDM_SETRANGE, 0, MAKELPARAM(128, 0));
+            break;
+        }
+        case WM_COMMAND:
+            switch (LOWORD(wParam)) {
+                case IDOK: {
+                    HWND hCombo1 = GetDlgItem(hwnd, IDC_COMBO1);
+                    config.vi_mode = SendMessage(hCombo1, CB_GETCURSEL, 0, 0);
+
+                    HWND hCheck1 = GetDlgItem(hwnd, IDC_CHECK1);
+                    config.trace = SendMessage(hCheck1, BM_GETCHECK, 0, 0);
+
+                    config.num_workers = GetDlgItemInt(hwnd, IDC_EDIT1, FALSE, FALSE);
+                }
+                case IDCANCEL:
+                    DestroyWindow(hwnd);
+                    break;
+            }
+            break;
+        default:
+            return FALSE;
+    }
+    return TRUE;
+}
 
 EXPORT void CALL CaptureScreen(char* directory)
 {
@@ -38,6 +102,12 @@ EXPORT void CALL CloseDLL(void)
 EXPORT void CALL DllAbout(HWND hParent)
 {
     msg_warning(PLUGIN_NAME ". MESS source code used.");
+}
+
+EXPORT void CALL DllConfig(HWND hParent)
+{
+    HWND configDialog = CreateDialog(hinst, MAKEINTRESOURCE(IDD_DIALOG1), hParent, ConfigDialogProc);
+    ShowWindow(configDialog, SW_SHOW);
 }
 
 EXPORT void CALL ReadScreen(void **dest, long *width, long *height)

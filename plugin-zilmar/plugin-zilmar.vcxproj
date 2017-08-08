@@ -22,6 +22,7 @@
     <ClInclude Include="gfx_1.3.h" />
     <ClInclude Include="gl_core_3_3.h" />
     <ClInclude Include="plugin_zilmar.h" />
+    <ClInclude Include="resource.h" />
     <ClInclude Include="screen_opengl.h" />
     <ClInclude Include="wgl_ext.h" />
   </ItemGroup>
@@ -31,6 +32,9 @@
     <ClCompile Include="plugin_zilmar.c" />
     <ClCompile Include="screen_opengl.c" />
     <ClCompile Include="wgl_ext.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="config.rc" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{722AD25D-C281-48FB-9A58-7699E50F8E6D}</ProjectGuid>
