@@ -77,7 +77,7 @@ BOOL CALLBACK ConfigDialogProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM l
                     core_update_config(&config);
                 }
                 case IDCANCEL:
-                    DestroyWindow(hwnd);
+                    EndDialog(hwnd, 0);
                     break;
             }
             break;
@@ -108,8 +108,7 @@ EXPORT void CALL DllAbout(HWND hParent)
 
 EXPORT void CALL DllConfig(HWND hParent)
 {
-    HWND configDialog = CreateDialog(hinst, MAKEINTRESOURCE(IDD_DIALOG1), hParent, ConfigDialogProc);
-    ShowWindow(configDialog, SW_SHOW);
+    DialogBox(hinst, MAKEINTRESOURCE(IDD_DIALOG1), hParent, ConfigDialogProc);
 }
 
 EXPORT void CALL ReadScreen(void **dest, long *width, long *height)
