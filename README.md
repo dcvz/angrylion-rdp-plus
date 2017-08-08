@@ -8,4 +8,5 @@ Current features:
 * Added manual window sizing.
 * Added fullscreen support.
 * Added BMP screenshot support.
+* Added settings GUI.
 * Slightly improved interlacing performance.
