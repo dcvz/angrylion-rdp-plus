@@ -1,7 +1,17 @@
 #pragma once
 
+#include "core_version.h"
+
 #include <stdint.h>
 #include <stdbool.h>
+
+#define CORE_BASE_NAME "angrylion's RDP Plus"
+
+#ifdef _DEBUG
+#define CORE_NAME CORE_BASE_NAME " " CORE_VERSION " (Debug)"
+#else
+#define CORE_NAME CORE_BASE_NAME " " CORE_VERSION
+#endif
 
 enum dp_register
 {

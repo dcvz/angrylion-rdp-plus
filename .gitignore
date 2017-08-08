@@ -245,6 +245,6 @@ ModelManifest.xml
 .fake/
 
 # auto-generated files
-core/git_tag.h
+core/core_version.h
 
 private/

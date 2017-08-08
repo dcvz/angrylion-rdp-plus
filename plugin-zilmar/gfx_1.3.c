@@ -10,14 +10,6 @@
 #include <Commctrl.h>
 #include <stdio.h>
 
-#define PLUGIN_BASE_NAME "angrylion's RDP Plus"
-
-#ifdef _DEBUG
-#define PLUGIN_NAME PLUGIN_BASE_NAME " (Debug)"
-#else
-#define PLUGIN_NAME PLUGIN_BASE_NAME
-#endif
-
 static bool warn_hle;
 static struct core_config config;
 static HINSTANCE hinst;
@@ -38,7 +30,7 @@ BOOL CALLBACK ConfigDialogProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM l
 {
     switch (iMessage) {
         case WM_INITDIALOG: {
-            SetWindowText(hwnd, PLUGIN_NAME " Config");
+            SetWindowText(hwnd, CORE_BASE_NAME " Config");
 
             TCHAR vi_mode_strings[VI_MODE_NUM][16] = {
                 TEXT("Filtered"),   // VI_MODE_NORMAL
@@ -103,7 +95,7 @@ EXPORT void CALL CloseDLL(void)
 
 EXPORT void CALL DllAbout(HWND hParent)
 {
-    msg_warning(PLUGIN_NAME ". MESS source code used.");
+    msg_warning(CORE_BASE_NAME ". MESS source code used.");
 }
 
 EXPORT void CALL DllConfig(HWND hParent)
@@ -123,7 +115,7 @@ EXPORT void CALL GetDllInfo(PLUGIN_INFO* PluginInfo)
 {
     PluginInfo->Version = 0x0103;
     PluginInfo->Type  = PLUGIN_TYPE_GFX;
-    sprintf(PluginInfo->Name, PLUGIN_NAME);
+    sprintf(PluginInfo->Name, CORE_NAME);
 
     PluginInfo->NormalMemory = TRUE;
     PluginInfo->MemoryBswaped = TRUE;

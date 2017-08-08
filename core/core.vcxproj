@@ -106,6 +106,9 @@
       <ImportLibrary>$(OutDir)angrylion.lib</ImportLibrary>
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
+    <PreBuildEvent>
+      <Command>python $(SolutionDir)git_describe.py</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -126,6 +129,9 @@
       </DataExecutionPrevention>
       <ImportLibrary>$(OutDir)angrylion.lib</ImportLibrary>
     </Link>
+    <PreBuildEvent>
+      <Command>python $(SolutionDir)git_describe.py</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -160,6 +166,9 @@
       <ImportLibrary>$(OutDir)angrylion.lib</ImportLibrary>
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
+    <PreBuildEvent>
+      <Command>python $(SolutionDir)git_describe.py</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -195,6 +204,9 @@
       </DataExecutionPrevention>
       <ImportLibrary>$(OutDir)angrylion.lib</ImportLibrary>
     </Link>
+    <PreBuildEvent>
+      <Command>python $(SolutionDir)git_describe.py</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="core.c" />
@@ -212,6 +224,7 @@
   <ItemGroup>
     <ClInclude Include="common.h" />
     <ClInclude Include="core.h" />
+    <ClInclude Include="core_version.h" />
     <ClInclude Include="file.h" />
     <ClInclude Include="msg.h" />
     <ClInclude Include="parallel.hpp" />
