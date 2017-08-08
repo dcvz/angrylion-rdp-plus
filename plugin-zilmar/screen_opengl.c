@@ -264,6 +264,9 @@ static void screen_get_buffer(int width, int height, int display_height, int** b
 
 static void screen_swap(void)
 {
+    // clear current buffer, indicating the start of a new frame
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
     // copy local buffer to GPU texture buffer
     glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, tex_width, tex_height,
         TEX_FORMAT, TEX_TYPE, tex_buffer);
