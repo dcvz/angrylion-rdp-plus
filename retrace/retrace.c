@@ -2,6 +2,7 @@
 #include "rdp.h"
 #include "vi.h"
 #include "screen_sdl.h"
+#include "screen_headless.h"
 #include "trace_read.h"
 #include "retrace.h"
 #include "plugin_retrace.h"
@@ -188,18 +189,11 @@ int main(int argc, char** argv)
         }
     }
 
-    // skip screen adapter in benchmarks for headless mode
-    if (!benchmark) {
-        config.screen_api = screen_sdl;
-    }
-
-    config.plugin_api = plugin_retrace;
-
     uint32_t rdram_size;
     trace_read_header(&rdram_size);
     plugin_set_rdram_size(rdram_size);
 
-    core_init(&config);
+    core_init(&config, benchmark ? screen_headless : screen_sdl, plugin_retrace);
 
     if (benchmark) {
         retrace_frames_verbose();

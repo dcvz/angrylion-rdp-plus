@@ -73,6 +73,8 @@ BOOL CALLBACK ConfigDialogProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM l
                     config.trace = SendMessage(hCheck1, BM_GETCHECK, 0, 0);
 
                     config.num_workers = GetDlgItemInt(hwnd, IDC_EDIT1, FALSE, FALSE);
+
+                    core_update_config(&config);
                 }
                 case IDCANCEL:
                     DestroyWindow(hwnd);
@@ -159,9 +161,7 @@ EXPORT void CALL RomClosed(void)
 
 EXPORT void CALL RomOpen(void)
 {
-    config.screen_api = screen_opengl;
-    config.plugin_api = plugin_zilmar;
-    core_init(&config);
+    core_init(&config, screen_opengl, plugin_zilmar);
 }
 
 EXPORT void CALL ShowCFB(void)

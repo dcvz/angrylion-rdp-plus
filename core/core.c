@@ -2,7 +2,6 @@
 
 #include "rdp.h"
 #include "vi.h"
-#include "screen_headless.h"
 #include "rdram.h"
 #include "file.h"
 #include "msg.h"
@@ -17,35 +16,35 @@ static uint32_t trace_num_workers;
 static uint32_t trace_index;
 static uint32_t num_workers;
 
-static struct core_config* config;
+static struct core_config* config_new;
+static struct core_config config;
 static struct screen_api screen;
 static struct plugin_api plugin;
 
-void core_init(struct core_config* _config)
+void core_init(struct core_config* _config, screen_api_func screen_api, plugin_api_func plugin_api)
 {
-    config = _config;
+    config = *_config;
 
-    // use headless mode if no screen adapter has been defined
-    if (!config->screen_api) {
-        config->screen_api = screen_headless;
+    if (!screen_api) {
+        msg_error("core: screen API not defined!");
     }
 
-    config->screen_api(&screen);
+    screen_api(&screen);
     screen.init();
 
-    if (!config->plugin_api) {
+    if (!plugin_api) {
         msg_error("core: plugin API not defined!");
     }
 
-    config->plugin_api(&plugin);
+    plugin_api(&plugin);
     plugin.init();
 
     rdram_init(&plugin);
 
-    rdp_init(config, &plugin);
-    vi_init(config, &plugin, &screen);
+    rdp_init(&config, &plugin);
+    vi_init(&config, &plugin, &screen);
 
-    num_workers = config->num_workers;
+    num_workers = config.num_workers;
 
     if (num_workers != 1) {
         parallel_init(num_workers);
@@ -57,43 +56,54 @@ void core_init(struct core_config* _config)
 
 void core_sync_dp(void)
 {
-    // open trace file when tracing has been enabled with no file open
-    if (config->trace && !trace_write_is_open()) {
-        // get ROM name from plugin and use placeholder if empty
-        char rom_name[32];
-        if (!plugin.get_rom_name(rom_name, sizeof(rom_name))) {
-            strcpy_s(rom_name, sizeof(rom_name), "trace");
+    // update config if set
+    if (config_new) {
+        config = *config_new;
+        config_new = NULL;
+
+        // open trace file when tracing has been enabled with no file open
+        if (config.trace && !trace_write_is_open()) {
+            // get ROM name from plugin and use placeholder if empty
+            char rom_name[32];
+            if (!plugin.get_rom_name(rom_name, sizeof(rom_name))) {
+                strcpy_s(rom_name, sizeof(rom_name), "trace");
+            }
+
+            // generate trace path
+            char trace_path[256];
+            file_path_indexed(trace_path, sizeof(trace_path), ".", rom_name,
+                "dpt", &trace_index);
+
+            trace_write_open(trace_path);
+            trace_write_header(plugin.get_rdram_size());
+            trace_num_workers = config.num_workers;
+            config.num_workers = 1;
         }
 
-        // generate trace path
-        char trace_path[256];
-        file_path_indexed(trace_path, sizeof(trace_path), ".", rom_name,
-            "dpt", &trace_index);
+        // close trace file when tracing has been disabled
+        if (!config.trace && trace_write_is_open()) {
+            trace_write_close();
+            config.num_workers = trace_num_workers;
+        }
 
-        trace_write_open(trace_path);
-        trace_write_header(plugin.get_rdram_size());
-        trace_num_workers = config->num_workers;
-        config->num_workers = 1;
-    }
+        // update number of workers
+        if (config.num_workers != num_workers) {
+            num_workers = config.num_workers;
+            parallel_close();
 
-    // close trace file when tracing has been disabled
-    if (!config->trace && trace_write_is_open()) {
-        trace_write_close();
-        config->num_workers = trace_num_workers;
-    }
-
-    // update number of workers
-    if (config->num_workers != num_workers) {
-        num_workers = config->num_workers;
-        parallel_close();
-
-        if (num_workers != 1) {
-            parallel_init(num_workers);
+            if (num_workers != 1) {
+                parallel_init(num_workers);
+            }
         }
     }
 
     // signal plugin to handle interrupts
     plugin.sync_dp();
+}
+
+void core_update_config(struct core_config* _config)
+{
+    config_new = _config;
 }
 
 void core_update_dp(void)

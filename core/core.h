@@ -56,6 +56,9 @@ struct screen_api
     void (*close)(void);
 };
 
+typedef void (*screen_api_func)(struct screen_api* api);
+typedef void (*plugin_api_func)(struct plugin_api* api);
+
 struct plugin_api
 {
     void (*init)(void);
@@ -76,13 +79,12 @@ struct core_config
     bool tv_fading;
     bool trace;
     enum vi_mode vi_mode;
-    void (*screen_api)(struct screen_api* api);
-    void (*plugin_api)(struct plugin_api* api);
 };
 
-void core_init(struct core_config* config);
+void core_init(struct core_config* config, screen_api_func screen_api, plugin_api_func plugin_api);
 void core_close(void);
 void core_sync_dp(void);
+void core_update_config(struct core_config* config);
 void core_update_dp(void);
 void core_update_vi(void);
 void core_screenshot(char* directory);
