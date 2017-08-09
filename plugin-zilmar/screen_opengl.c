@@ -124,7 +124,7 @@ static void gl_check_errors(void)
     }
 }
 
-static void screen_init(void)
+static void screen_update_size(int32_t width, int32_t height)
 {
     BOOL zoomed = IsZoomed(gfx.hWnd);
 
@@ -133,11 +133,6 @@ static void screen_init(void)
     }
 
     if (!fullscreen) {
-        // make window resizable for the user
-        LONG style = GetWindowLong(gfx.hWnd, GWL_STYLE);
-        style |= WS_SIZEBOX | WS_MAXIMIZEBOX;
-        SetWindowLong(gfx.hWnd, GWL_STYLE, style);
-
         // reserve some pixels for the status bar
         RECT statusrect;
         SetRectEmpty(&statusrect);
@@ -146,13 +141,25 @@ static void screen_init(void)
             GetClientRect(gfx.hStatusBar, &statusrect);
         }
 
-        // resize to 640x480
-        win32_client_resize(gfx.hWnd, WINDOW_DEFAULT_WIDTH, WINDOW_DEFAULT_HEIGHT + statusrect.bottom);
+        // resize window
+        win32_client_resize(gfx.hWnd, width, height + statusrect.bottom);
     }
 
     if (zoomed) {
         ShowWindow(gfx.hWnd, SW_MAXIMIZE);
     }
+}
+
+static void screen_init(void)
+{
+    // make window resizable for the user
+    if (!fullscreen) {
+        LONG style = GetWindowLong(gfx.hWnd, GWL_STYLE);
+        style |= WS_SIZEBOX | WS_MAXIMIZEBOX;
+        SetWindowLong(gfx.hWnd, GWL_STYLE, style);
+    }
+
+    screen_update_size(WINDOW_DEFAULT_WIDTH, WINDOW_DEFAULT_HEIGHT);
 
     PIXELFORMATDESCRIPTOR win_pfd = {
         sizeof(PIXELFORMATDESCRIPTOR), 1,
@@ -253,6 +260,8 @@ static void screen_get_buffer(int width, int height, int display_height, int** b
         // reallocate texture buffer on GPU, but don't download anything yet
         glTexImage2D(GL_TEXTURE_2D, 0, TEX_INTERNAL_FORMAT, width,
             height, 0, TEX_FORMAT, TEX_TYPE, 0);
+
+        screen_update_size(width, display_height);
 
         msg_debug("screen: resized framebuffer texture: %dx%d -> %dx%d",
             tex_width, tex_height, width, height);
