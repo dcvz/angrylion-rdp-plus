@@ -39,6 +39,23 @@ static HGLRC glrc;
 static HGLRC glrc_core;
 static bool fullscreen;
 
+// Win32 helpers
+void win32_client_resize(HWND hWnd, int nWidth, int nHeight)
+{
+    RECT rclient;
+    GetClientRect(hWnd, &rclient);
+
+    RECT rwin;
+    GetWindowRect(hWnd, &rwin);
+
+    POINT pdiff;
+    pdiff.x = (rwin.right - rwin.left) - rclient.right;
+    pdiff.y = (rwin.bottom - rwin.top) - rclient.bottom;
+
+    MoveWindow(hWnd, rwin.left, rwin.top, nWidth + pdiff.x, nHeight + pdiff.y, TRUE);
+}
+
+// OpenGL helpers
 static GLuint gl_shader_compile(GLenum type, const GLchar* source)
 {
     GLuint shader = glCreateShader(type);
@@ -121,27 +138,16 @@ static void screen_init(void)
         style |= WS_SIZEBOX | WS_MAXIMIZEBOX;
         SetWindowLong(gfx.hWnd, GWL_STYLE, style);
 
-        RECT rect;
-
-        // position window to the middle of the virtual screen
-        int vs_width = GetSystemMetrics(SM_CXVIRTUALSCREEN);
-        int vs_height = GetSystemMetrics(SM_CYVIRTUALSCREEN);
-        rect.left = vs_width / 2 - WINDOW_DEFAULT_WIDTH / 2;
-        rect.top = vs_height / 2 - WINDOW_DEFAULT_HEIGHT / 2;
-
-        // resize window to 640x480
-        rect.right = rect.left + WINDOW_DEFAULT_WIDTH;
-        rect.bottom = rect.top + WINDOW_DEFAULT_HEIGHT;
+        // reserve some pixels for the status bar
+        RECT statusrect;
+        SetRectEmpty(&statusrect);
 
         if (gfx.hStatusBar) {
-            RECT statusrect;
             GetClientRect(gfx.hStatusBar, &statusrect);
-            rect.bottom += statusrect.bottom - statusrect.top;
         }
 
-        AdjustWindowRect(&rect, style, FALSE);
-        SetWindowPos(gfx.hWnd, HWND_TOP, rect.left, rect.top,
-            rect.right - rect.left, rect.bottom - rect.top, SWP_SHOWWINDOW);
+        // resize to 640x480
+        win32_client_resize(gfx.hWnd, WINDOW_DEFAULT_WIDTH, WINDOW_DEFAULT_HEIGHT + statusrect.bottom);
     }
 
     if (zoomed) {
@@ -274,12 +280,21 @@ static void screen_swap(void)
     RECT rect;
     GetClientRect(gfx.hWnd, &rect);
 
+    // status bar covers the client area, so exclude it from calculation
+    RECT statusrect;
+    SetRectEmpty(&statusrect);
+
+    if (gfx.hStatusBar) {
+        GetClientRect(gfx.hStatusBar, &statusrect);
+        rect.bottom -= statusrect.bottom;
+    }
+
     int32_t vp_width = rect.right - rect.left;
     int32_t vp_height = rect.bottom - rect.top;
 
-    // default to bottom left corner of the window
+    // default to bottom left corner of the window above the status bar
     int32_t vp_x = 0;
-    int32_t vp_y = 0;
+    int32_t vp_y = statusrect.bottom;
 
     int32_t hw = tex_display_height * vp_width;
     int32_t wh = tex_width * vp_height;
@@ -288,11 +303,11 @@ static void screen_swap(void)
     // than the current display mode
     if (hw > wh) {
         int32_t w_max = wh / tex_display_height;
-        vp_x = (vp_width - w_max) / 2;
+        vp_x += (vp_width - w_max) / 2;
         vp_width = w_max;
     } else if (hw < wh) {
         int32_t h_max = hw / tex_width;
-        vp_y = (vp_height - h_max) / 2;
+        vp_y += (vp_height - h_max) / 2;
         vp_height = h_max;
     }
 
