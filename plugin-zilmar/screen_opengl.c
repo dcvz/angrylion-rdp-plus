@@ -279,6 +279,11 @@ static void screen_get_buffer(int width, int height, int display_height, int** b
 
 static void screen_swap(void)
 {
+    // don't render when the window is minimized
+    if (IsIconic(gfx.hWnd)) {
+        return;
+    }
+
     // clear current buffer, indicating the start of a new frame
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
