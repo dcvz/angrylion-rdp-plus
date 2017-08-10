@@ -92,6 +92,7 @@ static int vi_restore_table[0x400];
 
 #define PRESCALE_WIDTH 640
 #define PRESCALE_HEIGHT 625
+#define PRESCALE_HEIGHT_OUTPUT 480
 
 STRICTINLINE void restore_filter16(int* r, int* g, int* b, uint32_t fboffset, uint32_t num, uint32_t hres, uint32_t fetchbugstate)
 {
@@ -974,6 +975,12 @@ int vi_process_init(void)
         return 0;
     vactivelines >>= lineshifter;
 
+    // HACK: some games render more than 480 lines, even though the VI only
+    // supports 480(?), just crop away the excess for now
+    if (vactivelines > PRESCALE_HEIGHT_OUTPUT) {
+        vactivelines = PRESCALE_HEIGHT_OUTPUT;
+    }
+
     int validh = (hres > 0 && h_start < PRESCALE_WIDTH);
 
 
@@ -1011,7 +1018,7 @@ int vi_process_init(void)
         return 0;
     }
 
-    screen->get_buffer(PRESCALE_WIDTH, vactivelines, 480, &prescale, &pitchindwords);
+    screen->get_buffer(PRESCALE_WIDTH, vactivelines, PRESCALE_HEIGHT_OUTPUT, &prescale, &pitchindwords);
     pitchindwords >>= 2;
 
     linecount = serration_pulses ? (pitchindwords << 1) : pitchindwords;
