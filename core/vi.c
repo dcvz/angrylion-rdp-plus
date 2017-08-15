@@ -888,7 +888,7 @@ int vi_process_init(void)
 
     int validinterlace = (vitype & 2) && serration_pulses;
     if (validinterlace && prevserrate && emucontrolsvicurrent < 0)
-        emucontrolsvicurrent = (*vi_reg_ptr[VI_V_CURRENT_LINE] & 1) != prevvicurrent ? 1 : 0;
+        emucontrolsvicurrent = (*vi_reg_ptr[VI_V_CURRENT_LINE] & 1) != prevvicurrent;
 
     int lowerfield = 0;
     if (validinterlace)
@@ -900,7 +900,7 @@ int vi_process_init(void)
             if (v_start == oldvstart)
                 lowerfield = oldlowerfield ^ 1;
             else
-                lowerfield = v_start < oldvstart ? 1 : 0;
+                lowerfield = v_start < oldvstart;
         }
     }
 
@@ -928,8 +928,7 @@ int vi_process_init(void)
 
 
 
-    lineshifter = serration_pulses ? 0 : 1;
-    int twolines = serration_pulses ? 1 : 0;
+    lineshifter = !serration_pulses;
 
     int32_t vstartoffset = ispal ? 44 : 34;
     v_start = (v_start - vstartoffset) / 2;
@@ -1064,7 +1063,7 @@ int vi_process_init(void)
                 memset(&prescale[i * pitchindwords + h_end], 0, hrightblank * sizeof(uint32_t));
         }
 
-        for (i = 0; i < ((v_start << twolines) + (lowerfield ? 1 : 0)); i++)
+        for (i = 0; i < ((v_start << serration_pulses) + lowerfield); i++)
         {
             if (tvfadeoutstate[i])
             {
