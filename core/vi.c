@@ -972,13 +972,14 @@ int vi_process_init(void)
         msg_error("VI_V_SYNC_REG too big");
     if (vactivelines < 0)
         return 0;
-    vactivelines >>= lineshifter;
 
     // HACK: some games render more than 480 lines, even though the VI only
     // supports 480(?), just crop away the excess for now
     if (vactivelines > PRESCALE_HEIGHT_OUTPUT) {
         vactivelines = PRESCALE_HEIGHT_OUTPUT;
     }
+
+    vactivelines >>= lineshifter;
 
     int validh = (hres > 0 && h_start < PRESCALE_WIDTH);
 
