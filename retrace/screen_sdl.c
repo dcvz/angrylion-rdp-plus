@@ -47,18 +47,18 @@ static void screen_init(void)
 
 static void screen_swap(void)
 {
-    SDL_UnlockTexture(texture);
     SDL_RenderCopy(renderer, texture, NULL, NULL);
     SDL_RenderPresent(renderer);
 }
 
-static void screen_get_buffer(int width, int height, int display_height, int** buffer, int* pitch)
+static void screen_upload(int* buffer, int width, int height, bool interlaced)
 {
     if (texture_width != width || texture_height != height) {
         SDL_DisplayMode mode;
         SDL_GetDisplayMode(0, 0, &mode);
 
         // update window size and position
+        int display_height = height << interlaced;
         SDL_SetWindowSize(window, width, display_height);
         SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
         SDL_RenderSetLogicalSize(renderer, width, display_height);
@@ -84,7 +84,7 @@ static void screen_get_buffer(int width, int height, int display_height, int** b
         texture_height = height;
     }
 
-    SDL_LockTexture(texture, NULL, buffer, pitch);
+    SDL_UpdateTexture(texture, NULL, buffer, width * 4);
 }
 
 static void screen_set_fullscreen(bool _fullscreen)
@@ -119,7 +119,7 @@ void screen_sdl(struct screen_api* api)
 {
     api->init = screen_init;
     api->swap = screen_swap;
-    api->get_buffer = screen_get_buffer;
+    api->upload = screen_upload;
     api->set_fullscreen = screen_set_fullscreen;
     api->get_fullscreen = screen_get_fullscreen;
     api->capture = screen_capture;

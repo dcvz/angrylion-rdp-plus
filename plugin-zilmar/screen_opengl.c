@@ -28,7 +28,6 @@ static GLuint vao;
 static GLuint texture;
 
 // framebuffer texture states
-static uint32_t* tex_buffer;
 static int32_t tex_width;
 static int32_t tex_height;
 static int32_t tex_display_height;
@@ -248,33 +247,28 @@ static void screen_init(void)
     gl_check_errors();
 }
 
-static void screen_get_buffer(int width, int height, int display_height, int** buffer, int* pitch)
+static void screen_upload(int* buffer, int width, int height, bool interlaced)
 {
     // check if the framebuffer size has changed
     if (tex_width != width || tex_height != height) {
-        // reallocate and clear local buffer
-        size_t tex_buffer_size = width * height * TEX_BYTES_PER_PIXEL;
-        tex_buffer = realloc(tex_buffer, tex_buffer_size);
-        memset(tex_buffer, 0, tex_buffer_size);
-
-        // reallocate texture buffer on GPU, but don't download anything yet
+        // reallocate texture buffer on GPU
         glTexImage2D(GL_TEXTURE_2D, 0, TEX_INTERNAL_FORMAT, width,
-            height, 0, TEX_FORMAT, TEX_TYPE, 0);
+            height, 0, TEX_FORMAT, TEX_TYPE, buffer);
 
-        screen_update_size(width, display_height);
+        // texture may have non-square pixels, so save the display height separately
+        tex_display_height = height << interlaced;
+        screen_update_size(width, tex_display_height);
 
         msg_debug("screen: resized framebuffer texture: %dx%d -> %dx%d",
             tex_width, tex_height, width, height);
 
         tex_width = width;
         tex_height = height;
+    } else {
+        // copy local buffer to GPU texture buffer
+        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, tex_width, tex_height,
+            TEX_FORMAT, TEX_TYPE, buffer);
     }
-
-    // texture may have non-square pixels, so save the display height separately
-    tex_display_height = display_height;
-
-    *buffer = (int*)tex_buffer;
-    *pitch = width * TEX_BYTES_PER_PIXEL;
 }
 
 static void screen_swap(void)
@@ -286,10 +280,6 @@ static void screen_swap(void)
 
     // clear current buffer, indicating the start of a new frame
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    // copy local buffer to GPU texture buffer
-    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, tex_width, tex_height,
-        TEX_FORMAT, TEX_TYPE, tex_buffer);
 
     RECT rect;
     GetClientRect(gfx.hWnd, &rect);
@@ -439,21 +429,16 @@ static void screen_capture(char* path)
     // write bitmap contents
     fseek(fp, fhdr.bfOffBits, SEEK_SET);
 
-    uint8_t* buffer = (uint8_t*) tex_buffer;
-    for (int32_t y = (tex_height - 1); y >= 0; y--) {
-        fwrite(buffer + pitch * y, pitch, 1, fp);
-    }
+    //uint8_t* buffer = (uint8_t*) tex_buffer;
+    //for (int32_t y = (tex_height - 1); y >= 0; y--) {
+    //    fwrite(buffer + pitch * y, pitch, 1, fp);
+    //}
 
     fclose(fp);
 }
 
 static void screen_close(void)
 {
-    if (tex_buffer) {
-        free(tex_buffer);
-        tex_buffer = NULL;
-    }
-
     tex_width = 0;
     tex_height = 0;
 
@@ -472,7 +457,7 @@ void screen_opengl(struct screen_api* api)
 {
     api->init = screen_init;
     api->swap = screen_swap;
-    api->get_buffer = screen_get_buffer;
+    api->upload = screen_upload;
     api->set_fullscreen = screen_set_fullscreen;
     api->get_fullscreen = screen_get_fullscreen;
     api->capture = screen_capture;

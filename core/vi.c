@@ -9,6 +9,10 @@
 #include <stdlib.h>
 #include <memory.h>
 
+#define PRESCALE_WIDTH 640
+#define PRESCALE_HEIGHT 625
+#define PRESCALE_HEIGHT_OUTPUT 480
+
 enum vi_type
 {
     VI_TYPE_BLANK,
@@ -37,7 +41,7 @@ static int oldlowerfield;
 static int32_t oldvstart;
 static uint32_t prevwasblank;
 static uint32_t tvfadeoutstate[625];
-static int pitchindwords;
+static int vactivelines;
 static int ispal;
 static int lineshifter;
 static int minhpass;
@@ -49,7 +53,7 @@ static uint32_t y_start;
 static uint32_t zb_address;
 
 // prescale buffer
-static int32_t* prescale;
+static int32_t prescale[PRESCALE_WIDTH * PRESCALE_HEIGHT];
 static uint32_t prescale_ptr;
 static int linecount;
 
@@ -89,10 +93,6 @@ void (*vi_fetch_filter_ptr)(struct ccvg*, uint32_t, uint32_t, uint32_t, uint32_t
 static uint32_t gamma_table[0x100];
 static uint32_t gamma_dither_table[0x4000];
 static int vi_restore_table[0x400];
-
-#define PRESCALE_WIDTH 640
-#define PRESCALE_HEIGHT 625
-#define PRESCALE_HEIGHT_OUTPUT 480
 
 STRICTINLINE void restore_filter16(int* r, int* g, int* b, uint32_t fboffset, uint32_t num, uint32_t hres, uint32_t fetchbugstate)
 {
@@ -718,6 +718,8 @@ void vi_init(struct core_config* _config, struct plugin_api* _plugin, struct scr
             vi_restore_table[i] = 0;
     }
 
+    memset(prescale, 0, sizeof(prescale));
+
     prevvicurrent = 0;
     emucontrolsvicurrent = -1;
     prevserrate = 0;
@@ -726,7 +728,7 @@ void vi_init(struct core_config* _config, struct plugin_api* _plugin, struct scr
     prevwasblank = 0;
 }
 
-int vi_process_init(void)
+int vi_process_start(void)
 {
 
 
@@ -967,18 +969,11 @@ int vi_process_init(void)
     int32_t h_end = hres + h_start;
     int32_t hrightblank = PRESCALE_WIDTH - h_end;
 
-    int vactivelines = (*vi_reg_ptr[VI_V_SYNC] & 0x3ff) - vstartoffset;
+    vactivelines = (*vi_reg_ptr[VI_V_SYNC] & 0x3ff) - vstartoffset;
     if (vactivelines > PRESCALE_HEIGHT)
         msg_error("VI_V_SYNC_REG too big");
     if (vactivelines < 0)
         return 0;
-
-    // HACK: some games render more than 480 lines, even though the VI only
-    // supports 480(?), just crop away the excess for now
-    if (vactivelines > PRESCALE_HEIGHT_OUTPUT) {
-        vactivelines = PRESCALE_HEIGHT_OUTPUT;
-    }
-
     vactivelines >>= lineshifter;
 
     int validh = (hres > 0 && h_start < PRESCALE_WIDTH);
@@ -1018,11 +1013,8 @@ int vi_process_init(void)
         return 0;
     }
 
-    screen->get_buffer(PRESCALE_WIDTH, vactivelines, PRESCALE_HEIGHT_OUTPUT, &prescale, &pitchindwords);
-    pitchindwords >>= 2;
-
-    linecount = serration_pulses ? (pitchindwords << 1) : pitchindwords;
-    prescale_ptr = v_start * linecount + h_start + (lowerfield ? pitchindwords : 0);
+    linecount = serration_pulses ? (PRESCALE_WIDTH << 1) : PRESCALE_WIDTH;
+    prescale_ptr = v_start * linecount + h_start + (lowerfield ? PRESCALE_WIDTH : 0);
 
 
 
@@ -1039,9 +1031,8 @@ int vi_process_init(void)
         if (config->tv_fading) {
             memset(tvfadeoutstate, 0, PRESCALE_HEIGHT * sizeof(uint32_t));
         }
-        //for (i = 0; i < PRESCALE_HEIGHT; i++)
-        for (i = 0; i < vactivelines; i++)
-            memset(&prescale[i * pitchindwords], 0, PRESCALE_WIDTH * sizeof(int32_t));
+        for (i = 0; i < PRESCALE_HEIGHT; i++)
+            memset(&prescale[i * PRESCALE_WIDTH], 0, PRESCALE_WIDTH * sizeof(int32_t));
         prevwasblank = 1;
     }
     else
@@ -1056,12 +1047,12 @@ int vi_process_init(void)
         if (h_start > 0 && h_start < PRESCALE_WIDTH)
         {
             for (i = 0; i < vactivelines; i++)
-                memset(&prescale[i * pitchindwords], 0, h_start * sizeof(uint32_t));
+                memset(&prescale[i * PRESCALE_WIDTH], 0, h_start * sizeof(uint32_t));
         }
         if (h_end >= 0 && h_end < PRESCALE_WIDTH)
         {
             for (i = 0; i < vactivelines; i++)
-                memset(&prescale[i * pitchindwords + h_end], 0, hrightblank * sizeof(uint32_t));
+                memset(&prescale[i * PRESCALE_WIDTH + h_end], 0, hrightblank * sizeof(uint32_t));
         }
 
         for (i = 0; i < ((v_start << serration_pulses) + lowerfield); i++)
@@ -1072,9 +1063,9 @@ int vi_process_init(void)
                 if (!tvfadeoutstate[i])
                 {
                     if (validh)
-                        memset(&prescale[i * pitchindwords + h_start], 0, hres * sizeof(uint32_t));
+                        memset(&prescale[i * PRESCALE_WIDTH + h_start], 0, hres * sizeof(uint32_t));
                     else
-                        memset(&prescale[i * pitchindwords], 0, PRESCALE_WIDTH * sizeof(uint32_t));
+                        memset(&prescale[i * PRESCALE_WIDTH], 0, PRESCALE_WIDTH * sizeof(uint32_t));
                 }
             }
         }
@@ -1089,7 +1080,7 @@ int vi_process_init(void)
                     tvfadeoutstate[i]--;
                     if (!tvfadeoutstate[i])
                     {
-                        memset(&prescale[i * pitchindwords], 0, PRESCALE_WIDTH * sizeof(uint32_t));
+                        memset(&prescale[i * PRESCALE_WIDTH], 0, PRESCALE_WIDTH * sizeof(uint32_t));
                     }
                 }
 
@@ -1106,7 +1097,7 @@ int vi_process_init(void)
                 {
                     tvfadeoutstate[i]--;
                     if (!tvfadeoutstate[i])
-                        memset(&prescale[i * pitchindwords], 0, PRESCALE_WIDTH * sizeof(uint32_t));
+                        memset(&prescale[i * PRESCALE_WIDTH], 0, PRESCALE_WIDTH * sizeof(uint32_t));
                 }
 
                 if (tvfadeoutstate[i + 1])
@@ -1114,9 +1105,9 @@ int vi_process_init(void)
                     tvfadeoutstate[i + 1]--;
                     if (!tvfadeoutstate[i + 1])
                         if (validh)
-                            memset(&prescale[(i + 1) * pitchindwords + h_start], 0, hres * sizeof(uint32_t));
+                            memset(&prescale[(i + 1) * PRESCALE_WIDTH + h_start], 0, hres * sizeof(uint32_t));
                         else
-                            memset(&prescale[(i + 1) * pitchindwords], 0, PRESCALE_WIDTH * sizeof(uint32_t));
+                            memset(&prescale[(i + 1) * PRESCALE_WIDTH], 0, PRESCALE_WIDTH * sizeof(uint32_t));
                 }
 
                 i += 2;
@@ -1128,9 +1119,9 @@ int vi_process_init(void)
                 tvfadeoutstate[i]--;
             if (!tvfadeoutstate[i])
                 if (validh)
-                    memset(&prescale[i * pitchindwords + h_start], 0, hres * sizeof(uint32_t));
+                    memset(&prescale[i * PRESCALE_WIDTH + h_start], 0, hres * sizeof(uint32_t));
                 else
-                    memset(&prescale[i * pitchindwords], 0, PRESCALE_WIDTH * sizeof(uint32_t));
+                    memset(&prescale[i * PRESCALE_WIDTH], 0, PRESCALE_WIDTH * sizeof(uint32_t));
         }
     }
 
@@ -1415,7 +1406,13 @@ void vi_process(void)
     }
 }
 
-int vi_process_init_fast(void)
+void vi_process_end(void)
+{
+    int visiblelines = (ispal ? 576 : 480) >> lineshifter;
+    screen->upload(prescale, PRESCALE_WIDTH, visiblelines, lineshifter);
+}
+
+int vi_process_start_fast(void)
 {
     int32_t v_start = (*vi_reg_ptr[VI_V_START] >> 16) & 0x3ff;
     int32_t h_start = (*vi_reg_ptr[VI_H_START] >> 16) & 0x3ff;
@@ -1435,9 +1432,6 @@ int vi_process_init_fast(void)
     if (hres_raw <= 0 || vres_raw <= 0 || *vi_reg_ptr[VI_V_CURRENT_LINE] & 1) {
         return 0;
     }
-
-    screen->get_buffer(hres_raw, vres_raw, vres_raw, &prescale, &pitchindwords);
-    pitchindwords >>= 2;
 
     uint32_t vi_control = *vi_reg_ptr[VI_STATUS];
     vitype = vi_control & 3;
@@ -1470,7 +1464,7 @@ static void vi_process_fast(void)
 
     for (int32_t y = y_start; y < y_end; y += y_add) {
         int32_t line = y * width;
-        uint32_t* dst = prescale + y * pitchindwords;
+        uint32_t* dst = prescale + y * PRESCALE_WIDTH;
 
         for (int32_t x = 0; x < hres_raw; x++) {
             uint32_t r, g, b;
@@ -1524,6 +1518,11 @@ static void vi_process_fast(void)
     }
 }
 
+void vi_process_end_fast(void)
+{
+    screen->upload(prescale, hres_raw, vres_raw, vres_raw);
+}
+
 void vi_update(void)
 {
     if (trace_write_is_open()) {
@@ -1531,19 +1530,22 @@ void vi_update(void)
     }
 
     // select filter functions based on config
-    int (*vi_process_init_ptr)(void);
+    int (*vi_process_start_ptr)(void);
     void (*vi_process_ptr)(void);
+    void (*vi_process_end_ptr)(void);
 
     if (config->vi_mode == VI_MODE_NORMAL) {
-        vi_process_init_ptr = vi_process_init;
+        vi_process_start_ptr = vi_process_start;
         vi_process_ptr = vi_process;
+        vi_process_end_ptr = vi_process_end;
     } else {
-        vi_process_init_ptr = vi_process_init_fast;
+        vi_process_start_ptr = vi_process_start_fast;
         vi_process_ptr = vi_process_fast;
+        vi_process_end_ptr = vi_process_end_fast;
     }
 
     // try to init VI frame, abort if there's nothing to display
-    if (!vi_process_init_ptr()) {
+    if (!vi_process_start_ptr()) {
         return;
     }
 
@@ -1553,6 +1555,9 @@ void vi_update(void)
     } else {
         vi_process_ptr();
     }
+
+    // finish and send buffer to screen
+    vi_process_end_ptr();
 
     // render frame to screen
     screen->swap();

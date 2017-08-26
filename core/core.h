@@ -59,7 +59,7 @@ struct screen_api
 {
     void (*init)(void);
     void (*swap)(void);
-    void (*get_buffer)(int width, int height, int display_height, int** buffer, int* pitch);
+    void (*upload)(int* buffer, int width, int height, bool interlaced);
     void (*set_fullscreen)(bool fullscreen);
     bool (*get_fullscreen)(void);
     void (*capture)(char* path);
