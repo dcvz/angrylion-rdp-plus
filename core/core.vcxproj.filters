@@ -85,5 +85,8 @@
     <ClInclude Include="core_version.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="bitmap.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

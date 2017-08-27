@@ -70,7 +70,7 @@ void core_sync_dp(void)
             }
 
             // generate trace path
-            char trace_path[256];
+            char trace_path[FILE_MAX_PATH];
             file_path_indexed(trace_path, sizeof(trace_path), ".", rom_name,
                 "dpt", &trace_index);
 
@@ -125,9 +125,11 @@ void core_screenshot(char* directory)
     }
 
     // generate and find an unused file path
-    char path[256];
+    char path[FILE_MAX_PATH];
     if (file_path_indexed(path, sizeof(path), directory, rom_name, "bmp", &screenshot_index)) {
-        screen.capture(path);
+        vi_screenshot(path);
+    } else {
+        msg_warning("Ran out of screenshot indices!");
     }
 }
 

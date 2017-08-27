@@ -23,10 +23,6 @@ static bool screen_get_fullscreen(void)
     return false;
 }
 
-static void screen_capture(char* path)
-{
-}
-
 static void screen_close(void)
 {
 }
@@ -38,6 +34,5 @@ void screen_headless(struct screen_api* api)
     api->upload = screen_upload;
     api->set_fullscreen = screen_set_fullscreen;
     api->get_fullscreen = screen_get_fullscreen;
-    api->capture = screen_capture;
     api->close = screen_close;
 }

@@ -54,14 +54,16 @@ static void screen_swap(void)
 static void screen_upload(int* buffer, int width, int height, bool interlaced)
 {
     if (texture_width != width || texture_height != height) {
+        texture_width = width;
+        texture_height = height >> interlaced;
+
         SDL_DisplayMode mode;
         SDL_GetDisplayMode(0, 0, &mode);
 
         // update window size and position
-        int display_height = height << interlaced;
-        SDL_SetWindowSize(window, width, display_height);
+        SDL_SetWindowSize(window, texture_width, height);
         SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
-        SDL_RenderSetLogicalSize(renderer, width, display_height);
+        SDL_RenderSetLogicalSize(renderer, width, height);
 
         // (re)create frame buffer texture
         if (texture) {
@@ -72,16 +74,13 @@ static void screen_upload(int* buffer, int width, int height, bool interlaced)
             renderer,
             SDL_PIXELFORMAT_ARGB8888,
             SDL_TEXTUREACCESS_STREAMING,
-            width,
-            height
+            texture_width,
+            texture_height
         );
 
         if (!texture) {
             msg_error("Can't create texture: %s", SDL_GetError());
         }
-
-        texture_width = width;
-        texture_height = height;
     }
 
     SDL_UpdateTexture(texture, NULL, buffer, width * 4);
@@ -97,10 +96,6 @@ static void screen_set_fullscreen(bool _fullscreen)
 static bool screen_get_fullscreen(void)
 {
     return fullscreen;
-}
-
-static void screen_capture(char* path)
-{
 }
 
 static void screen_close(void)
@@ -122,6 +117,5 @@ void screen_sdl(struct screen_api* api)
     api->upload = screen_upload;
     api->set_fullscreen = screen_set_fullscreen;
     api->get_fullscreen = screen_get_fullscreen;
-    api->capture = screen_capture;
     api->close = screen_close;
 }

@@ -251,19 +251,18 @@ static void screen_upload(int* buffer, int width, int height, bool interlaced)
 {
     // check if the framebuffer size has changed
     if (tex_width != width || tex_height != height) {
+        tex_width = width;
+        tex_height = height >> interlaced;
+
         // reallocate texture buffer on GPU
-        glTexImage2D(GL_TEXTURE_2D, 0, TEX_INTERNAL_FORMAT, width,
-            height, 0, TEX_FORMAT, TEX_TYPE, buffer);
+        glTexImage2D(GL_TEXTURE_2D, 0, TEX_INTERNAL_FORMAT, tex_width,
+            tex_height, 0, TEX_FORMAT, TEX_TYPE, buffer);
 
         // texture may have non-square pixels, so save the display height separately
-        tex_display_height = height << interlaced;
+        tex_display_height = height;
         screen_update_size(width, tex_display_height);
 
-        msg_debug("screen: resized framebuffer texture: %dx%d -> %dx%d",
-            tex_width, tex_height, width, height);
-
-        tex_width = width;
-        tex_height = height;
+        msg_debug("screen: resized framebuffer texture: %dx%d", tex_width, tex_height);
     } else {
         // copy local buffer to GPU texture buffer
         glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, tex_width, tex_height,
@@ -393,50 +392,6 @@ static bool screen_get_fullscreen(void)
     return fullscreen;
 }
 
-static void screen_capture(char* path)
-{
-    msg_debug("screen: writing screenshot to '%s'", path);
-
-    // prepare bitmap headers
-    uint32_t pitch = tex_width * TEX_BYTES_PER_PIXEL;
-    uint32_t img_size = tex_height * pitch;
-
-    BITMAPINFOHEADER ihdr = {0};
-    ihdr.biSize = sizeof(ihdr);
-    ihdr.biWidth = tex_width;
-    ihdr.biHeight = tex_height;
-    ihdr.biPlanes = 1;
-    ihdr.biBitCount = 32;
-    ihdr.biSizeImage = img_size;
-
-    // calculate aspect ratio for non-square pixel buffers
-    if (tex_height != tex_display_height) {
-        ihdr.biXPelsPerMeter = 2835; // 72 DPI × 39.3701 inches per meter
-        ihdr.biYPelsPerMeter = (ihdr.biXPelsPerMeter * tex_height) / tex_display_height;
-    }
-
-    BITMAPFILEHEADER fhdr = {0};
-    fhdr.bfType = 'B' | ('M' << 8);
-    fhdr.bfOffBits = sizeof(fhdr) + sizeof(ihdr) + 10;
-    fhdr.bfSize = img_size + fhdr.bfOffBits;
-
-    FILE* fp = fopen(path, "wb");
-
-    // write bitmap headers
-    fwrite(&fhdr, sizeof(fhdr), 1, fp);
-    fwrite(&ihdr, sizeof(ihdr), 1, fp);
-
-    // write bitmap contents
-    fseek(fp, fhdr.bfOffBits, SEEK_SET);
-
-    //uint8_t* buffer = (uint8_t*) tex_buffer;
-    //for (int32_t y = (tex_height - 1); y >= 0; y--) {
-    //    fwrite(buffer + pitch * y, pitch, 1, fp);
-    //}
-
-    fclose(fp);
-}
-
 static void screen_close(void)
 {
     tex_width = 0;
@@ -460,6 +415,5 @@ void screen_opengl(struct screen_api* api)
     api->upload = screen_upload;
     api->set_fullscreen = screen_set_fullscreen;
     api->get_fullscreen = screen_get_fullscreen;
-    api->capture = screen_capture;
     api->close = screen_close;
 }

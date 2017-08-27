@@ -4,9 +4,13 @@
 #include "trace_write.h"
 #include "msg.h"
 #include "irand.h"
+#include "file.h"
+#include "bitmap.h"
 #include "parallel_c.hpp"
 
 #include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
 #include <memory.h>
 
 #define PRESCALE_WIDTH 640
@@ -51,6 +55,7 @@ static uint32_t x_start_init;
 static uint32_t y_add;
 static uint32_t y_start;
 static uint32_t zb_address;
+static char screenshot_path[FILE_MAX_PATH];
 
 // prescale buffer
 static int32_t prescale[PRESCALE_WIDTH * PRESCALE_HEIGHT];
@@ -93,6 +98,43 @@ void (*vi_fetch_filter_ptr)(struct ccvg*, uint32_t, uint32_t, uint32_t, uint32_t
 static uint32_t gamma_table[0x100];
 static uint32_t gamma_dither_table[0x4000];
 static int vi_restore_table[0x400];
+
+static void vi_screenshot_write(char* path, int32_t* buffer, int width, int height, bool interlaced)
+{
+    msg_debug("screen: writing screenshot to '%s'", path);
+
+    // prepare bitmap headers
+    uint32_t pitch = width * sizeof(int32_t);
+    uint32_t img_size = pitch * height;
+
+    struct bitmap_info_header ihdr = {0};
+    ihdr.size = sizeof(ihdr);
+    ihdr.width = width;
+    ihdr.height = height;
+    ihdr.planes = 1;
+    ihdr.bit_count = 32;
+    ihdr.size_image = img_size;
+
+    struct bitmap_file_header fhdr = {0};
+    fhdr.type = 'B' | ('M' << 8);
+    fhdr.off_bits = sizeof(fhdr) + sizeof(ihdr) + 10;
+    fhdr.size = img_size + fhdr.off_bits;
+
+    FILE* fp = fopen(path, "wb");
+
+    // write bitmap headers
+    fwrite(&fhdr, sizeof(fhdr), 1, fp);
+    fwrite(&ihdr, sizeof(ihdr), 1, fp);
+
+    // write bitmap contents
+    fseek(fp, fhdr.off_bits, SEEK_SET);
+
+    for (int32_t y = height - 1; y >= 0; y--) {
+        fwrite(buffer + width * (y >> interlaced), pitch, 1, fp);
+    }
+
+    fclose(fp);
+}
 
 STRICTINLINE void restore_filter16(int* r, int* g, int* b, uint32_t fboffset, uint32_t num, uint32_t hres, uint32_t fetchbugstate)
 {
@@ -1408,8 +1450,13 @@ void vi_process(void)
 
 void vi_process_end(void)
 {
-    int visiblelines = (ispal ? 576 : 480) >> lineshifter;
+    int visiblelines = ispal ? 576 : 480;
     screen->upload(prescale, PRESCALE_WIDTH, visiblelines, lineshifter);
+
+    if (screenshot_path[0]) {
+        vi_screenshot_write(screenshot_path, prescale, PRESCALE_WIDTH, visiblelines, lineshifter);
+        screenshot_path[0] = 0;
+    }
 }
 
 int vi_process_start_fast(void)
@@ -1520,7 +1567,11 @@ static void vi_process_fast(void)
 
 void vi_process_end_fast(void)
 {
-    screen->upload(prescale, hres_raw, vres_raw, vres_raw);
+    screen->upload(prescale, hres_raw, vres_raw, false);
+    if (screenshot_path[0]) {
+        vi_screenshot_write(screenshot_path, prescale, hres_raw, vres_raw, false);
+        screenshot_path[0] = 0;
+    }
 }
 
 void vi_update(void)
@@ -1566,6 +1617,11 @@ void vi_update(void)
 void vi_set_zb_address(uint32_t _zb_address)
 {
     zb_address = _zb_address;
+}
+
+void vi_screenshot(char* path)
+{
+    strcpy(screenshot_path, path);
 }
 
 void vi_close(void)
