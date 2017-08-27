@@ -53,7 +53,7 @@ static void screen_swap(void)
 
 static void screen_upload(int* buffer, int width, int height, bool interlaced)
 {
-    if (texture_width != width || texture_height != height) {
+    if (texture_width != width || texture_height != height >> interlaced) {
         texture_width = width;
         texture_height = height >> interlaced;
 

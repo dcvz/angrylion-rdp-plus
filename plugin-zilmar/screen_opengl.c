@@ -250,7 +250,7 @@ static void screen_init(void)
 static void screen_upload(int* buffer, int width, int height, bool interlaced)
 {
     // check if the framebuffer size has changed
-    if (tex_width != width || tex_height != height) {
+    if (tex_width != width || tex_height != height >> interlaced) {
         tex_width = width;
         tex_height = height >> interlaced;
 
