@@ -22,15 +22,14 @@ bool file_exists(const char* path)
 
 bool file_path_indexed(char* path, uint32_t path_size, const char* dir, const char* name, const char* ext, uint32_t* index)
 {
-    // only up to four decimals are allowed
-    if (*index > 9999) {
-        return false;
+    // find a free file slot between 0 and 9999
+    for (; *index < 10000; (*index)++) {
+        sprintf_s(path, path_size, "%s" PATH_SEPARATOR "%s_%04d.%s", dir, name, *index, ext);
+        if (!file_exists(path)) {
+            return true;
+        }
     }
 
-    do {
-        sprintf_s(path, path_size, "%s" PATH_SEPARATOR "%s_%04d.%s",
-            dir, name, (*index)++, ext);
-    } while (file_exists(path));
-
-    return true;
+    // all file slots are used up
+    return false;
 }
