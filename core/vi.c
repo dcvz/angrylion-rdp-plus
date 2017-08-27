@@ -120,6 +120,11 @@ static void vi_screenshot_write(char* path, int32_t* buffer, int width, int heig
 
     FILE* fp = fopen(path, "wb");
 
+    if (!fp) {
+        msg_warning("Can't open screenshot file %s!", path);
+        return;
+    }
+
     // write bitmap headers
     fwrite(&fhdr, sizeof(fhdr), 1, fp);
     fwrite(&ihdr, sizeof(ihdr), 1, fp);
