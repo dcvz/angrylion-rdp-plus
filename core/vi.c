@@ -1511,7 +1511,7 @@ static void vi_process_fast(void)
 
     for (int32_t y = y_start; y < y_end; y += y_add) {
         int32_t line = y * width;
-        uint32_t* dst = prescale + y * PRESCALE_WIDTH;
+        uint32_t* dst = prescale + y * hres_raw;
 
         for (int32_t x = 0; x < hres_raw; x++) {
             uint32_t r, g, b;
