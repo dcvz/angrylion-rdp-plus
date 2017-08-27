@@ -57,6 +57,7 @@ static uint32_t y_add;
 static uint32_t y_start;
 static uint32_t zb_address;
 static char screenshot_path[FILE_MAX_PATH];
+static enum vi_mode vi_mode;
 
 // prescale buffer
 static int32_t prescale[PRESCALE_WIDTH * PRESCALE_HEIGHT];
@@ -772,6 +773,7 @@ void vi_init(struct core_config* _config, struct plugin_api* _plugin, struct scr
     }
 
     memset(prescale, 0, sizeof(prescale));
+    vi_mode = VI_MODE_NORMAL;
 
     prevvicurrent = 0;
     emucontrolsvicurrent = -1;
@@ -1589,6 +1591,13 @@ void vi_process_end_fast(void)
 
 void vi_update(void)
 {
+    // clear buffer after switching VI modes to make sure that black borders are
+    // actually black and don't contain garbage
+    if (config->vi_mode != vi_mode) {
+        memset(prescale, 0, sizeof(prescale));
+        vi_mode = config->vi_mode;
+    }
+
     if (trace_write_is_open()) {
         trace_write_vi(vi_reg_ptr);
     }
