@@ -16,7 +16,6 @@
 
 #define PRESCALE_WIDTH 640
 #define PRESCALE_HEIGHT 625
-#define PRESCALE_HEIGHT_OUTPUT 480
 
 enum vi_type
 {
