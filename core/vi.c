@@ -12,6 +12,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <memory.h>
+#include <math.h>
 
 #define PRESCALE_WIDTH 640
 #define PRESCALE_HEIGHT 625
@@ -99,26 +100,23 @@ static uint32_t gamma_table[0x100];
 static uint32_t gamma_dither_table[0x4000];
 static int vi_restore_table[0x400];
 
-static void vi_screenshot_write(char* path, int32_t* buffer, int width, int height, bool interlaced)
+static void vi_screenshot_write(char* path, int32_t* buffer, int width, int height, int output_width, int output_height)
 {
     msg_debug("screen: writing screenshot to '%s'", path);
 
     // prepare bitmap headers
-    uint32_t pitch = width * sizeof(int32_t);
-    uint32_t img_size = pitch * height;
-
     struct bitmap_info_header ihdr = {0};
     ihdr.size = sizeof(ihdr);
-    ihdr.width = width;
-    ihdr.height = height;
+    ihdr.width = output_width;
+    ihdr.height = output_height;
     ihdr.planes = 1;
     ihdr.bit_count = 32;
-    ihdr.size_image = img_size;
+    ihdr.size_image = output_width * output_height * sizeof(int32_t);
 
     struct bitmap_file_header fhdr = {0};
     fhdr.type = 'B' | ('M' << 8);
     fhdr.off_bits = sizeof(fhdr) + sizeof(ihdr) + 10;
-    fhdr.size = img_size + fhdr.off_bits;
+    fhdr.size = ihdr.size_image + fhdr.off_bits;
 
     FILE* fp = fopen(path, "wb");
 
@@ -129,8 +127,21 @@ static void vi_screenshot_write(char* path, int32_t* buffer, int width, int heig
     // write bitmap contents
     fseek(fp, fhdr.off_bits, SEEK_SET);
 
-    for (int32_t y = height - 1; y >= 0; y--) {
-        fwrite(buffer + width * (y >> interlaced), pitch, 1, fp);
+    // check if interpolation is required
+    if (width != output_width || height != output_height) {
+        // nearest-neighbor mode, copy pixel by pixel
+        for (int32_t y = output_height - 1; y >= 0; y--) {
+            for (int32_t x = 0; x < output_width; x++) {
+                int ix = (int)roundf((float)x * width / output_width);
+                int iy = (int)roundf((float)y * height / output_height);
+                fwrite(buffer + width * iy + ix, sizeof(int32_t), 1, fp);
+            }
+        }
+    } else {
+        // direct mode, copy line by line in reverse order
+        for (int32_t y = height - 1; y >= 0; y--) {
+            fwrite(buffer + width * y, width * sizeof(int32_t), 1, fp);
+        }
     }
 
     fclose(fp);
@@ -1450,11 +1461,13 @@ void vi_process(void)
 
 void vi_process_end(void)
 {
-    int visiblelines = ispal ? 576 : 480;
-    screen->upload(prescale, PRESCALE_WIDTH, visiblelines, lineshifter);
+    int output_width = ispal ? 768 : 640;
+    int output_height = ispal ? 576 : 480;
+    int height = output_height >> lineshifter;
+    screen->upload(prescale, PRESCALE_WIDTH, height, output_width, output_height);
 
     if (screenshot_path[0]) {
-        vi_screenshot_write(screenshot_path, prescale, PRESCALE_WIDTH, visiblelines, lineshifter);
+        vi_screenshot_write(screenshot_path, prescale, PRESCALE_WIDTH, height, output_width, output_height);
         screenshot_path[0] = 0;
     }
 }
@@ -1567,9 +1580,9 @@ static void vi_process_fast(void)
 
 void vi_process_end_fast(void)
 {
-    screen->upload(prescale, hres_raw, vres_raw, false);
+    screen->upload(prescale, hres_raw, vres_raw, hres_raw, vres_raw);
     if (screenshot_path[0]) {
-        vi_screenshot_write(screenshot_path, prescale, hres_raw, vres_raw, false);
+        vi_screenshot_write(screenshot_path, prescale, hres_raw, vres_raw, hres_raw, vres_raw);
         screenshot_path[0] = 0;
     }
 }

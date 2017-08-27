@@ -30,6 +30,7 @@ static GLuint texture;
 // framebuffer texture states
 static int32_t tex_width;
 static int32_t tex_height;
+static int32_t tex_display_width;
 static int32_t tex_display_height;
 
 // context states
@@ -247,20 +248,22 @@ static void screen_init(void)
     gl_check_errors();
 }
 
-static void screen_upload(int* buffer, int width, int height, bool interlaced)
+static void screen_upload(int* buffer, int width, int height, int output_width, int output_height)
 {
     // check if the framebuffer size has changed
-    if (tex_width != width || tex_height != height >> interlaced) {
+    if (tex_width != width || tex_height != height) {
         tex_width = width;
-        tex_height = height >> interlaced;
+        tex_height = height;
 
         // reallocate texture buffer on GPU
         glTexImage2D(GL_TEXTURE_2D, 0, TEX_INTERNAL_FORMAT, tex_width,
             tex_height, 0, TEX_FORMAT, TEX_TYPE, buffer);
 
-        // texture may have non-square pixels, so save the display height separately
-        tex_display_height = height;
-        screen_update_size(width, tex_display_height);
+        // update output size
+        tex_display_width = output_width;
+        tex_display_height = output_height;
+
+        screen_update_size(tex_display_width, tex_display_height);
 
         msg_debug("screen: resized framebuffer texture: %dx%d", tex_width, tex_height);
     } else {
@@ -300,7 +303,7 @@ static void screen_swap(void)
     int32_t vp_y = statusrect.bottom;
 
     int32_t hw = tex_display_height * vp_width;
-    int32_t wh = tex_width * vp_height;
+    int32_t wh = tex_display_width * vp_height;
 
     // add letterboxes or pillarboxes if the window has a different aspect ratio
     // than the current display mode
@@ -309,7 +312,7 @@ static void screen_swap(void)
         vp_x += (vp_width - w_max) / 2;
         vp_width = w_max;
     } else if (hw < wh) {
-        int32_t h_max = hw / tex_width;
+        int32_t h_max = hw / tex_display_width;
         vp_y += (vp_height - h_max) / 2;
         vp_height = h_max;
     }

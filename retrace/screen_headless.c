@@ -10,7 +10,7 @@ static void screen_swap(void)
 {
 }
 
-static void screen_upload(int* buffer, int width, int height, bool interlaced)
+static void screen_upload(int* buffer, int width, int height, int output_width, int output_height)
 {
 }
 
