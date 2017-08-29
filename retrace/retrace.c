@@ -13,6 +13,10 @@
 #include <string.h>
 #include <SDL.h>
 
+#ifdef WIN32
+#include <windows.h>
+#endif
+
 static struct core_config config;
 
 bool retrace_frame(uint64_t* num_cmds)
@@ -107,6 +111,11 @@ void retrace_frames(void)
 
 void retrace_frames_verbose(void)
 {
+#ifdef WIN32
+    // set maximum process priority for most accurate results
+    SetPriorityClass(GetCurrentProcess(), REALTIME_PRIORITY_CLASS);
+#endif
+
     uint64_t start = SDL_GetPerformanceCounter();
     uint64_t freq = SDL_GetPerformanceFrequency();
     uint64_t prev = start;
@@ -115,68 +124,20 @@ void retrace_frames_verbose(void)
     uint32_t frames_total = 0;
     uint64_t cmds_total = 0;
 
-    // counters for the current update
-    uint64_t frames_sec = 0;
-    uint64_t cmds_sec = 0;
-
-    uint8_t prev_line_chars = 0;
-
-    // refresh after that many seconds have passed
-    const float update_interval = 0.25;
-
     bool running = true;
     uint64_t cmds_per_frame;
     while (retrace_frame(&cmds_per_frame)) {
-        uint64_t now = SDL_GetPerformanceCounter();
-
         // increment command counters
         cmds_total += cmds_per_frame;
-        cmds_sec += cmds_per_frame;
 
         // increment frame counters
         frames_total++;
-        frames_sec++;
-
-        // check if the console output needs to be updated
-        float seconds_passed = (now - prev) / (float)freq;
-        if (seconds_passed > update_interval) {
-            float fps = frames_sec / seconds_passed;
-            frames_sec = 0;
-
-            float cmds_per_sec = cmds_sec / seconds_passed;
-            cmds_sec = 0;
-
-            prev = now;
-
-            // format numbers and output them
-            uint8_t line_chars = 0;
-            line_chars += printf("Frames: %u, frames/s: %.2f, ", frames_total, fps);
-            line_chars += printf("cmds: %" PRIu64 "k, frame cmds: %" PRIu64 ", cmds/s: %.2fk",
-                cmds_total / 1000, cmds_per_frame, cmds_per_sec / 1000.f);
-
-            // overwrite characters from previous output if the current one is
-            // shorter
-            if (line_chars < prev_line_chars) {
-                for (uint8_t i = 0; i < (prev_line_chars - line_chars); i++) {
-                    printf(" ");
-                }
-            }
-            printf("\r");
-
-            prev_line_chars = line_chars;
-        }
     }
 
     uint64_t now = SDL_GetPerformanceCounter();
     float seconds_passed = (now - start) / (float)freq;
     float average_fps = frames_total / seconds_passed;
     float average_cps = cmds_total / seconds_passed;
-
-    printf("\r");
-    for (uint8_t i = 0; i < prev_line_chars; i++) {
-        printf(" ");
-    }
-    printf("\r");
 
     printf("Frames: %d\n", frames_total);
     printf("Commands: %" PRIu64 "\n", cmds_total);
