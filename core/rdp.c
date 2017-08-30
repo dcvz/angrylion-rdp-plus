@@ -322,24 +322,27 @@ static TLS int32_t keyalpha;
 
 static int32_t blenderone   = 0xff;
 
+// combiner states
+static TLS struct
+{
+    int32_t *rgbsub_a_r[2];
+    int32_t *rgbsub_a_g[2];
+    int32_t *rgbsub_a_b[2];
+    int32_t *rgbsub_b_r[2];
+    int32_t *rgbsub_b_g[2];
+    int32_t *rgbsub_b_b[2];
+    int32_t *rgbmul_r[2];
+    int32_t *rgbmul_g[2];
+    int32_t *rgbmul_b[2];
+    int32_t *rgbadd_r[2];
+    int32_t *rgbadd_g[2];
+    int32_t *rgbadd_b[2];
 
-static TLS int32_t *combiner_rgbsub_a_r[2];
-static TLS int32_t *combiner_rgbsub_a_g[2];
-static TLS int32_t *combiner_rgbsub_a_b[2];
-static TLS int32_t *combiner_rgbsub_b_r[2];
-static TLS int32_t *combiner_rgbsub_b_g[2];
-static TLS int32_t *combiner_rgbsub_b_b[2];
-static TLS int32_t *combiner_rgbmul_r[2];
-static TLS int32_t *combiner_rgbmul_g[2];
-static TLS int32_t *combiner_rgbmul_b[2];
-static TLS int32_t *combiner_rgbadd_r[2];
-static TLS int32_t *combiner_rgbadd_g[2];
-static TLS int32_t *combiner_rgbadd_b[2];
-
-static TLS int32_t *combiner_alphasub_a[2];
-static TLS int32_t *combiner_alphasub_b[2];
-static TLS int32_t *combiner_alphamul[2];
-static TLS int32_t *combiner_alphaadd[2];
+    int32_t *alphasub_a[2];
+    int32_t *alphasub_b[2];
+    int32_t *alphamul[2];
+    int32_t *alphaadd[2];
+} combiner;
 
 
 static TLS int32_t *blender1a_r[2];
@@ -894,23 +897,23 @@ int rdp_init(struct core_config* _config, struct plugin_api* _plugin)
     render_spans_1cycle_ptr = render_spans_1cycle_func[2];
     render_spans_2cycle_ptr = render_spans_2cycle_func[1];
 
-    combiner_rgbsub_a_r[0] = combiner_rgbsub_a_r[1] = &one_color;
-    combiner_rgbsub_a_g[0] = combiner_rgbsub_a_g[1] = &one_color;
-    combiner_rgbsub_a_b[0] = combiner_rgbsub_a_b[1] = &one_color;
-    combiner_rgbsub_b_r[0] = combiner_rgbsub_b_r[1] = &one_color;
-    combiner_rgbsub_b_g[0] = combiner_rgbsub_b_g[1] = &one_color;
-    combiner_rgbsub_b_b[0] = combiner_rgbsub_b_b[1] = &one_color;
-    combiner_rgbmul_r[0] = combiner_rgbmul_r[1] = &one_color;
-    combiner_rgbmul_g[0] = combiner_rgbmul_g[1] = &one_color;
-    combiner_rgbmul_b[0] = combiner_rgbmul_b[1] = &one_color;
-    combiner_rgbadd_r[0] = combiner_rgbadd_r[1] = &one_color;
-    combiner_rgbadd_g[0] = combiner_rgbadd_g[1] = &one_color;
-    combiner_rgbadd_b[0] = combiner_rgbadd_b[1] = &one_color;
+    combiner.rgbsub_a_r[0] = combiner.rgbsub_a_r[1] = &one_color;
+    combiner.rgbsub_a_g[0] = combiner.rgbsub_a_g[1] = &one_color;
+    combiner.rgbsub_a_b[0] = combiner.rgbsub_a_b[1] = &one_color;
+    combiner.rgbsub_b_r[0] = combiner.rgbsub_b_r[1] = &one_color;
+    combiner.rgbsub_b_g[0] = combiner.rgbsub_b_g[1] = &one_color;
+    combiner.rgbsub_b_b[0] = combiner.rgbsub_b_b[1] = &one_color;
+    combiner.rgbmul_r[0] = combiner.rgbmul_r[1] = &one_color;
+    combiner.rgbmul_g[0] = combiner.rgbmul_g[1] = &one_color;
+    combiner.rgbmul_b[0] = combiner.rgbmul_b[1] = &one_color;
+    combiner.rgbadd_r[0] = combiner.rgbadd_r[1] = &one_color;
+    combiner.rgbadd_g[0] = combiner.rgbadd_g[1] = &one_color;
+    combiner.rgbadd_b[0] = combiner.rgbadd_b[1] = &one_color;
 
-    combiner_alphasub_a[0] = combiner_alphasub_a[1] = &one_color;
-    combiner_alphasub_b[0] = combiner_alphasub_b[1] = &one_color;
-    combiner_alphamul[0] = combiner_alphamul[1] = &one_color;
-    combiner_alphaadd[0] = combiner_alphaadd[1] = &one_color;
+    combiner.alphasub_a[0] = combiner.alphasub_a[1] = &one_color;
+    combiner.alphasub_b[0] = combiner.alphasub_b[1] = &one_color;
+    combiner.alphamul[0] = combiner.alphamul[1] = &one_color;
+    combiner.alphaadd[0] = combiner.alphaadd[1] = &one_color;
 
     uint32_t tmp[2] = {0};
     rdp_set_other_modes(tmp);
@@ -1060,9 +1063,9 @@ static STRICTINLINE void combiner_1cycle(int adseed, uint32_t* curpixel_cvg)
 
     if (other_modes.key_en)
     {
-        chromabypass.r = *combiner_rgbsub_a_r[1];
-        chromabypass.g = *combiner_rgbsub_a_g[1];
-        chromabypass.b = *combiner_rgbsub_a_b[1];
+        chromabypass.r = *combiner.rgbsub_a_r[1];
+        chromabypass.g = *combiner.rgbsub_a_g[1];
+        chromabypass.b = *combiner.rgbsub_a_b[1];
     }
 
 
@@ -1070,7 +1073,7 @@ static STRICTINLINE void combiner_1cycle(int adseed, uint32_t* curpixel_cvg)
 
 
 
-    if (combiner_rgbmul_r[1] != &zero_color)
+    if (combiner.rgbmul_r[1] != &zero_color)
     {
 
 
@@ -1088,21 +1091,21 @@ static STRICTINLINE void combiner_1cycle(int adseed, uint32_t* curpixel_cvg)
 
 
 
-        combined_color.r = color_combiner_equation(*combiner_rgbsub_a_r[1],*combiner_rgbsub_b_r[1],*combiner_rgbmul_r[1],*combiner_rgbadd_r[1]);
-        combined_color.g = color_combiner_equation(*combiner_rgbsub_a_g[1],*combiner_rgbsub_b_g[1],*combiner_rgbmul_g[1],*combiner_rgbadd_g[1]);
-        combined_color.b = color_combiner_equation(*combiner_rgbsub_a_b[1],*combiner_rgbsub_b_b[1],*combiner_rgbmul_b[1],*combiner_rgbadd_b[1]);
+        combined_color.r = color_combiner_equation(*combiner.rgbsub_a_r[1],*combiner.rgbsub_b_r[1],*combiner.rgbmul_r[1],*combiner.rgbadd_r[1]);
+        combined_color.g = color_combiner_equation(*combiner.rgbsub_a_g[1],*combiner.rgbsub_b_g[1],*combiner.rgbmul_g[1],*combiner.rgbadd_g[1]);
+        combined_color.b = color_combiner_equation(*combiner.rgbsub_a_b[1],*combiner.rgbsub_b_b[1],*combiner.rgbmul_b[1],*combiner.rgbadd_b[1]);
     }
     else
     {
-        combined_color.r = ((special_9bit_exttable[*combiner_rgbadd_r[1]] << 8) + 0x80) & 0x1ffff;
-        combined_color.g = ((special_9bit_exttable[*combiner_rgbadd_g[1]] << 8) + 0x80) & 0x1ffff;
-        combined_color.b = ((special_9bit_exttable[*combiner_rgbadd_b[1]] << 8) + 0x80) & 0x1ffff;
+        combined_color.r = ((special_9bit_exttable[*combiner.rgbadd_r[1]] << 8) + 0x80) & 0x1ffff;
+        combined_color.g = ((special_9bit_exttable[*combiner.rgbadd_g[1]] << 8) + 0x80) & 0x1ffff;
+        combined_color.b = ((special_9bit_exttable[*combiner.rgbadd_b[1]] << 8) + 0x80) & 0x1ffff;
     }
 
-    if (combiner_alphamul[1] != &zero_color)
-        combined_color.a = alpha_combiner_equation(*combiner_alphasub_a[1],*combiner_alphasub_b[1],*combiner_alphamul[1],*combiner_alphaadd[1]);
+    if (combiner.alphamul[1] != &zero_color)
+        combined_color.a = alpha_combiner_equation(*combiner.alphasub_a[1],*combiner.alphasub_b[1],*combiner.alphamul[1],*combiner.alphaadd[1]);
     else
-        combined_color.a = special_9bit_exttable[*combiner_alphaadd[1]] & 0x1ff;
+        combined_color.a = special_9bit_exttable[*combiner.alphaadd[1]] & 0x1ff;
 
     pixel_color.a = special_9bit_clamptable[combined_color.a];
     if (pixel_color.a == 0xff)
@@ -1189,23 +1192,23 @@ static STRICTINLINE void combiner_2cycle(int adseed, uint32_t* curpixel_cvg, int
     int32_t redkey, greenkey, bluekey, temp;
     struct color chromabypass;
 
-    if (combiner_rgbmul_r[0] != &zero_color)
+    if (combiner.rgbmul_r[0] != &zero_color)
     {
-        combined_color.r = color_combiner_equation(*combiner_rgbsub_a_r[0],*combiner_rgbsub_b_r[0],*combiner_rgbmul_r[0],*combiner_rgbadd_r[0]);
-        combined_color.g = color_combiner_equation(*combiner_rgbsub_a_g[0],*combiner_rgbsub_b_g[0],*combiner_rgbmul_g[0],*combiner_rgbadd_g[0]);
-        combined_color.b = color_combiner_equation(*combiner_rgbsub_a_b[0],*combiner_rgbsub_b_b[0],*combiner_rgbmul_b[0],*combiner_rgbadd_b[0]);
+        combined_color.r = color_combiner_equation(*combiner.rgbsub_a_r[0],*combiner.rgbsub_b_r[0],*combiner.rgbmul_r[0],*combiner.rgbadd_r[0]);
+        combined_color.g = color_combiner_equation(*combiner.rgbsub_a_g[0],*combiner.rgbsub_b_g[0],*combiner.rgbmul_g[0],*combiner.rgbadd_g[0]);
+        combined_color.b = color_combiner_equation(*combiner.rgbsub_a_b[0],*combiner.rgbsub_b_b[0],*combiner.rgbmul_b[0],*combiner.rgbadd_b[0]);
     }
     else
     {
-        combined_color.r = ((special_9bit_exttable[*combiner_rgbadd_r[0]] << 8) + 0x80) & 0x1ffff;
-        combined_color.g = ((special_9bit_exttable[*combiner_rgbadd_g[0]] << 8) + 0x80) & 0x1ffff;
-        combined_color.b = ((special_9bit_exttable[*combiner_rgbadd_b[0]] << 8) + 0x80) & 0x1ffff;
+        combined_color.r = ((special_9bit_exttable[*combiner.rgbadd_r[0]] << 8) + 0x80) & 0x1ffff;
+        combined_color.g = ((special_9bit_exttable[*combiner.rgbadd_g[0]] << 8) + 0x80) & 0x1ffff;
+        combined_color.b = ((special_9bit_exttable[*combiner.rgbadd_b[0]] << 8) + 0x80) & 0x1ffff;
     }
 
-    if (combiner_alphamul[0] != &zero_color)
-        combined_color.a = alpha_combiner_equation(*combiner_alphasub_a[0],*combiner_alphasub_b[0],*combiner_alphamul[0],*combiner_alphaadd[0]);
+    if (combiner.alphamul[0] != &zero_color)
+        combined_color.a = alpha_combiner_equation(*combiner.alphasub_a[0],*combiner.alphasub_b[0],*combiner.alphamul[0],*combiner.alphaadd[0]);
     else
-        combined_color.a = special_9bit_exttable[*combiner_alphaadd[0]] & 0x1ff;
+        combined_color.a = special_9bit_exttable[*combiner.alphaadd[0]] & 0x1ff;
 
 
 
@@ -1286,28 +1289,28 @@ static STRICTINLINE void combiner_2cycle(int adseed, uint32_t* curpixel_cvg, int
 
     if (other_modes.key_en)
     {
-        chromabypass.r = *combiner_rgbsub_a_r[1];
-        chromabypass.g = *combiner_rgbsub_a_g[1];
-        chromabypass.b = *combiner_rgbsub_a_b[1];
+        chromabypass.r = *combiner.rgbsub_a_r[1];
+        chromabypass.g = *combiner.rgbsub_a_g[1];
+        chromabypass.b = *combiner.rgbsub_a_b[1];
     }
 
-    if (combiner_rgbmul_r[1] != &zero_color)
+    if (combiner.rgbmul_r[1] != &zero_color)
     {
-        combined_color.r = color_combiner_equation(*combiner_rgbsub_a_r[1],*combiner_rgbsub_b_r[1],*combiner_rgbmul_r[1],*combiner_rgbadd_r[1]);
-        combined_color.g = color_combiner_equation(*combiner_rgbsub_a_g[1],*combiner_rgbsub_b_g[1],*combiner_rgbmul_g[1],*combiner_rgbadd_g[1]);
-        combined_color.b = color_combiner_equation(*combiner_rgbsub_a_b[1],*combiner_rgbsub_b_b[1],*combiner_rgbmul_b[1],*combiner_rgbadd_b[1]);
+        combined_color.r = color_combiner_equation(*combiner.rgbsub_a_r[1],*combiner.rgbsub_b_r[1],*combiner.rgbmul_r[1],*combiner.rgbadd_r[1]);
+        combined_color.g = color_combiner_equation(*combiner.rgbsub_a_g[1],*combiner.rgbsub_b_g[1],*combiner.rgbmul_g[1],*combiner.rgbadd_g[1]);
+        combined_color.b = color_combiner_equation(*combiner.rgbsub_a_b[1],*combiner.rgbsub_b_b[1],*combiner.rgbmul_b[1],*combiner.rgbadd_b[1]);
     }
     else
     {
-        combined_color.r = ((special_9bit_exttable[*combiner_rgbadd_r[1]] << 8) + 0x80) & 0x1ffff;
-        combined_color.g = ((special_9bit_exttable[*combiner_rgbadd_g[1]] << 8) + 0x80) & 0x1ffff;
-        combined_color.b = ((special_9bit_exttable[*combiner_rgbadd_b[1]] << 8) + 0x80) & 0x1ffff;
+        combined_color.r = ((special_9bit_exttable[*combiner.rgbadd_r[1]] << 8) + 0x80) & 0x1ffff;
+        combined_color.g = ((special_9bit_exttable[*combiner.rgbadd_g[1]] << 8) + 0x80) & 0x1ffff;
+        combined_color.b = ((special_9bit_exttable[*combiner.rgbadd_b[1]] << 8) + 0x80) & 0x1ffff;
     }
 
-    if (combiner_alphamul[1] != &zero_color)
-        combined_color.a = alpha_combiner_equation(*combiner_alphasub_a[1],*combiner_alphasub_b[1],*combiner_alphamul[1],*combiner_alphaadd[1]);
+    if (combiner.alphamul[1] != &zero_color)
+        combined_color.a = alpha_combiner_equation(*combiner.alphasub_a[1],*combiner.alphasub_b[1],*combiner.alphamul[1],*combiner.alphaadd[1]);
     else
-        combined_color.a = special_9bit_exttable[*combiner_alphaadd[1]] & 0x1ff;
+        combined_color.a = special_9bit_exttable[*combiner.alphaadd[1]] & 0x1ff;
 
     if (!other_modes.key_en)
     {
@@ -6565,26 +6568,26 @@ static void deduce_derivatives()
     int texels_in_cc0 = 0, texels_in_cc1 = 0;
     int lod_frac_used_in_cc1 = 0, lod_frac_used_in_cc0 = 0;
 
-    if ((combiner_rgbmul_r[1] == &lod_frac) || (combiner_alphamul[1] == &lod_frac))
+    if ((combiner.rgbmul_r[1] == &lod_frac) || (combiner.alphamul[1] == &lod_frac))
         lod_frac_used_in_cc1 = 1;
-    if ((combiner_rgbmul_r[0] == &lod_frac) || (combiner_alphamul[0] == &lod_frac))
+    if ((combiner.rgbmul_r[0] == &lod_frac) || (combiner.alphamul[0] == &lod_frac))
         lod_frac_used_in_cc0 = 1;
 
-    if (combiner_rgbmul_r[1] == &texel1_color.r || combiner_rgbsub_a_r[1] == &texel1_color.r || combiner_rgbsub_b_r[1] == &texel1_color.r || combiner_rgbadd_r[1] == &texel1_color.r || \
-        combiner_alphamul[1] == &texel1_color.a || combiner_alphasub_a[1] == &texel1_color.a || combiner_alphasub_b[1] == &texel1_color.a || combiner_alphaadd[1] == &texel1_color.a || \
-        combiner_rgbmul_r[1] == &texel1_color.a)
+    if (combiner.rgbmul_r[1] == &texel1_color.r || combiner.rgbsub_a_r[1] == &texel1_color.r || combiner.rgbsub_b_r[1] == &texel1_color.r || combiner.rgbadd_r[1] == &texel1_color.r || \
+        combiner.alphamul[1] == &texel1_color.a || combiner.alphasub_a[1] == &texel1_color.a || combiner.alphasub_b[1] == &texel1_color.a || combiner.alphaadd[1] == &texel1_color.a || \
+        combiner.rgbmul_r[1] == &texel1_color.a)
         texel1_used_in_cc1 = 1;
-    if (combiner_rgbmul_r[1] == &texel0_color.r || combiner_rgbsub_a_r[1] == &texel0_color.r || combiner_rgbsub_b_r[1] == &texel0_color.r || combiner_rgbadd_r[1] == &texel0_color.r || \
-        combiner_alphamul[1] == &texel0_color.a || combiner_alphasub_a[1] == &texel0_color.a || combiner_alphasub_b[1] == &texel0_color.a || combiner_alphaadd[1] == &texel0_color.a || \
-        combiner_rgbmul_r[1] == &texel0_color.a)
+    if (combiner.rgbmul_r[1] == &texel0_color.r || combiner.rgbsub_a_r[1] == &texel0_color.r || combiner.rgbsub_b_r[1] == &texel0_color.r || combiner.rgbadd_r[1] == &texel0_color.r || \
+        combiner.alphamul[1] == &texel0_color.a || combiner.alphasub_a[1] == &texel0_color.a || combiner.alphasub_b[1] == &texel0_color.a || combiner.alphaadd[1] == &texel0_color.a || \
+        combiner.rgbmul_r[1] == &texel0_color.a)
         texel0_used_in_cc1 = 1;
-    if (combiner_rgbmul_r[0] == &texel1_color.r || combiner_rgbsub_a_r[0] == &texel1_color.r || combiner_rgbsub_b_r[0] == &texel1_color.r || combiner_rgbadd_r[0] == &texel1_color.r || \
-        combiner_alphamul[0] == &texel1_color.a || combiner_alphasub_a[0] == &texel1_color.a || combiner_alphasub_b[0] == &texel1_color.a || combiner_alphaadd[0] == &texel1_color.a || \
-        combiner_rgbmul_r[0] == &texel1_color.a)
+    if (combiner.rgbmul_r[0] == &texel1_color.r || combiner.rgbsub_a_r[0] == &texel1_color.r || combiner.rgbsub_b_r[0] == &texel1_color.r || combiner.rgbadd_r[0] == &texel1_color.r || \
+        combiner.alphamul[0] == &texel1_color.a || combiner.alphasub_a[0] == &texel1_color.a || combiner.alphasub_b[0] == &texel1_color.a || combiner.alphaadd[0] == &texel1_color.a || \
+        combiner.rgbmul_r[0] == &texel1_color.a)
         texel1_used_in_cc0 = 1;
-    if (combiner_rgbmul_r[0] == &texel0_color.r || combiner_rgbsub_a_r[0] == &texel0_color.r || combiner_rgbsub_b_r[0] == &texel0_color.r || combiner_rgbadd_r[0] == &texel0_color.r || \
-        combiner_alphamul[0] == &texel0_color.a || combiner_alphasub_a[0] == &texel0_color.a || combiner_alphasub_b[0] == &texel0_color.a || combiner_alphaadd[0] == &texel0_color.a || \
-        combiner_rgbmul_r[0] == &texel0_color.a)
+    if (combiner.rgbmul_r[0] == &texel0_color.r || combiner.rgbsub_a_r[0] == &texel0_color.r || combiner.rgbsub_b_r[0] == &texel0_color.r || combiner.rgbadd_r[0] == &texel0_color.r || \
+        combiner.alphamul[0] == &texel0_color.a || combiner.alphasub_a[0] == &texel0_color.a || combiner.alphasub_b[0] == &texel0_color.a || combiner.alphaadd[0] == &texel0_color.a || \
+        combiner.rgbmul_r[0] == &texel0_color.a)
         texel0_used_in_cc0 = 1;
     texels_in_cc0 = texel0_used_in_cc0 || texel1_used_in_cc0;
     texels_in_cc1 = texel0_used_in_cc1 || texel1_used_in_cc1;
@@ -6613,8 +6616,8 @@ static void deduce_derivatives()
         (other_modes.cycle_type == CYCLE_TYPE_1 && lod_frac_used_in_cc1))
         lodfracused = 1;
 
-    if ((other_modes.cycle_type == CYCLE_TYPE_1 && combiner_rgbsub_a_r[1] == &noise) || \
-        (other_modes.cycle_type == CYCLE_TYPE_2 && (combiner_rgbsub_a_r[0] == &noise || combiner_rgbsub_a_r[1] == &noise)) || \
+    if ((other_modes.cycle_type == CYCLE_TYPE_1 && combiner.rgbsub_a_r[1] == &noise) || \
+        (other_modes.cycle_type == CYCLE_TYPE_2 && (combiner.rgbsub_a_r[0] == &noise || combiner.rgbsub_a_r[1] == &noise)) || \
         other_modes.alpha_dither_sel == 2)
         get_dither_noise_ptr = get_dither_noise_func[0];
     else if (other_modes.f.rgb_alpha_dither != 0xf)
@@ -6818,23 +6821,23 @@ static void rdp_set_combine(const uint32_t* args)
     combine.add_a1      = (args[1] >>  0) & 0x7;
 
 
-    set_suba_rgb_input(&combiner_rgbsub_a_r[0], &combiner_rgbsub_a_g[0], &combiner_rgbsub_a_b[0], combine.sub_a_rgb0);
-    set_subb_rgb_input(&combiner_rgbsub_b_r[0], &combiner_rgbsub_b_g[0], &combiner_rgbsub_b_b[0], combine.sub_b_rgb0);
-    set_mul_rgb_input(&combiner_rgbmul_r[0], &combiner_rgbmul_g[0], &combiner_rgbmul_b[0], combine.mul_rgb0);
-    set_add_rgb_input(&combiner_rgbadd_r[0], &combiner_rgbadd_g[0], &combiner_rgbadd_b[0], combine.add_rgb0);
-    set_sub_alpha_input(&combiner_alphasub_a[0], combine.sub_a_a0);
-    set_sub_alpha_input(&combiner_alphasub_b[0], combine.sub_b_a0);
-    set_mul_alpha_input(&combiner_alphamul[0], combine.mul_a0);
-    set_sub_alpha_input(&combiner_alphaadd[0], combine.add_a0);
+    set_suba_rgb_input(&combiner.rgbsub_a_r[0], &combiner.rgbsub_a_g[0], &combiner.rgbsub_a_b[0], combine.sub_a_rgb0);
+    set_subb_rgb_input(&combiner.rgbsub_b_r[0], &combiner.rgbsub_b_g[0], &combiner.rgbsub_b_b[0], combine.sub_b_rgb0);
+    set_mul_rgb_input(&combiner.rgbmul_r[0], &combiner.rgbmul_g[0], &combiner.rgbmul_b[0], combine.mul_rgb0);
+    set_add_rgb_input(&combiner.rgbadd_r[0], &combiner.rgbadd_g[0], &combiner.rgbadd_b[0], combine.add_rgb0);
+    set_sub_alpha_input(&combiner.alphasub_a[0], combine.sub_a_a0);
+    set_sub_alpha_input(&combiner.alphasub_b[0], combine.sub_b_a0);
+    set_mul_alpha_input(&combiner.alphamul[0], combine.mul_a0);
+    set_sub_alpha_input(&combiner.alphaadd[0], combine.add_a0);
 
-    set_suba_rgb_input(&combiner_rgbsub_a_r[1], &combiner_rgbsub_a_g[1], &combiner_rgbsub_a_b[1], combine.sub_a_rgb1);
-    set_subb_rgb_input(&combiner_rgbsub_b_r[1], &combiner_rgbsub_b_g[1], &combiner_rgbsub_b_b[1], combine.sub_b_rgb1);
-    set_mul_rgb_input(&combiner_rgbmul_r[1], &combiner_rgbmul_g[1], &combiner_rgbmul_b[1], combine.mul_rgb1);
-    set_add_rgb_input(&combiner_rgbadd_r[1], &combiner_rgbadd_g[1], &combiner_rgbadd_b[1], combine.add_rgb1);
-    set_sub_alpha_input(&combiner_alphasub_a[1], combine.sub_a_a1);
-    set_sub_alpha_input(&combiner_alphasub_b[1], combine.sub_b_a1);
-    set_mul_alpha_input(&combiner_alphamul[1], combine.mul_a1);
-    set_sub_alpha_input(&combiner_alphaadd[1], combine.add_a1);
+    set_suba_rgb_input(&combiner.rgbsub_a_r[1], &combiner.rgbsub_a_g[1], &combiner.rgbsub_a_b[1], combine.sub_a_rgb1);
+    set_subb_rgb_input(&combiner.rgbsub_b_r[1], &combiner.rgbsub_b_g[1], &combiner.rgbsub_b_b[1], combine.sub_b_rgb1);
+    set_mul_rgb_input(&combiner.rgbmul_r[1], &combiner.rgbmul_g[1], &combiner.rgbmul_b[1], combine.mul_rgb1);
+    set_add_rgb_input(&combiner.rgbadd_r[1], &combiner.rgbadd_g[1], &combiner.rgbadd_b[1], combine.add_rgb1);
+    set_sub_alpha_input(&combiner.alphasub_a[1], combine.sub_a_a1);
+    set_sub_alpha_input(&combiner.alphasub_b[1], combine.sub_b_a1);
+    set_mul_alpha_input(&combiner.alphamul[1], combine.mul_a1);
+    set_sub_alpha_input(&combiner.alphaadd[1], combine.add_a1);
 
     other_modes.f.stalederivs = 1;
 }
