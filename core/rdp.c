@@ -450,22 +450,22 @@ static STRICTINLINE uint32_t rightcvghex(uint32_t x, uint32_t fmask);
 static STRICTINLINE uint32_t leftcvghex(uint32_t x, uint32_t fmask);
 static STRICTINLINE void compute_cvg_noflip(int32_t scanline);
 static STRICTINLINE void compute_cvg_flip(int32_t scanline);
-static INLINE void fbwrite_4(uint32_t curpixel, uint32_t r, uint32_t g, uint32_t b, uint32_t blend_en, uint32_t curpixel_cvg, uint32_t curpixel_memcvg);
-static INLINE void fbwrite_8(uint32_t curpixel, uint32_t r, uint32_t g, uint32_t b, uint32_t blend_en, uint32_t curpixel_cvg, uint32_t curpixel_memcvg);
-static INLINE void fbwrite_16(uint32_t curpixel, uint32_t r, uint32_t g, uint32_t b, uint32_t blend_en, uint32_t curpixel_cvg, uint32_t curpixel_memcvg);
-static INLINE void fbwrite_32(uint32_t curpixel, uint32_t r, uint32_t g, uint32_t b, uint32_t blend_en, uint32_t curpixel_cvg, uint32_t curpixel_memcvg);
-static INLINE void fbfill_4(uint32_t curpixel);
-static INLINE void fbfill_8(uint32_t curpixel);
-static INLINE void fbfill_16(uint32_t curpixel);
-static INLINE void fbfill_32(uint32_t curpixel);
-static INLINE void fbread_4(uint32_t num, uint32_t* curpixel_memcvg);
-static INLINE void fbread_8(uint32_t num, uint32_t* curpixel_memcvg);
-static INLINE void fbread_16(uint32_t num, uint32_t* curpixel_memcvg);
-static INLINE void fbread_32(uint32_t num, uint32_t* curpixel_memcvg);
-static INLINE void fbread2_4(uint32_t num, uint32_t* curpixel_memcvg);
-static INLINE void fbread2_8(uint32_t num, uint32_t* curpixel_memcvg);
-static INLINE void fbread2_16(uint32_t num, uint32_t* curpixel_memcvg);
-static INLINE void fbread2_32(uint32_t num, uint32_t* curpixel_memcvg);
+static void fbwrite_4(uint32_t curpixel, uint32_t r, uint32_t g, uint32_t b, uint32_t blend_en, uint32_t curpixel_cvg, uint32_t curpixel_memcvg);
+static void fbwrite_8(uint32_t curpixel, uint32_t r, uint32_t g, uint32_t b, uint32_t blend_en, uint32_t curpixel_cvg, uint32_t curpixel_memcvg);
+static void fbwrite_16(uint32_t curpixel, uint32_t r, uint32_t g, uint32_t b, uint32_t blend_en, uint32_t curpixel_cvg, uint32_t curpixel_memcvg);
+static void fbwrite_32(uint32_t curpixel, uint32_t r, uint32_t g, uint32_t b, uint32_t blend_en, uint32_t curpixel_cvg, uint32_t curpixel_memcvg);
+static void fbfill_4(uint32_t curpixel);
+static void fbfill_8(uint32_t curpixel);
+static void fbfill_16(uint32_t curpixel);
+static void fbfill_32(uint32_t curpixel);
+static void fbread_4(uint32_t num, uint32_t* curpixel_memcvg);
+static void fbread_8(uint32_t num, uint32_t* curpixel_memcvg);
+static void fbread_16(uint32_t num, uint32_t* curpixel_memcvg);
+static void fbread_32(uint32_t num, uint32_t* curpixel_memcvg);
+static void fbread2_4(uint32_t num, uint32_t* curpixel_memcvg);
+static void fbread2_8(uint32_t num, uint32_t* curpixel_memcvg);
+static void fbread2_16(uint32_t num, uint32_t* curpixel_memcvg);
+static void fbread2_32(uint32_t num, uint32_t* curpixel_memcvg);
 static STRICTINLINE uint32_t z_decompress(uint32_t rawz);
 static STRICTINLINE uint32_t dz_decompress(uint32_t compresseddz);
 static STRICTINLINE uint32_t dz_compress(uint32_t value);
@@ -478,8 +478,8 @@ static STRICTINLINE uint32_t z_compare(uint32_t zcurpixel, uint32_t sz, uint16_t
 static STRICTINLINE int finalize_spanalpha(uint32_t blend_en, uint32_t curpixel_cvg, uint32_t curpixel_memcvg);
 static STRICTINLINE int32_t normalize_dzpix(int32_t sum);
 static STRICTINLINE int32_t clamp(int32_t value,int32_t min,int32_t max);
-static INLINE void tcdiv_persp(int32_t ss, int32_t st, int32_t sw, int32_t* sss, int32_t* sst);
-static INLINE void tcdiv_nopersp(int32_t ss, int32_t st, int32_t sw, int32_t* sss, int32_t* sst);
+static void tcdiv_persp(int32_t ss, int32_t st, int32_t sw, int32_t* sss, int32_t* sst);
+static void tcdiv_nopersp(int32_t ss, int32_t st, int32_t sw, int32_t* sss, int32_t* sst);
 static STRICTINLINE void tclod_4x17_to_15(int32_t scurr, int32_t snext, int32_t tcurr, int32_t tnext, int32_t previous, int32_t* lod);
 static STRICTINLINE void tclod_tcclamp(int32_t* sss, int32_t* sst);
 static STRICTINLINE void lodfrac_lodtile_signals(int lodclamp, int32_t lod, uint32_t* l_tile, uint32_t* magnify, uint32_t* distant, int32_t* lfdst);
@@ -495,11 +495,11 @@ static STRICTINLINE void get_texel1_1cycle(int32_t* s1, int32_t* t1, int32_t s, 
 static STRICTINLINE void get_nexttexel0_2cycle(int32_t* s1, int32_t* t1, int32_t s, int32_t t, int32_t w, int32_t dsinc, int32_t dtinc, int32_t dwinc);
 static INLINE void calculate_clamp_diffs(uint32_t tile);
 static INLINE void calculate_tile_derivs(uint32_t tile);
-static INLINE void rgb_dither_complete(int* r, int* g, int* b, int dith);
-static INLINE void rgb_dither_nothing(int* r, int* g, int* b, int dith);
-static INLINE void get_dither_noise_complete(int x, int y, int* cdith, int* adith);
-static INLINE void get_dither_only(int x, int y, int* cdith, int* adith);
-static INLINE void get_dither_nothing(int x, int y, int* cdith, int* adith);
+static void rgb_dither_complete(int* r, int* g, int* b, int dith);
+static void rgb_dither_nothing(int* r, int* g, int* b, int dith);
+static void get_dither_noise_complete(int x, int y, int* cdith, int* adith);
+static void get_dither_only(int x, int y, int* cdith, int* adith);
+static void get_dither_nothing(int x, int y, int* cdith, int* adith);
 static STRICTINLINE void rgbaz_correct_clip(int offx, int offy, int r, int g, int b, int a, int* z, uint32_t curpixel_cvg);
 static void deduce_derivatives(void);
 static STRICTINLINE int32_t irand();
@@ -7413,19 +7413,19 @@ static STRICTINLINE void compute_cvg_noflip(int32_t scanline)
     }
 }
 
-static INLINE void fbwrite_4(uint32_t curpixel, uint32_t r, uint32_t g, uint32_t b, uint32_t blend_en, uint32_t curpixel_cvg, uint32_t curpixel_memcvg)
+static void fbwrite_4(uint32_t curpixel, uint32_t r, uint32_t g, uint32_t b, uint32_t blend_en, uint32_t curpixel_cvg, uint32_t curpixel_memcvg)
 {
     uint32_t fb = fb_address + curpixel;
     RWRITEADDR8(fb, 0);
 }
 
-static INLINE void fbwrite_8(uint32_t curpixel, uint32_t r, uint32_t g, uint32_t b, uint32_t blend_en, uint32_t curpixel_cvg, uint32_t curpixel_memcvg)
+static void fbwrite_8(uint32_t curpixel, uint32_t r, uint32_t g, uint32_t b, uint32_t blend_en, uint32_t curpixel_cvg, uint32_t curpixel_memcvg)
 {
     uint32_t fb = fb_address + curpixel;
     PAIRWRITE8(fb, r & 0xff, (r & 1) ? 3 : 0);
 }
 
-static INLINE void fbwrite_16(uint32_t curpixel, uint32_t r, uint32_t g, uint32_t b, uint32_t blend_en, uint32_t curpixel_cvg, uint32_t curpixel_memcvg)
+static void fbwrite_16(uint32_t curpixel, uint32_t r, uint32_t g, uint32_t b, uint32_t blend_en, uint32_t curpixel_cvg, uint32_t curpixel_memcvg)
 {
 #undef CVG_DRAW
 #ifdef CVG_DRAW
@@ -7457,7 +7457,7 @@ static INLINE void fbwrite_16(uint32_t curpixel, uint32_t r, uint32_t g, uint32_
     PAIRWRITE16(fb, rval, hval);
 }
 
-static INLINE void fbwrite_32(uint32_t curpixel, uint32_t r, uint32_t g, uint32_t b, uint32_t blend_en, uint32_t curpixel_cvg, uint32_t curpixel_memcvg)
+static void fbwrite_32(uint32_t curpixel, uint32_t r, uint32_t g, uint32_t b, uint32_t blend_en, uint32_t curpixel_cvg, uint32_t curpixel_memcvg)
 {
     uint32_t fb = (fb_address >> 2) + curpixel;
 
@@ -7470,12 +7470,12 @@ static INLINE void fbwrite_32(uint32_t curpixel, uint32_t r, uint32_t g, uint32_
     PAIRWRITE32(fb, finalcolor, (g & 1) ? 3 : 0, 0);
 }
 
-static INLINE void fbfill_4(uint32_t curpixel)
+static void fbfill_4(uint32_t curpixel)
 {
     rdp_pipeline_crashed = 1;
 }
 
-static INLINE void fbfill_8(uint32_t curpixel)
+static void fbfill_8(uint32_t curpixel)
 {
     uint32_t fb = fb_address + curpixel;
     uint32_t val = (fill_color >> (((fb & 3) ^ 3) << 3)) & 0xff;
@@ -7483,7 +7483,7 @@ static INLINE void fbfill_8(uint32_t curpixel)
     PAIRWRITE8(fb, val, hval);
 }
 
-static INLINE void fbfill_16(uint32_t curpixel)
+static void fbfill_16(uint32_t curpixel)
 {
     uint16_t val;
     uint8_t hval;
@@ -7496,13 +7496,13 @@ static INLINE void fbfill_16(uint32_t curpixel)
     PAIRWRITE16(fb, val, hval);
 }
 
-static INLINE void fbfill_32(uint32_t curpixel)
+static void fbfill_32(uint32_t curpixel)
 {
     uint32_t fb = (fb_address >> 2) + curpixel;
     PAIRWRITE32(fb, fill_color, (fill_color & 0x10000) ? 3 : 0, (fill_color & 0x1) ? 3 : 0);
 }
 
-static INLINE void fbread_4(uint32_t curpixel, uint32_t* curpixel_memcvg)
+static void fbread_4(uint32_t curpixel, uint32_t* curpixel_memcvg)
 {
     memory_color.r = memory_color.g = memory_color.b = 0;
 
@@ -7510,14 +7510,14 @@ static INLINE void fbread_4(uint32_t curpixel, uint32_t* curpixel_memcvg)
     memory_color.a = 0xe0;
 }
 
-static INLINE void fbread2_4(uint32_t curpixel, uint32_t* curpixel_memcvg)
+static void fbread2_4(uint32_t curpixel, uint32_t* curpixel_memcvg)
 {
     pre_memory_color.r = pre_memory_color.g = pre_memory_color.b = 0;
     pre_memory_color.a = 0xe0;
     *curpixel_memcvg = 7;
 }
 
-static INLINE void fbread_8(uint32_t curpixel, uint32_t* curpixel_memcvg)
+static void fbread_8(uint32_t curpixel, uint32_t* curpixel_memcvg)
 {
     uint8_t mem;
     uint32_t addr = fb_address + curpixel;
@@ -7527,7 +7527,7 @@ static INLINE void fbread_8(uint32_t curpixel, uint32_t* curpixel_memcvg)
     memory_color.a = 0xe0;
 }
 
-static INLINE void fbread2_8(uint32_t curpixel, uint32_t* curpixel_memcvg)
+static void fbread2_8(uint32_t curpixel, uint32_t* curpixel_memcvg)
 {
     uint8_t mem;
     uint32_t addr = fb_address + curpixel;
@@ -7537,7 +7537,7 @@ static INLINE void fbread2_8(uint32_t curpixel, uint32_t* curpixel_memcvg)
     *curpixel_memcvg = 7;
 }
 
-static INLINE void fbread_16(uint32_t curpixel, uint32_t* curpixel_memcvg)
+static void fbread_16(uint32_t curpixel, uint32_t* curpixel_memcvg)
 {
     uint16_t fword;
     uint8_t hbyte;
@@ -7584,7 +7584,7 @@ static INLINE void fbread_16(uint32_t curpixel, uint32_t* curpixel_memcvg)
     }
 }
 
-static INLINE void fbread2_16(uint32_t curpixel, uint32_t* curpixel_memcvg)
+static void fbread2_16(uint32_t curpixel, uint32_t* curpixel_memcvg)
 {
     uint16_t fword;
     uint8_t hbyte;
@@ -7631,7 +7631,7 @@ static INLINE void fbread2_16(uint32_t curpixel, uint32_t* curpixel_memcvg)
 
 }
 
-static INLINE void fbread_32(uint32_t curpixel, uint32_t* curpixel_memcvg)
+static void fbread_32(uint32_t curpixel, uint32_t* curpixel_memcvg)
 {
     uint32_t mem, addr = (fb_address >> 2) + curpixel;
     RREADIDX32(mem, addr);
@@ -8158,7 +8158,7 @@ static INLINE void calculate_tile_derivs(uint32_t i)
     tile[i].f.tlutswitch = (tile[i].size << 2) | ((tile[i].format + 2) & 3);
 }
 
-static INLINE void rgb_dither_complete(int* r, int* g, int* b, int dith)
+static void rgb_dither_complete(int* r, int* g, int* b, int dith)
 {
 
     int32_t newr = *r, newg = *g, newb = *b;
@@ -8206,12 +8206,12 @@ static INLINE void rgb_dither_complete(int* r, int* g, int* b, int dith)
 
 }
 
-static INLINE void rgb_dither_nothing(int* r, int* g, int* b, int dith)
+static void rgb_dither_nothing(int* r, int* g, int* b, int dith)
 {
 }
 
 
-static INLINE void get_dither_noise_complete(int x, int y, int* cdith, int* adith)
+static void get_dither_noise_complete(int x, int y, int* cdith, int* adith)
 {
 
 
@@ -8299,7 +8299,7 @@ static INLINE void get_dither_noise_complete(int x, int y, int* cdith, int* adit
 }
 
 
-static INLINE void get_dither_only(int x, int y, int* cdith, int* adith)
+static void get_dither_only(int x, int y, int* cdith, int* adith)
 {
     int dithindex;
     switch(other_modes.f.rgb_alpha_dither)
@@ -8381,7 +8381,7 @@ static INLINE void get_dither_only(int x, int y, int* cdith, int* adith)
     }
 }
 
-static INLINE void get_dither_nothing(int x, int y, int* cdith, int* adith)
+static void get_dither_nothing(int x, int y, int* cdith, int* adith)
 {
 }
 
@@ -8445,7 +8445,7 @@ static STRICTINLINE void rgbaz_correct_clip(int offx, int offy, int r, int g, in
 
 
 
-static INLINE void tcdiv_nopersp(int32_t ss, int32_t st, int32_t sw, int32_t* sss, int32_t* sst)
+static void tcdiv_nopersp(int32_t ss, int32_t st, int32_t sw, int32_t* sss, int32_t* sst)
 {
 
 
@@ -8454,7 +8454,7 @@ static INLINE void tcdiv_nopersp(int32_t ss, int32_t st, int32_t sw, int32_t* ss
     *sst = (SIGN16(st)) & 0x1ffff;
 }
 
-static INLINE void tcdiv_persp(int32_t ss, int32_t st, int32_t sw, int32_t* sss, int32_t* sst)
+static void tcdiv_persp(int32_t ss, int32_t st, int32_t sw, int32_t* sss, int32_t* sst)
 {
 
 
