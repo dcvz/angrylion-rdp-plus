@@ -1,4 +1,5 @@
 #include "vi.h"
+#include "rdp.h"
 #include "common.h"
 #include "rdram.h"
 #include "trace_write.h"
@@ -54,7 +55,6 @@ static uint32_t x_add;
 static uint32_t x_start_init;
 static uint32_t y_add;
 static uint32_t y_start;
-static uint32_t zb_address;
 static char screenshot_path[FILE_MAX_PATH];
 static enum vi_mode vi_mode;
 
@@ -1560,7 +1560,7 @@ static void vi_process_fast(void)
                     break;
 
                 case VI_MODE_DEPTH: {
-                    r = g = b = rdram_read_idx16((zb_address >> 1) + line + x) >> 8;
+                    r = g = b = rdram_read_idx16((rdp_get_zb_address() >> 1) + line + x) >> 8;
                     break;
                 }
 
@@ -1638,11 +1638,6 @@ void vi_update(void)
 
     // render frame to screen
     screen->swap();
-}
-
-void vi_set_zb_address(uint32_t _zb_address)
-{
-    zb_address = _zb_address;
 }
 
 void vi_screenshot(char* path)

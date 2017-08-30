@@ -6999,11 +6999,6 @@ void rdp_cmd(const uint32_t* arg, uint32_t length)
     if (rdp_commands[cmd_id].multithread && parallel) {
         rdp_cmd_push(arg, length);
     }
-
-    // send z-buffer address to VI for VI_MODE_COVERAGE
-    if (cmd_id == CMD_ID_SET_MASK_IMAGE) {
-        vi_set_zb_address(zb_address);
-    }
 }
 
 void rdp_update(void)
@@ -9338,4 +9333,9 @@ static STRICTINLINE void lodfrac_lodtile_signals(int lodclamp, int32_t lod, uint
     *l_tile = ltil;
     *magnify = mag;
     *lfdst = lf;
+}
+
+uint32_t rdp_get_zb_address(void)
+{
+    return zb_address;
 }
