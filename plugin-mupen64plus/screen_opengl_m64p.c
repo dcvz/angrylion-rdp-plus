@@ -3,7 +3,7 @@
 #include "core/msg.h"
 
 #include <GL/gl.h>
-#include <GL/glext.h>
+#include "glext.h"
 
 extern GFX_INFO gfx;
 extern m64p_dynlib_handle CoreLibHandle;
@@ -221,6 +221,7 @@ static void screen_set_fullscreen(bool _fullscreen)
 
 static bool screen_get_fullscreen(void)
 {
+    return 0;
 }
 
 static void screen_close(void)
