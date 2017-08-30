@@ -67,7 +67,7 @@ static int linecount;
 static int dither_filter;
 static int fsaa;
 static int divot;
-static int gamma;
+static int gamma_value;
 static int gamma_dither;
 static int lerp_en;
 static int extralines;
@@ -85,8 +85,8 @@ static struct
 } onetimewarnings;
 
 // function pointers
-STRICTINLINE void vi_fetch_filter16(struct ccvg* res, uint32_t fboffset, uint32_t cur_x, uint32_t fsaa, uint32_t dither_filter, uint32_t vres, uint32_t fetchstate);
-STRICTINLINE void vi_fetch_filter32(struct ccvg* res, uint32_t fboffset, uint32_t cur_x, uint32_t fsaa, uint32_t dither_filter, uint32_t vres, uint32_t fetchstate);
+void vi_fetch_filter16(struct ccvg* res, uint32_t fboffset, uint32_t cur_x, uint32_t fsaa, uint32_t dither_filter, uint32_t vres, uint32_t fetchstate);
+void vi_fetch_filter32(struct ccvg* res, uint32_t fboffset, uint32_t cur_x, uint32_t fsaa, uint32_t dither_filter, uint32_t vres, uint32_t fetchstate);
 
 static void (*vi_fetch_filter_func[2])(struct ccvg*, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t) =
 {
@@ -152,7 +152,7 @@ static void vi_screenshot_write(char* path, int32_t* buffer, int width, int heig
     fclose(fp);
 }
 
-STRICTINLINE void restore_filter16(int* r, int* g, int* b, uint32_t fboffset, uint32_t num, uint32_t hres, uint32_t fetchbugstate)
+void restore_filter16(int* r, int* g, int* b, uint32_t fboffset, uint32_t num, uint32_t hres, uint32_t fetchbugstate)
 {
 
 
@@ -239,7 +239,7 @@ STRICTINLINE void restore_filter16(int* r, int* g, int* b, uint32_t fboffset, ui
     *b = bend;
 }
 
-STRICTINLINE void restore_filter32(int* r, int* g, int* b, uint32_t fboffset, uint32_t num, uint32_t hres, uint32_t fetchbugstate)
+void restore_filter32(int* r, int* g, int* b, uint32_t fboffset, uint32_t num, uint32_t hres, uint32_t fetchbugstate)
 {
     uint32_t idx = (fboffset >> 2) + num;
 
@@ -367,7 +367,7 @@ STRICTINLINE void video_max_optimized(uint32_t* pixels, uint32_t* penumin, uint3
 }
 
 
-STRICTINLINE void video_filter16(int* endr, int* endg, int* endb, uint32_t fboffset, uint32_t num, uint32_t hres, uint32_t centercvg, uint32_t fetchbugstate)
+void video_filter16(int* endr, int* endg, int* endb, uint32_t fboffset, uint32_t num, uint32_t hres, uint32_t centercvg, uint32_t fetchbugstate)
 {
 
 
@@ -473,7 +473,7 @@ STRICTINLINE void video_filter16(int* endr, int* endg, int* endb, uint32_t fboff
 
 }
 
-STRICTINLINE void video_filter32(int* endr, int* endg, int* endb, uint32_t fboffset, uint32_t num, uint32_t hres, uint32_t centercvg, uint32_t fetchbugstate)
+void video_filter32(int* endr, int* endg, int* endb, uint32_t fboffset, uint32_t num, uint32_t hres, uint32_t centercvg, uint32_t fetchbugstate)
 {
 
     uint32_t penumaxr, penumaxg, penumaxb, penuminr, penuming, penuminb;
@@ -550,7 +550,7 @@ STRICTINLINE void video_filter32(int* endr, int* endg, int* endb, uint32_t fboff
     *endb = colb & 0xff;
 }
 
-STRICTINLINE void vi_fetch_filter16(struct ccvg* res, uint32_t fboffset, uint32_t cur_x, uint32_t fsaa, uint32_t dither_filter, uint32_t vres, uint32_t fetchstate)
+void vi_fetch_filter16(struct ccvg* res, uint32_t fboffset, uint32_t cur_x, uint32_t fsaa, uint32_t dither_filter, uint32_t vres, uint32_t fetchstate)
 {
     int r, g, b;
     uint32_t idx = (fboffset >> 1) + cur_x;
@@ -590,7 +590,7 @@ STRICTINLINE void vi_fetch_filter16(struct ccvg* res, uint32_t fboffset, uint32_
     res->cvg = cur_cvg;
 }
 
-STRICTINLINE void vi_fetch_filter32(struct ccvg* res, uint32_t fboffset, uint32_t cur_x, uint32_t fsaa, uint32_t dither_filter, uint32_t vres, uint32_t fetchstate)
+void vi_fetch_filter32(struct ccvg* res, uint32_t fboffset, uint32_t cur_x, uint32_t fsaa, uint32_t dither_filter, uint32_t vres, uint32_t fetchstate)
 {
     int r, g, b;
     uint32_t pix, addr = (fboffset >> 2) + cur_x;
@@ -622,7 +622,7 @@ STRICTINLINE void vi_fetch_filter32(struct ccvg* res, uint32_t fboffset, uint32_
     res->cvg = cur_cvg;
 }
 
-STRICTINLINE void divot_filter(struct ccvg* final, struct ccvg centercolor, struct ccvg leftcolor, struct ccvg rightcolor)
+void divot_filter(struct ccvg* final, struct ccvg centercolor, struct ccvg leftcolor, struct ccvg rightcolor)
 {
 
 
@@ -824,7 +824,7 @@ int vi_process_start(void)
     dither_filter = (vi_control >> 16) & 1;
     fsaa = !((vi_control >> 9) & 1);
     divot = (vi_control >> 4) & 1;
-    gamma = (vi_control >> 3) & 1;
+    gamma_value = (vi_control >> 3) & 1;
     gamma_dither = (vi_control >> 2) & 1;
     lerp_en = (((vi_control >> 8) & 3) != 3);
     extralines = !((vi_control >> 8) & 1);
@@ -837,7 +837,7 @@ int vi_process_start(void)
     }
 
     serration_pulses = (vi_control >> 6) & 1;
-    gamma_and_dither = (gamma << 1) | gamma_dither;
+    gamma_and_dither = (gamma_value << 1) | gamma_dither;
     if (((vi_control >> 5) & 1) && !onetimewarnings.vbusclock)
     {
         msg_warning("rdp_update: vbus_clock_enable bit set in VI_CONTROL_REG register. Never run this code on your N64! It's rumored that turning this bit on\
@@ -1507,9 +1507,9 @@ int vi_process_start_fast(void)
         msg_warning("Unknown framebuffer format %d\n", vitype);
     }
 
-    gamma = (vi_control >> 3) & 1;
+    gamma_value = (vi_control >> 3) & 1;
     gamma_dither = (vi_control >> 2) & 1;
-    gamma_and_dither = (gamma << 1) | gamma_dither;
+    gamma_and_dither = (gamma_value << 1) | gamma_dither;
 
     return 1;
 }

@@ -2,6 +2,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include "core.h"
 
 // endianness
 #define LSB_FIRST 1 

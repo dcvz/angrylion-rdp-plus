@@ -14,7 +14,7 @@ void msg_error(const char * err, ...)
     char buf[MSG_BUFFER_LEN];
     va_list arg;
     va_start(arg, err);
-    vsprintf_s(buf, sizeof(buf), err, arg);
+    vsprintf(buf, err, arg);
 #ifdef WIN32
     MessageBoxA(0, buf, "RDP: fatal error", MB_OK);
 #else
@@ -29,7 +29,7 @@ void msg_warning(const char* err, ...)
     char buf[MSG_BUFFER_LEN];
     va_list arg;
     va_start(arg, err);
-    vsprintf_s(buf, sizeof(buf), err, arg);
+    vsprintf(buf, err, arg);
 #ifdef WIN32
     MessageBoxA(0, buf, "RDP: warning", MB_OK);
 #else
@@ -43,7 +43,7 @@ void msg_debug(const char* err, ...)
     char buf[MSG_BUFFER_LEN];
     va_list arg;
     va_start(arg, err);
-    vsprintf_s(buf, sizeof(buf), err, arg);
+    vsprintf(buf, err, arg);
 #ifdef WIN32
     OutputDebugStringA(buf);
 #else

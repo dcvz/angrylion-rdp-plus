@@ -66,7 +66,7 @@ void core_sync_dp(void)
             // get ROM name from plugin and use placeholder if empty
             char rom_name[32];
             if (!plugin.get_rom_name(rom_name, sizeof(rom_name))) {
-                strcpy_s(rom_name, sizeof(rom_name), "trace");
+                strcpy(rom_name, "trace");
             }
 
             // generate trace path
@@ -122,7 +122,7 @@ void core_screenshot(char* directory)
     // get ROM name from plugin and use placeholder if empty
     char rom_name[32];
     if (!plugin.get_rom_name(rom_name, sizeof(rom_name))) {
-        strcpy_s(rom_name, sizeof(rom_name), "screenshot");
+        strcpy(rom_name, "screenshot");
     }
 
     // generate and find an unused file path

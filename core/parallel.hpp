@@ -5,6 +5,7 @@
 #include <thread>
 #include <cstdint>
 #include <mutex>
+#include <condition_variable>
 #include <atomic>
 
 class Parallel
