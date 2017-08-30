@@ -3,7 +3,6 @@
 //
 
 #include "rdram.h"
-#include "core.h"
 
 #define RDRAM_MASK 0x00ffffff
 
