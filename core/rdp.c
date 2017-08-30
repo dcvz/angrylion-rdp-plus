@@ -502,7 +502,6 @@ static void get_dither_only(int x, int y, int* cdith, int* adith);
 static void get_dither_nothing(int x, int y, int* cdith, int* adith);
 static STRICTINLINE void rgbaz_correct_clip(int offx, int offy, int r, int g, int b, int a, int* z, uint32_t curpixel_cvg);
 static void deduce_derivatives(void);
-static STRICTINLINE int32_t irand();
 
 static TLS int32_t k0_tf = 0, k1_tf = 0, k2_tf = 0, k3_tf = 0;
 static TLS int32_t k4 = 0, k5 = 0;
@@ -605,7 +604,6 @@ static TLS uint32_t max_level = 0;
 static TLS int32_t min_level = 0;
 static int rdp_pipeline_crashed = 0;
 
-static STRICTINLINE void tcmask(int32_t* S, int32_t* T, int32_t num);
 static STRICTINLINE void tcmask(int32_t* S, int32_t* T, int32_t num)
 {
     int32_t wrap;
@@ -637,7 +635,6 @@ static STRICTINLINE void tcmask(int32_t* S, int32_t* T, int32_t num)
 }
 
 
-static STRICTINLINE void tcmask_coupled(int32_t* S, int32_t* S1, int32_t* T, int32_t* T1, int32_t num);
 static STRICTINLINE void tcmask_coupled(int32_t* S, int32_t* S1, int32_t* T, int32_t* T1, int32_t num)
 {
     int32_t wrap;
@@ -682,7 +679,6 @@ static STRICTINLINE void tcmask_coupled(int32_t* S, int32_t* S1, int32_t* T, int
 }
 
 
-static STRICTINLINE void tcmask_copy(int32_t* S, int32_t* S1, int32_t* S2, int32_t* S3, int32_t* T, int32_t num);
 static STRICTINLINE void tcmask_copy(int32_t* S, int32_t* S1, int32_t* S2, int32_t* S3, int32_t* T, int32_t num)
 {
     int32_t wrap;
