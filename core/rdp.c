@@ -322,7 +322,7 @@ static TLS int32_t keyalpha;
 
 static int32_t blenderone   = 0xff;
 
-// combiner states
+// combiner inputs
 static TLS struct
 {
     int32_t *rgbsub_a_r[2];
@@ -344,15 +344,18 @@ static TLS struct
     int32_t *alphaadd[2];
 } combiner;
 
-
-static TLS int32_t *blender1a_r[2];
-static TLS int32_t *blender1a_g[2];
-static TLS int32_t *blender1a_b[2];
-static TLS int32_t *blender1b_a[2];
-static TLS int32_t *blender2a_r[2];
-static TLS int32_t *blender2a_g[2];
-static TLS int32_t *blender2a_b[2];
-static TLS int32_t *blender2b_a[2];
+// blender inputs
+static TLS struct
+{
+    int32_t *i1a_r[2];
+    int32_t *i1a_g[2];
+    int32_t *i1a_b[2];
+    int32_t *i1b_a[2];
+    int32_t *i2a_r[2];
+    int32_t *i2a_g[2];
+    int32_t *i2a_b[2];
+    int32_t *i2b_a[2];
+} blender;
 
 static TLS struct color pixel_color;
 static TLS struct color inv_pixel_color;
@@ -1668,13 +1671,13 @@ static STRICTINLINE int blender_1cycle(uint32_t* fr, uint32_t* fg, uint32_t* fb,
                 dontblend = (other_modes.f.partialreject_1cycle && pixel_color.a >= 0xff);
                 if (!blend_en || dontblend)
                 {
-                    r = *blender1a_r[0];
-                    g = *blender1a_g[0];
-                    b = *blender1a_b[0];
+                    r = *blender.i1a_r[0];
+                    g = *blender.i1a_g[0];
+                    b = *blender.i1a_b[0];
                 }
                 else
                 {
-                    inv_pixel_color.a =  (~(*blender1b_a[0])) & 0xff;
+                    inv_pixel_color.a =  (~(*blender.i1b_a[0])) & 0xff;
 
 
 
@@ -1685,9 +1688,9 @@ static STRICTINLINE int blender_1cycle(uint32_t* fr, uint32_t* fg, uint32_t* fb,
             }
             else
             {
-                r = *blender2a_r[0];
-                g = *blender2a_g[0];
-                b = *blender2a_b[0];
+                r = *blender.i2a_r[0];
+                g = *blender.i2a_g[0];
+                b = *blender.i2a_b[0];
             }
 
             rgb_dither_ptr(&r, &g, &b, dith);
@@ -1713,7 +1716,7 @@ static STRICTINLINE int blender_2cycle(uint32_t* fr, uint32_t* fg, uint32_t* fb,
         if (other_modes.antialias_en ? (curpixel_cvg) : (curpixel_cvbit))
         {
 
-            inv_pixel_color.a =  (~(*blender1b_a[0])) & 0xff;
+            inv_pixel_color.a =  (~(*blender.i1b_a[0])) & 0xff;
             blender_equation_cycle0_2(&r, &g, &b);
 
 
@@ -1729,21 +1732,21 @@ static STRICTINLINE int blender_2cycle(uint32_t* fr, uint32_t* fg, uint32_t* fb,
                 dontblend = (other_modes.f.partialreject_2cycle && pixel_color.a >= 0xff);
                 if (!blend_en || dontblend)
                 {
-                    r = *blender1a_r[1];
-                    g = *blender1a_g[1];
-                    b = *blender1a_b[1];
+                    r = *blender.i1a_r[1];
+                    g = *blender.i1a_g[1];
+                    b = *blender.i1a_b[1];
                 }
                 else
                 {
-                    inv_pixel_color.a =  (~(*blender1b_a[1])) & 0xff;
+                    inv_pixel_color.a =  (~(*blender.i1b_a[1])) & 0xff;
                     blender_equation_cycle1(&r, &g, &b);
                 }
             }
             else
             {
-                r = *blender2a_r[1];
-                g = *blender2a_g[1];
-                b = *blender2a_b[1];
+                r = *blender.i2a_r[1];
+                g = *blender.i2a_g[1];
+                b = *blender.i2a_b[1];
             }
 
 
@@ -6528,13 +6531,13 @@ static void rdp_set_other_modes(const uint32_t* args)
     other_modes.dither_alpha_en     = (args[1] >> 1) & 1;
     other_modes.alpha_compare_en    = (args[1]) & 1;
 
-    set_blender_input(0, 0, &blender1a_r[0], &blender1a_g[0], &blender1a_b[0], &blender1b_a[0],
+    set_blender_input(0, 0, &blender.i1a_r[0], &blender.i1a_g[0], &blender.i1a_b[0], &blender.i1b_a[0],
                       other_modes.blend_m1a_0, other_modes.blend_m1b_0);
-    set_blender_input(0, 1, &blender2a_r[0], &blender2a_g[0], &blender2a_b[0], &blender2b_a[0],
+    set_blender_input(0, 1, &blender.i2a_r[0], &blender.i2a_g[0], &blender.i2a_b[0], &blender.i2b_a[0],
                       other_modes.blend_m2a_0, other_modes.blend_m2b_0);
-    set_blender_input(1, 0, &blender1a_r[1], &blender1a_g[1], &blender1a_b[1], &blender1b_a[1],
+    set_blender_input(1, 0, &blender.i1a_r[1], &blender.i1a_g[1], &blender.i1a_b[1], &blender.i1b_a[1],
                       other_modes.blend_m1a_1, other_modes.blend_m1b_1);
-    set_blender_input(1, 1, &blender2a_r[1], &blender2a_g[1], &blender2a_b[1], &blender2b_a[1],
+    set_blender_input(1, 1, &blender.i2a_r[1], &blender.i2a_g[1], &blender.i2a_b[1], &blender.i2b_a[1],
                       other_modes.blend_m2a_1, other_modes.blend_m2b_1);
 
     other_modes.f.stalederivs = 1;
@@ -6543,12 +6546,12 @@ static void rdp_set_other_modes(const uint32_t* args)
 static void deduce_derivatives()
 {
 
-    other_modes.f.partialreject_1cycle = (blender2b_a[0] == &inv_pixel_color.a && blender1b_a[0] == &pixel_color.a);
-    other_modes.f.partialreject_2cycle = (blender2b_a[1] == &inv_pixel_color.a && blender1b_a[1] == &pixel_color.a);
+    other_modes.f.partialreject_1cycle = (blender.i2b_a[0] == &inv_pixel_color.a && blender.i1b_a[0] == &pixel_color.a);
+    other_modes.f.partialreject_2cycle = (blender.i2b_a[1] == &inv_pixel_color.a && blender.i1b_a[1] == &pixel_color.a);
 
 
-    other_modes.f.special_bsel0 = (blender2b_a[0] == &memory_color.a);
-    other_modes.f.special_bsel1 = (blender2b_a[1] == &memory_color.a);
+    other_modes.f.special_bsel0 = (blender.i2b_a[0] == &memory_color.a);
+    other_modes.f.special_bsel1 = (blender.i2b_a[1] == &memory_color.a);
 
 
     other_modes.f.realblendershiftersneeded = (other_modes.f.special_bsel0 && other_modes.cycle_type == CYCLE_TYPE_1) || (other_modes.f.special_bsel1 && other_modes.cycle_type == CYCLE_TYPE_2);
@@ -7171,8 +7174,8 @@ static STRICTINLINE void blender_equation_cycle0(int* r, int* g, int* b)
 {
     int blend1a, blend2a;
     int blr, blg, blb, sum;
-    blend1a = *blender1b_a[0] >> 3;
-    blend2a = *blender2b_a[0] >> 3;
+    blend1a = *blender.i1b_a[0] >> 3;
+    blend2a = *blender.i2b_a[0] >> 3;
 
     int mulb;
 
@@ -7187,9 +7190,9 @@ static STRICTINLINE void blender_equation_cycle0(int* r, int* g, int* b)
     mulb = blend2a + 1;
 
 
-    blr = (*blender1a_r[0]) * blend1a + (*blender2a_r[0]) * mulb;
-    blg = (*blender1a_g[0]) * blend1a + (*blender2a_g[0]) * mulb;
-    blb = (*blender1a_b[0]) * blend1a + (*blender2a_b[0]) * mulb;
+    blr = (*blender.i1a_r[0]) * blend1a + (*blender.i2a_r[0]) * mulb;
+    blg = (*blender.i1a_g[0]) * blend1a + (*blender.i2a_g[0]) * mulb;
+    blb = (*blender.i1a_b[0]) * blend1a + (*blender.i2a_b[0]) * mulb;
 
 
 
@@ -7216,8 +7219,8 @@ static STRICTINLINE void blender_equation_cycle0(int* r, int* g, int* b)
 static STRICTINLINE void blender_equation_cycle0_2(int* r, int* g, int* b)
 {
     int blend1a, blend2a;
-    blend1a = *blender1b_a[0] >> 3;
-    blend2a = *blender2b_a[0] >> 3;
+    blend1a = *blender.i1b_a[0] >> 3;
+    blend2a = *blender.i2b_a[0] >> 3;
 
     if (other_modes.f.special_bsel0)
     {
@@ -7226,17 +7229,17 @@ static STRICTINLINE void blender_equation_cycle0_2(int* r, int* g, int* b)
     }
 
     blend2a += 1;
-    *r = (((*blender1a_r[0]) * blend1a + (*blender2a_r[0]) * blend2a) >> 5) & 0xff;
-    *g = (((*blender1a_g[0]) * blend1a + (*blender2a_g[0]) * blend2a) >> 5) & 0xff;
-    *b = (((*blender1a_b[0]) * blend1a + (*blender2a_b[0]) * blend2a) >> 5) & 0xff;
+    *r = (((*blender.i1a_r[0]) * blend1a + (*blender.i2a_r[0]) * blend2a) >> 5) & 0xff;
+    *g = (((*blender.i1a_g[0]) * blend1a + (*blender.i2a_g[0]) * blend2a) >> 5) & 0xff;
+    *b = (((*blender.i1a_b[0]) * blend1a + (*blender.i2a_b[0]) * blend2a) >> 5) & 0xff;
 }
 
 static STRICTINLINE void blender_equation_cycle1(int* r, int* g, int* b)
 {
     int blend1a, blend2a;
     int blr, blg, blb, sum;
-    blend1a = *blender1b_a[1] >> 3;
-    blend2a = *blender2b_a[1] >> 3;
+    blend1a = *blender.i1b_a[1] >> 3;
+    blend2a = *blender.i2b_a[1] >> 3;
 
     int mulb;
     if (other_modes.f.special_bsel1)
@@ -7246,9 +7249,9 @@ static STRICTINLINE void blender_equation_cycle1(int* r, int* g, int* b)
     }
 
     mulb = blend2a + 1;
-    blr = (*blender1a_r[1]) * blend1a + (*blender2a_r[1]) * mulb;
-    blg = (*blender1a_g[1]) * blend1a + (*blender2a_g[1]) * mulb;
-    blb = (*blender1a_b[1]) * blend1a + (*blender2a_b[1]) * mulb;
+    blr = (*blender.i1a_r[1]) * blend1a + (*blender.i2a_r[1]) * mulb;
+    blg = (*blender.i1a_g[1]) * blend1a + (*blender.i2a_g[1]) * mulb;
+    blb = (*blender.i1a_b[1]) * blend1a + (*blender.i2a_b[1]) * mulb;
 
     if (!other_modes.force_blend)
     {
