@@ -162,8 +162,14 @@ EXPORT void CALL SetRenderingCallback(void (*callback)(int))
 {
 }
 
+extern int32_t viewport_width;
+extern int32_t viewport_height;
+
 EXPORT void CALL ResizeVideoOutput(int width, int height)
 {
+    //TODO: Maintain proper aspect ratio
+    viewport_width = width;
+    viewport_height = height;
 }
 
 EXPORT void CALL FBWrite(unsigned int addr, unsigned int size)
