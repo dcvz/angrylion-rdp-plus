@@ -47,13 +47,15 @@ static GLuint program;
 static GLuint vao;
 static GLuint texture;
 
-static int toggle_fs;
+static int32_t toggle_fs;
 
 // framebuffer texture states
 static int32_t tex_width;
 static int32_t tex_height;
-int32_t viewport_width;
-int32_t viewport_height;
+static int32_t tex_display_width;
+static int32_t tex_display_height;
+int32_t window_width;
+int32_t window_height;
 
 #define TEX_INTERNAL_FORMAT GL_RGBA8
 #define TEX_FORMAT GL_BGRA
@@ -180,10 +182,10 @@ static void screen_init(void)
     CoreVideo_GL_SetAttribute(M64P_GL_CONTEXT_MINOR_VERSION, 3);
 
     //TODO: get these values from Video-General config
-    viewport_width = WINDOW_DEFAULT_WIDTH;
-    viewport_height = WINDOW_DEFAULT_HEIGHT;
+    window_width = WINDOW_DEFAULT_WIDTH;
+    window_height = WINDOW_DEFAULT_HEIGHT;
 
-    CoreVideo_SetVideoMode(viewport_width, viewport_height, 0, M64VIDEO_WINDOWED, M64VIDEOFLAG_SUPPORT_RESIZING);
+    CoreVideo_SetVideoMode(window_width, window_height, 0, M64VIDEO_WINDOWED, M64VIDEOFLAG_SUPPORT_RESIZING);
 
     glSetupFunctions();
 
@@ -199,7 +201,32 @@ static void screen_swap(void)
     }
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glViewport(0, 0, viewport_width, viewport_height);
+
+    int32_t vp_width = window_width;
+    int32_t vp_height = window_height;
+
+    // default to bottom left corner of the window above the status bar
+    int32_t vp_x = 0;
+    int32_t vp_y = 0;
+
+    int32_t hw = tex_display_height * vp_width;
+    int32_t wh = tex_display_width * vp_height;
+
+    // add letterboxes or pillarboxes if the window has a different aspect ratio
+    // than the current display mode
+    if (hw > wh) {
+        int32_t w_max = wh / tex_display_height;
+        vp_x += (vp_width - w_max) / 2;
+        vp_width = w_max;
+    } else if (hw < wh) {
+        int32_t h_max = hw / tex_display_width;
+        vp_y += (vp_height - h_max) / 2;
+        vp_height = h_max;
+    }
+
+    // configure viewport
+    glViewport(vp_x, vp_y, vp_width, vp_height);
+
     glDrawArrays(GL_TRIANGLES, 0, 3);
     CoreVideo_GL_SwapBuffers();
 }
@@ -214,6 +241,10 @@ static void screen_upload(int* buffer, int width, int height, int output_width, 
         // reallocate texture buffer on GPU
         glTexImage2D(GL_TEXTURE_2D, 0, TEX_INTERNAL_FORMAT, tex_width,
             tex_height, 0, TEX_FORMAT, TEX_TYPE, buffer);
+
+        // update output size
+        tex_display_width = output_width;
+        tex_display_height = output_height;
 
         msg_debug("screen: resized framebuffer texture: %dx%d", tex_width, tex_height);
     } else {
