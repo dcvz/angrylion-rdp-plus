@@ -12,5 +12,6 @@
 #endif
 
 void plugin_mupen64plus(struct plugin_api* api);
+extern void(*renderCallback)(int);
 
 #endif

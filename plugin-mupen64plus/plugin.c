@@ -46,6 +46,7 @@ static int l_PluginInit = 0;
 static void (*l_DebugCallback)(void *, int, const char *) = NULL;
 static void *l_DebugCallContext = NULL;
 static struct core_config config;
+void(*renderCallback)(int) = NULL;
 
 m64p_dynlib_handle CoreLibHandle;
 GFX_INFO gfx;
@@ -198,10 +199,12 @@ EXPORT void CALL ChangeWindow(void)
 
 EXPORT void CALL ReadScreen2(void *dest, int *width, int *height, int front)
 {
+    ogl_readscreen(dest, width, height, front);
 }
 
 EXPORT void CALL SetRenderingCallback(void (*callback)(int))
 {
+    renderCallback = callback;
 }
 
 EXPORT void CALL ResizeVideoOutput(int width, int height)

@@ -2,6 +2,7 @@
 #include "plugin.h"
 #include "core/msg.h"
 
+#include <stdlib.h>
 #include <GL/gl.h>
 #include "glext.h"
 
@@ -221,6 +222,7 @@ static void screen_swap(void)
     glViewport(vp_x, vp_y, vp_width, vp_height);
 
     glDrawArrays(GL_TRIANGLES, 0, 3);
+    (*renderCallback)(1);
     CoreVideo_GL_SwapBuffers();
 }
 
@@ -277,4 +279,35 @@ void screen_opengl_m64p(struct screen_api* api)
     api->set_fullscreen = screen_set_fullscreen;
     api->get_fullscreen = screen_get_fullscreen;
     api->close = screen_close;
+}
+
+void ogl_readscreen(void *_dest, int *_width, int *_height, int _front)
+{
+    if (_width == NULL || _height == NULL)
+        return;
+
+    *_width = window_width;
+    *_height = window_height;
+
+    if (_dest == NULL)
+        return;
+
+    unsigned char *pBufferData = (unsigned char*)malloc((*_width)*(*_height) * 4);
+    unsigned char *pDest = (unsigned char*)_dest;
+
+    glReadPixels(0, 0, window_width, window_height, GL_RGBA, GL_UNSIGNED_BYTE, pBufferData);
+
+    //Convert RGBA to RGB
+    for (uint32_t y = 0; y < *_height; ++y) {
+        unsigned char *ptr = pBufferData + ((*_width) * 4 * y);
+        for (uint32_t x = 0; x < *_width; ++x) {
+            pDest[x * 3] = ptr[0]; // red
+            pDest[x * 3 + 1] = ptr[1]; // green
+            pDest[x * 3 + 2] = ptr[2]; // blue
+            ptr += 4;
+        }
+        pDest += (*_width) * 3;
+    }
+
+    free(pBufferData);
 }
