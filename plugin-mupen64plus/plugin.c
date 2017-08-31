@@ -88,7 +88,11 @@ EXPORT m64p_error CALL PluginStartup(m64p_dynlib_handle _CoreLibHandle, void *Co
     ConfigSetDefaultInt(configVideoGeneral, "ScreenWidth", 640, "Width of output window or fullscreen width");
     ConfigSetDefaultInt(configVideoGeneral, "ScreenHeight", 480, "Height of output window or fullscreen height");
 
+    ConfigSetDefaultInt(configVideoAngrylionPlus, "NumWorkers", 0, "Rendering Workers (0=Use all logical processors)");
+    ConfigSetDefaultInt(configVideoAngrylionPlus, "ViMode", 0, "VI Mode (0=Filtered, 1=Unfiltered, 2=Depth, 3=Coverage)");
+
     ConfigSaveSection("Video-General");
+    ConfigSaveSection("Video-AngrylionPlus");
 
     l_PluginInit = 1;
     return M64ERR_SUCCESS;
@@ -157,6 +161,10 @@ EXPORT int CALL RomOpen (void)
     window_fullscreen = ConfigGetParamBool(configVideoGeneral, "Fullscreen");
     window_width = ConfigGetParamInt(configVideoGeneral, "ScreenWidth");
     window_height = ConfigGetParamInt(configVideoGeneral, "ScreenHeight");
+
+    config.num_workers = ConfigGetParamInt(configVideoAngrylionPlus, "NumWorkers");
+    config.vi_mode = ConfigGetParamInt(configVideoAngrylionPlus, "ViMode");
+
     core_init(&config, screen_opengl_m64p, plugin_mupen64plus);
     return 1;
 }
