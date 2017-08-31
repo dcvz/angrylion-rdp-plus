@@ -38,10 +38,6 @@ PFNGLBINDVERTEXARRAYPROC g_glBindVertexArray;
 PFNGLDELETEVERTEXARRAYSPROC g_glDeleteVertexArrays;
 PFNGLDELETEPROGRAMPROC g_glDeleteProgram;
 
-// default size of the window
-#define WINDOW_DEFAULT_WIDTH 640
-#define WINDOW_DEFAULT_HEIGHT 480
-
 // OpenGL objects
 static GLuint program;
 static GLuint vao;
@@ -56,6 +52,7 @@ static int32_t tex_display_width;
 static int32_t tex_display_height;
 int32_t window_width;
 int32_t window_height;
+int32_t window_fullscreen;
 
 #define TEX_INTERNAL_FORMAT GL_RGBA8
 #define TEX_FORMAT GL_BGRA
@@ -181,11 +178,7 @@ static void screen_init(void)
     CoreVideo_GL_SetAttribute(M64P_GL_CONTEXT_MAJOR_VERSION, 3);
     CoreVideo_GL_SetAttribute(M64P_GL_CONTEXT_MINOR_VERSION, 3);
 
-    //TODO: get these values from Video-General config
-    window_width = WINDOW_DEFAULT_WIDTH;
-    window_height = WINDOW_DEFAULT_HEIGHT;
-
-    CoreVideo_SetVideoMode(window_width, window_height, 0, M64VIDEO_WINDOWED, M64VIDEOFLAG_SUPPORT_RESIZING);
+    CoreVideo_SetVideoMode(window_width, window_height, 0, window_fullscreen ? M64VIDEO_FULLSCREEN : M64VIDEO_WINDOWED, M64VIDEOFLAG_SUPPORT_RESIZING);
 
     glSetupFunctions();
 

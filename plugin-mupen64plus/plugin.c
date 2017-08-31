@@ -28,10 +28,18 @@
 #include <stdlib.h>
 
 #include "api/m64p_types.h"
+#include "api/m64p_config.h"
 #include "screen_opengl_m64p.h"
 #include "plugin.h"
 #include "core/msg.h"
 #include "core/rdram.h"
+
+ptr_ConfigOpenSection      ConfigOpenSection = NULL;
+ptr_ConfigSaveSection      ConfigSaveSection = NULL;
+ptr_ConfigSetDefaultInt    ConfigSetDefaultInt = NULL;
+ptr_ConfigSetDefaultBool   ConfigSetDefaultBool = NULL;
+ptr_ConfigGetParamInt      ConfigGetParamInt = NULL;
+ptr_ConfigGetParamBool     ConfigGetParamBool = NULL;
 
 static int warn_hle = 0;
 static int l_PluginInit = 0;
@@ -43,6 +51,13 @@ m64p_dynlib_handle CoreLibHandle;
 GFX_INFO gfx;
 static uint32_t rdram_size;
 static uint8_t* rdram_hidden_bits;
+
+extern int32_t window_width;
+extern int32_t window_height;
+extern int32_t window_fullscreen;
+
+static m64p_handle configVideoGeneral = NULL;
+static m64p_handle configVideoAngrylionPlus = NULL;
 
 #define PLUGIN_VERSION              0x020000
 #define VIDEO_PLUGIN_API_VERSION	0x020200
@@ -58,6 +73,22 @@ EXPORT m64p_error CALL PluginStartup(m64p_dynlib_handle _CoreLibHandle, void *Co
     l_DebugCallContext = Context;
 
     CoreLibHandle = _CoreLibHandle;
+
+    ConfigOpenSection = (ptr_ConfigOpenSection)DLSYM(CoreLibHandle, "ConfigOpenSection");
+    ConfigSaveSection = (ptr_ConfigSaveSection)DLSYM(CoreLibHandle, "ConfigSaveSection");
+    ConfigSetDefaultInt = (ptr_ConfigSetDefaultInt)DLSYM(CoreLibHandle, "ConfigSetDefaultInt");
+    ConfigSetDefaultBool = (ptr_ConfigSetDefaultBool)DLSYM(CoreLibHandle, "ConfigSetDefaultBool");
+    ConfigGetParamInt = (ptr_ConfigGetParamInt)DLSYM(CoreLibHandle, "ConfigGetParamInt");
+    ConfigGetParamBool = (ptr_ConfigGetParamBool)DLSYM(CoreLibHandle, "ConfigGetParamBool");
+
+    ConfigOpenSection("Video-General", &configVideoGeneral);
+    ConfigOpenSection("Video-AngrylionPlus", &configVideoAngrylionPlus);
+
+    ConfigSetDefaultBool(configVideoGeneral, "Fullscreen", 0, "Use fullscreen mode if True, or windowed mode if False ");
+    ConfigSetDefaultInt(configVideoGeneral, "ScreenWidth", 640, "Width of output window or fullscreen width");
+    ConfigSetDefaultInt(configVideoGeneral, "ScreenHeight", 480, "Height of output window or fullscreen height");
+
+    ConfigSaveSection("Video-General");
 
     l_PluginInit = 1;
     return M64ERR_SUCCESS;
@@ -123,6 +154,9 @@ EXPORT void CALL ProcessRDPList(void)
 
 EXPORT int CALL RomOpen (void)
 {
+    window_fullscreen = ConfigGetParamBool(configVideoGeneral, "Fullscreen");
+    window_width = ConfigGetParamInt(configVideoGeneral, "ScreenWidth");
+    window_height = ConfigGetParamInt(configVideoGeneral, "ScreenHeight");
     core_init(&config, screen_opengl_m64p, plugin_mupen64plus);
     return 1;
 }
@@ -161,9 +195,6 @@ EXPORT void CALL ReadScreen2(void *dest, int *width, int *height, int front)
 EXPORT void CALL SetRenderingCallback(void (*callback)(int))
 {
 }
-
-extern int32_t window_width;
-extern int32_t window_height;
 
 EXPORT void CALL ResizeVideoOutput(int width, int height)
 {
