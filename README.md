@@ -10,3 +10,5 @@ Current features:
 * Added BMP screenshot support.
 * Added settings GUI.
 * Slightly improved interlacing performance.
+
+Tested with Project64 2.3+. May also work with Project64 1.7 with a RSP plugin of newer builds (1.7.1+).
