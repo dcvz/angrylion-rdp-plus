@@ -120,7 +120,7 @@ static void gl_check_errors(void)
             default:
                 err_str = "unknown";
         }
-        msg_warning("OpenGL error: %d (%s)", err, err_str);
+        msg_debug("OpenGL error: %d (%s)", err, err_str);
     }
 }
 
