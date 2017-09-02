@@ -186,10 +186,9 @@ static void screen_init(void)
 
     // create legacy context, required for wglGetProcAddress to work properly
     glrc = wglCreateContext(dc);
-    if (!glrc) {
+    if (!glrc || !wglMakeCurrent(dc, glrc)) {
         msg_error("Can't create OpenGL context.");
     }
-    wglMakeCurrent(dc, glrc);
 
     // attributes for a 3.3 core profile without all the legacy stuff
     GLint attribs[] = {
@@ -201,9 +200,7 @@ static void screen_init(void)
 
     // create the actual context
     glrc_core = wglCreateContextAttribsARB(dc, glrc, attribs);
-    if (glrc_core) {
-        wglMakeCurrent(dc, glrc_core);
-    } else {
+    if (!glrc_core || !wglMakeCurrent(dc, glrc_core)) {
         // rendering probably still works with the legacy context, so just send
         // a warning
         msg_warning("Can't create OpenGL 3.3 core context.");
