@@ -85,8 +85,8 @@ static struct
 } onetimewarnings;
 
 // function pointers
-STRICTINLINE void vi_fetch_filter16(struct ccvg* res, uint32_t fboffset, uint32_t cur_x, uint32_t fsaa, uint32_t dither_filter, uint32_t vres, uint32_t fetchstate);
-STRICTINLINE void vi_fetch_filter32(struct ccvg* res, uint32_t fboffset, uint32_t cur_x, uint32_t fsaa, uint32_t dither_filter, uint32_t vres, uint32_t fetchstate);
+static void vi_fetch_filter16(struct ccvg* res, uint32_t fboffset, uint32_t cur_x, uint32_t fsaa, uint32_t dither_filter, uint32_t vres, uint32_t fetchstate);
+static void vi_fetch_filter32(struct ccvg* res, uint32_t fboffset, uint32_t cur_x, uint32_t fsaa, uint32_t dither_filter, uint32_t vres, uint32_t fetchstate);
 
 static void (*vi_fetch_filter_func[2])(struct ccvg*, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t) =
 {
@@ -152,7 +152,7 @@ static void vi_screenshot_write(char* path, int32_t* buffer, int width, int heig
     fclose(fp);
 }
 
-STRICTINLINE void restore_filter16(int* r, int* g, int* b, uint32_t fboffset, uint32_t num, uint32_t hres, uint32_t fetchbugstate)
+static STRICTINLINE void restore_filter16(int* r, int* g, int* b, uint32_t fboffset, uint32_t num, uint32_t hres, uint32_t fetchbugstate)
 {
 
 
@@ -239,7 +239,7 @@ STRICTINLINE void restore_filter16(int* r, int* g, int* b, uint32_t fboffset, ui
     *b = bend;
 }
 
-STRICTINLINE void restore_filter32(int* r, int* g, int* b, uint32_t fboffset, uint32_t num, uint32_t hres, uint32_t fetchbugstate)
+static STRICTINLINE void restore_filter32(int* r, int* g, int* b, uint32_t fboffset, uint32_t num, uint32_t hres, uint32_t fetchbugstate)
 {
     uint32_t idx = (fboffset >> 2) + num;
 
@@ -321,7 +321,7 @@ STRICTINLINE void restore_filter32(int* r, int* g, int* b, uint32_t fboffset, ui
     *b = bend;
 }
 
-STRICTINLINE void video_max_optimized(uint32_t* pixels, uint32_t* penumin, uint32_t* penumax, int numofels)
+static STRICTINLINE void video_max_optimized(uint32_t* pixels, uint32_t* penumin, uint32_t* penumax, int numofels)
 {
 
 
@@ -367,7 +367,7 @@ STRICTINLINE void video_max_optimized(uint32_t* pixels, uint32_t* penumin, uint3
 }
 
 
-STRICTINLINE void video_filter16(int* endr, int* endg, int* endb, uint32_t fboffset, uint32_t num, uint32_t hres, uint32_t centercvg, uint32_t fetchbugstate)
+static STRICTINLINE void video_filter16(int* endr, int* endg, int* endb, uint32_t fboffset, uint32_t num, uint32_t hres, uint32_t centercvg, uint32_t fetchbugstate)
 {
 
 
@@ -473,7 +473,7 @@ STRICTINLINE void video_filter16(int* endr, int* endg, int* endb, uint32_t fboff
 
 }
 
-STRICTINLINE void video_filter32(int* endr, int* endg, int* endb, uint32_t fboffset, uint32_t num, uint32_t hres, uint32_t centercvg, uint32_t fetchbugstate)
+static STRICTINLINE void video_filter32(int* endr, int* endg, int* endb, uint32_t fboffset, uint32_t num, uint32_t hres, uint32_t centercvg, uint32_t fetchbugstate)
 {
 
     uint32_t penumaxr, penumaxg, penumaxb, penuminr, penuming, penuminb;
@@ -550,7 +550,7 @@ STRICTINLINE void video_filter32(int* endr, int* endg, int* endb, uint32_t fboff
     *endb = colb & 0xff;
 }
 
-STRICTINLINE void vi_fetch_filter16(struct ccvg* res, uint32_t fboffset, uint32_t cur_x, uint32_t fsaa, uint32_t dither_filter, uint32_t vres, uint32_t fetchstate)
+static void vi_fetch_filter16(struct ccvg* res, uint32_t fboffset, uint32_t cur_x, uint32_t fsaa, uint32_t dither_filter, uint32_t vres, uint32_t fetchstate)
 {
     int r, g, b;
     uint32_t idx = (fboffset >> 1) + cur_x;
@@ -590,7 +590,7 @@ STRICTINLINE void vi_fetch_filter16(struct ccvg* res, uint32_t fboffset, uint32_
     res->cvg = cur_cvg;
 }
 
-STRICTINLINE void vi_fetch_filter32(struct ccvg* res, uint32_t fboffset, uint32_t cur_x, uint32_t fsaa, uint32_t dither_filter, uint32_t vres, uint32_t fetchstate)
+static void vi_fetch_filter32(struct ccvg* res, uint32_t fboffset, uint32_t cur_x, uint32_t fsaa, uint32_t dither_filter, uint32_t vres, uint32_t fetchstate)
 {
     int r, g, b;
     uint32_t pix, addr = (fboffset >> 2) + cur_x;
@@ -622,7 +622,7 @@ STRICTINLINE void vi_fetch_filter32(struct ccvg* res, uint32_t fboffset, uint32_
     res->cvg = cur_cvg;
 }
 
-STRICTINLINE void divot_filter(struct ccvg* final, struct ccvg centercolor, struct ccvg leftcolor, struct ccvg rightcolor)
+static STRICTINLINE void divot_filter(struct ccvg* final, struct ccvg centercolor, struct ccvg leftcolor, struct ccvg rightcolor)
 {
 
 
@@ -670,7 +670,7 @@ STRICTINLINE void divot_filter(struct ccvg* final, struct ccvg centercolor, stru
         final->b = rightb;
 }
 
-STRICTINLINE void gamma_filters(int* r, int* g, int* b, int gamma_and_dither)
+static STRICTINLINE void gamma_filters(int* r, int* g, int* b, int gamma_and_dither)
 {
     int cdith, dith;
 
@@ -710,7 +710,7 @@ STRICTINLINE void gamma_filters(int* r, int* g, int* b, int gamma_and_dither)
     }
 }
 
-STRICTINLINE void vi_vl_lerp(struct ccvg* up, struct ccvg down, uint32_t frac)
+static STRICTINLINE void vi_vl_lerp(struct ccvg* up, struct ccvg down, uint32_t frac)
 {
     uint32_t r0, g0, b0;
     if (!frac)
@@ -726,7 +726,7 @@ STRICTINLINE void vi_vl_lerp(struct ccvg* up, struct ccvg down, uint32_t frac)
 
 }
 
-uint32_t vi_integer_sqrt(uint32_t a)
+static uint32_t vi_integer_sqrt(uint32_t a)
 {
     unsigned long op = a, res = 0, one = 1 << 30;
 
@@ -787,7 +787,7 @@ void vi_init(struct core_config* _config, struct plugin_api* _plugin, struct scr
     prevwasblank = 0;
 }
 
-int vi_process_start(void)
+static int vi_process_start(void)
 {
 
 
@@ -1187,7 +1187,7 @@ int vi_process_start(void)
     return 1;
 }
 
-void vi_process(void)
+static void vi_process(void)
 {
     struct ccvg viaa_array[0xa10 << 1];
     struct ccvg divot_array[0xa10 << 1];
@@ -1465,7 +1465,7 @@ void vi_process(void)
     }
 }
 
-void vi_process_end(void)
+static void vi_process_end(void)
 {
     int output_width = ispal ? 768 : 640;
     int output_height = ispal ? 576 : 480;
@@ -1478,7 +1478,7 @@ void vi_process_end(void)
     }
 }
 
-int vi_process_start_fast(void)
+static int vi_process_start_fast(void)
 {
     int32_t v_start = (*vi_reg_ptr[VI_V_START] >> 16) & 0x3ff;
     int32_t h_start = (*vi_reg_ptr[VI_H_START] >> 16) & 0x3ff;
@@ -1584,7 +1584,7 @@ static void vi_process_fast(void)
     }
 }
 
-void vi_process_end_fast(void)
+static void vi_process_end_fast(void)
 {
     screen->upload(prescale, hres_raw, vres_raw, hres_raw << 1, vres_raw << 1);
     if (screenshot_path[0]) {
