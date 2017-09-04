@@ -24,7 +24,7 @@ bool file_path_indexed(char* path, uint32_t path_size, const char* dir, const ch
 {
     // find a free file slot between 0 and 9999
     for (; *index < 10000; (*index)++) {
-        sprintf_s(path, path_size, "%s" PATH_SEPARATOR "%s_%04d.%s", dir, name, *index, ext);
+        sprintf(path, "%s" PATH_SEPARATOR "%s_%04d.%s", dir, name, *index, ext);
         if (!file_exists(path)) {
             return true;
         }
