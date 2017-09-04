@@ -67,7 +67,7 @@ static int linecount;
 static int dither_filter;
 static int fsaa;
 static int divot;
-static int gamma;
+static int gamma_value;
 static int gamma_dither;
 static int lerp_en;
 static int extralines;
@@ -824,7 +824,7 @@ static int vi_process_start(void)
     dither_filter = (vi_control >> 16) & 1;
     fsaa = !((vi_control >> 9) & 1);
     divot = (vi_control >> 4) & 1;
-    gamma = (vi_control >> 3) & 1;
+    gamma_value = (vi_control >> 3) & 1;
     gamma_dither = (vi_control >> 2) & 1;
     lerp_en = (((vi_control >> 8) & 3) != 3);
     extralines = !((vi_control >> 8) & 1);
@@ -837,7 +837,7 @@ static int vi_process_start(void)
     }
 
     serration_pulses = (vi_control >> 6) & 1;
-    gamma_and_dither = (gamma << 1) | gamma_dither;
+    gamma_and_dither = (gamma_value << 1) | gamma_dither;
     if (((vi_control >> 5) & 1) && !onetimewarnings.vbusclock)
     {
         msg_warning("rdp_update: vbus_clock_enable bit set in VI_CONTROL_REG register. Never run this code on your N64! It's rumored that turning this bit on\
@@ -1507,9 +1507,9 @@ static int vi_process_start_fast(void)
         msg_warning("Unknown framebuffer format %d\n", vitype);
     }
 
-    gamma = (vi_control >> 3) & 1;
+    gamma_value = (vi_control >> 3) & 1;
     gamma_dither = (vi_control >> 2) & 1;
-    gamma_and_dither = (gamma << 1) | gamma_dither;
+    gamma_and_dither = (gamma_value << 1) | gamma_dither;
 
     return 1;
 }
