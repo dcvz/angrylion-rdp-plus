@@ -11,7 +11,12 @@
 #include <stdio.h>
 #include <inttypes.h>
 #include <string.h>
+
+#ifdef WIN32
 #include <SDL.h>
+#else
+#include <SDL2/SDL.h>
+#endif
 
 #ifdef WIN32
 #include <windows.h>
