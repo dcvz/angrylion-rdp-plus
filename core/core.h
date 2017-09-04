@@ -65,9 +65,6 @@ struct screen_api
     void (*close)(void);
 };
 
-typedef void (*screen_api_func)(struct screen_api* api);
-typedef void (*plugin_api_func)(struct plugin_api* api);
-
 struct plugin_api
 {
     void (*init)(void);
@@ -81,6 +78,9 @@ struct plugin_api
     uint32_t (*get_rom_name)(char* name, uint32_t name_size);
     void (*close)(void);
 };
+
+typedef void (*screen_api_func)(struct screen_api* api);
+typedef void (*plugin_api_func)(struct plugin_api* api);
 
 struct core_config
 {
