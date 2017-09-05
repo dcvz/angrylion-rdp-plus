@@ -298,9 +298,9 @@ void ogl_readscreen(void *_dest, int *_width, int *_height, int _front)
     glReadPixels(0, 0, window_width, window_height, GL_RGBA, GL_UNSIGNED_BYTE, pBufferData);
 
     //Convert RGBA to RGB
-    for (uint32_t y = 0; y < *_height; ++y) {
+    for (int32_t y = 0; y < *_height; ++y) {
         unsigned char *ptr = pBufferData + ((*_width) * 4 * y);
-        for (uint32_t x = 0; x < *_width; ++x) {
+        for (int32_t x = 0; x < *_width; ++x) {
             pDest[x * 3] = ptr[0]; // red
             pDest[x * 3 + 1] = ptr[1]; // green
             pDest[x * 3 + 2] = ptr[2]; // blue
