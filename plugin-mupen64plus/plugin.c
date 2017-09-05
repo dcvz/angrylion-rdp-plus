@@ -26,6 +26,8 @@
 #define M64P_PLUGIN_PROTOTYPES 1
 
 #include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
 
 #include "api/m64p_types.h"
 #include "api/m64p_config.h"
