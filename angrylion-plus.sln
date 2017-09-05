@@ -14,10 +14,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "retrace", "retrace\retrace.
 		{D86C6E84-3371-4B20-8620-A703FF3F2CC5} = {D86C6E84-3371-4B20-8620-A703FF3F2CC5}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "plugin-mupen64plus", "plugin-mupen64plus\projects\MSVC\plugin-mupen64plus.vcxproj", "{54BDC4EF-2526-47F7-A73E-C1C0FBC0237C}"
-        ProjectSection(ProjectDependencies) = postProject
-                {D86C6E84-3371-4B20-8620-A703FF3F2CC5} = {D86C6E84-3371-4B20-8620-A703FF3F2CC5}
-        EndProjectSection
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "plugin-mupen64plus", "plugin-mupen64plus\plugin-mupen64plus.vcxproj", "{54BDC4EF-2526-47F7-A73E-C1C0FBC0237C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
