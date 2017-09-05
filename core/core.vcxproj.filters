@@ -82,11 +82,13 @@
     <ClInclude Include="file.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="core_version.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="bitmap.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="version.h.in">
+      <Filter>Source Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

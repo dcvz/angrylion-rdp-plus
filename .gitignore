@@ -245,6 +245,6 @@ ModelManifest.xml
 .fake/
 
 # auto-generated files
-core/core_version.h
+core/version.h
 
 private/

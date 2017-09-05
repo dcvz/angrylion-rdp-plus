@@ -26,7 +26,7 @@ static void screen_init(void)
     SDL_SetThreadPriority(SDL_THREAD_PRIORITY_HIGH);
 
     window = SDL_CreateWindow(
-        "RDP Retracer",             // window title
+        CORE_NAME,                  // window title
         SDL_WINDOWPOS_CENTERED,     // initial x position
         SDL_WINDOWPOS_CENTERED,     // initial y position
         640, 480,                   // width and height, in pixels
