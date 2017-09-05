@@ -26,11 +26,20 @@ add_custom_command(
 file(GLOB SOURCES_CORE "${PATH_CORE}/*.c" "${PATH_CORE}/*.cpp")
 add_library(core STATIC ${SOURCES_CORE} ${PATH_VERSION_OUT})
 
+# Mupen64Plus GFX plugin
+set(PATH_PLUGIN_M64P "plugin-mupen64plus")
+
+include_directories(${CMAKE_SOURCE_DIR})
+
+file(GLOB SOURCES_PLUGIN_M64P "${PATH_PLUGIN_M64P}/*.c")
+add_library(mupen64plus-video-angrylionplus ${SOURCES_PLUGIN_M64P})
+
 # RDP retracer
 set(PATH_RETRACER "retrace")
 
-find_package(SDL2 REQUIRED)
 include_directories(${PATH_CORE})
+
+find_package(SDL2 REQUIRED)
 file(GLOB SOURCES_RETRACE "${PATH_RETRACER}/*.c")
 add_executable(retrace ${SOURCES_RETRACE})
 
