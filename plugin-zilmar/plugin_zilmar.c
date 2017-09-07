@@ -1,6 +1,7 @@
 #include "plugin_zilmar.h"
-#include "rdram.h"
 #include "gfx_1.3.h"
+
+#include "core/rdram.h"
 
 #include <ctype.h>
 

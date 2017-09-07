@@ -1,8 +1,9 @@
 #include "screen_opengl.h"
-#include "msg.h"
 #include "gfx_1.3.h"
 #include "gl_core_3_3.h"
 #include "wgl_ext.h"
+
+#include "core/msg.h"
 
 #include <stdlib.h>
 #include <stdint.h>
