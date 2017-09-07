@@ -10,7 +10,7 @@ find_package(PythonInterp 3.2 REQUIRED)
 find_package(SDL2 REQUIRED)
 find_package(OpenGL REQUIRED)
 
-# RDP core
+# RDP core library
 set(PATH_CORE "core")
 set(PATH_VERSION_IN "${PATH_CORE}/version.h.in")
 set(PATH_VERSION_OUT "${PATH_CORE}/version.h")
@@ -32,22 +32,30 @@ if ( NOT MINGW )
     set_target_properties(core PROPERTIES POSITION_INDEPENDENT_CODE ON)
 endif ( NOT MINGW )
 
+include_directories(${CMAKE_SOURCE_DIR})
+
+# OpenGL screen library
+set(PATH_GL_SCREEN "gl-screen")
+
+file(GLOB SOURCES_GL_SCREEN "${PATH_GL_SCREEN}/*.c")
+add_library(gl-screen STATIC ${SOURCES_GL_SCREEN})
+
+if ( NOT MINGW )
+    set_target_properties(gl-screen PROPERTIES POSITION_INDEPENDENT_CODE ON)
+endif ( NOT MINGW )
+
 # Mupen64Plus GFX plugin
 set(PATH_PLUGIN_M64P "plugin-mupen64plus")
-
-include_directories(${CMAKE_SOURCE_DIR})
 
 file(GLOB SOURCES_PLUGIN_M64P "${PATH_PLUGIN_M64P}/*.c")
 add_library(mupen64plus-video-angrylionplus SHARED ${SOURCES_PLUGIN_M64P})
 
 set_target_properties(mupen64plus-video-angrylionplus PROPERTIES PREFIX "")
 
-target_link_libraries(mupen64plus-video-angrylionplus core ${OPENGL_LIBRARIES})
+target_link_libraries(mupen64plus-video-angrylionplus core gl-screen ${OPENGL_LIBRARIES})
 
 # RDP retracer
 set(PATH_RETRACER "retrace")
-
-include_directories(${PATH_CORE})
 
 file(GLOB SOURCES_RETRACE "${PATH_RETRACER}/*.c")
 add_executable(retrace ${SOURCES_RETRACE})

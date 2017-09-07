@@ -14,9 +14,6 @@
     <ClInclude Include="gfx_1.3.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="gl_core_3_3.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="wgl_ext.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -30,9 +27,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="gfx_1.3.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="gl_core_3_3.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="wgl_ext.c">
