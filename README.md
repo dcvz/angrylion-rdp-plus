@@ -21,4 +21,5 @@ The Mupen64Plus plugin was tested with Mupen64Plus 2.5 using the [mupen64plus-rs
 ### Credits
 * Angrylion, Ville Linde, MooglyGuy and others involved for creating an awesome N64 RDP reference software.
 * theboy181 - Testing. Lots of testing.
-* loganmc10 - Donator, Mupen64Plus plugin implementation.
+* fallaha56 - Donator.
+* loganmc10 - Mupen64Plus plugin implementation.
