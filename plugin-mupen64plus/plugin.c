@@ -33,6 +33,7 @@
 #include "api/m64p_config.h"
 #include "screen_opengl_m64p.h"
 #include "plugin.h"
+#include "core/version.h"
 #include "core/msg.h"
 #include "core/rdram.h"
 
@@ -127,7 +128,7 @@ EXPORT m64p_error CALL PluginGetVersion(m64p_plugin_type *PluginType, int *Plugi
         *APIVersion = VIDEO_PLUGIN_API_VERSION;
 
     if (PluginNamePtr != NULL)
-        *PluginNamePtr = "Angrylion RDP Plus GFX Plugin";
+        *PluginNamePtr = CORE_NAME;
 
     if (Capabilities != NULL)
         *Capabilities = 0;
