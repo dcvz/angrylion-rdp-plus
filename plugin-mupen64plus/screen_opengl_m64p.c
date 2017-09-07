@@ -22,7 +22,7 @@ static ptr_VidExt_GL_SetAttribute       CoreVideo_GL_SetAttribute = NULL;
 static ptr_VidExt_GL_GetAttribute       CoreVideo_GL_GetAttribute = NULL;
 static ptr_VidExt_GL_SwapBuffers        CoreVideo_GL_SwapBuffers = NULL;
 
-static int32_t toggle_fs;
+static bool toggle_fs;
 
 // framebuffer texture states
 int32_t window_width;
@@ -59,12 +59,12 @@ static void screen_swap(void)
 {
     if (toggle_fs) {
         CoreVideo_ToggleFullScreen();
-        toggle_fs = 0;
+        toggle_fs = false;
     }
 
     gl_screen_render(window_width, window_height, 0, 0);
 
-    (*renderCallback)(1);
+    (*render_callback)(1);
     CoreVideo_GL_SwapBuffers();
 }
 
@@ -75,12 +75,12 @@ static void screen_upload(int* buffer, int width, int height, int output_width, 
 
 static void screen_set_fullscreen(bool _fullscreen)
 {
-    toggle_fs = 1;
+    toggle_fs = true;
 }
 
 static bool screen_get_fullscreen(void)
 {
-    return 0;
+    return false;
 }
 
 static void screen_close(void)

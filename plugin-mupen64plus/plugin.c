@@ -44,15 +44,15 @@ static ptr_ConfigSetDefaultBool   ConfigSetDefaultBool = NULL;
 static ptr_ConfigGetParamInt      ConfigGetParamInt = NULL;
 static ptr_ConfigGetParamBool     ConfigGetParamBool = NULL;
 
-static int warn_hle = 0;
-static int l_PluginInit = 0;
-static void (*l_DebugCallback)(void *, int, const char *) = NULL;
-static void *l_DebugCallContext = NULL;
+static bool warn_hle;
+static bool plugin_initialized;
+static void (*debug_callback)(void *, int, const char *);
+static void *debug_call_context;
 static struct core_config config;
-void(*renderCallback)(int) = NULL;
 
 m64p_dynlib_handle CoreLibHandle;
 GFX_INFO gfx;
+void (*render_callback)(int);
 
 extern int32_t window_width;
 extern int32_t window_height;
@@ -70,13 +70,13 @@ static m64p_handle configVideoAngrylionPlus = NULL;
 EXPORT m64p_error CALL PluginStartup(m64p_dynlib_handle _CoreLibHandle, void *Context,
                                      void (*DebugCallback)(void *, int, const char *))
 {
-    if (l_PluginInit) {
+    if (plugin_initialized) {
         return M64ERR_ALREADY_INIT;
     }
 
     /* first thing is to set the callback function for debug info */
-    l_DebugCallback = DebugCallback;
-    l_DebugCallContext = Context;
+    debug_callback = DebugCallback;
+    debug_call_context = Context;
 
     CoreLibHandle = _CoreLibHandle;
 
@@ -100,21 +100,21 @@ EXPORT m64p_error CALL PluginStartup(m64p_dynlib_handle _CoreLibHandle, void *Co
     ConfigSaveSection("Video-General");
     ConfigSaveSection("Video-AngrylionPlus");
 
-    l_PluginInit = 1;
+    plugin_initialized = true;
     return M64ERR_SUCCESS;
 }
 
 EXPORT m64p_error CALL PluginShutdown(void)
 {
-    if (!l_PluginInit) {
+    if (!plugin_initialized) {
         return M64ERR_NOT_INIT;
     }
 
     /* reset some local variable */
-    l_DebugCallback = NULL;
-    l_DebugCallContext = NULL;
+    debug_callback = NULL;
+    debug_call_context = NULL;
 
-    l_PluginInit = 0;
+    plugin_initialized = false;
     return M64ERR_SUCCESS;
 }
 
@@ -159,7 +159,7 @@ EXPORT void CALL ProcessDList(void)
 {
     if (!warn_hle) {
         msg_warning("Please disable 'Graphic HLE' in the plugin settings.");
-        warn_hle = 1;
+        warn_hle = true;
     }
 }
 
@@ -215,7 +215,7 @@ EXPORT void CALL ReadScreen2(void *dest, int *width, int *height, int front)
 
 EXPORT void CALL SetRenderingCallback(void (*callback)(int))
 {
-    renderCallback = callback;
+    render_callback = callback;
 }
 
 EXPORT void CALL ResizeVideoOutput(int width, int height)
