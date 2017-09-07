@@ -37,12 +37,12 @@
 #include "core/msg.h"
 #include "core/rdram.h"
 
-ptr_ConfigOpenSection      ConfigOpenSection = NULL;
-ptr_ConfigSaveSection      ConfigSaveSection = NULL;
-ptr_ConfigSetDefaultInt    ConfigSetDefaultInt = NULL;
-ptr_ConfigSetDefaultBool   ConfigSetDefaultBool = NULL;
-ptr_ConfigGetParamInt      ConfigGetParamInt = NULL;
-ptr_ConfigGetParamBool     ConfigGetParamBool = NULL;
+static ptr_ConfigOpenSection      ConfigOpenSection = NULL;
+static ptr_ConfigSaveSection      ConfigSaveSection = NULL;
+static ptr_ConfigSetDefaultInt    ConfigSetDefaultInt = NULL;
+static ptr_ConfigSetDefaultBool   ConfigSetDefaultBool = NULL;
+static ptr_ConfigGetParamInt      ConfigGetParamInt = NULL;
+static ptr_ConfigGetParamBool     ConfigGetParamBool = NULL;
 
 static int warn_hle = 0;
 static int l_PluginInit = 0;
@@ -53,12 +53,13 @@ void(*renderCallback)(int) = NULL;
 
 m64p_dynlib_handle CoreLibHandle;
 GFX_INFO gfx;
-static uint32_t rdram_size;
-static uint8_t* rdram_hidden_bits;
 
 extern int32_t window_width;
 extern int32_t window_height;
 extern int32_t window_fullscreen;
+
+static uint32_t rdram_size;
+static uint8_t* rdram_hidden_bits;
 
 static m64p_handle configVideoGeneral = NULL;
 static m64p_handle configVideoAngrylionPlus = NULL;
