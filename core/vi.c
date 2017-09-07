@@ -201,7 +201,7 @@ static STRICTINLINE void restore_filter16(int* r, int* g, int* b, uint32_t fboff
 
 #define VI_COMPARE_OPT(x)                                           \
 {                                                                   \
-    pix = rdram_read_idx16((x));                                    \
+    pix = rdram_read_idx16_fast((x));                               \
     tempr = (pix >> 11) & 0x1f;                                     \
     tempg = (pix >> 6) & 0x1f;                                      \
     tempb = (pix >> 1) & 0x1f;                                      \
@@ -284,7 +284,7 @@ static STRICTINLINE void restore_filter32(int* r, int* g, int* b, uint32_t fboff
 
 #define VI_COMPARE32_OPT(x)                                             \
 {                                                                       \
-    pix = rdram_read_idx32((x));                                        \
+    pix = rdram_read_idx32_fast((x));                                   \
     tempr = (pix >> 27) & 0x1f;                                         \
     tempg = (pix >> 19) & 0x1f;                                         \
     tempb = (pix >> 11) & 0x1f;                                         \

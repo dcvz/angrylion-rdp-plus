@@ -51,8 +51,11 @@ bool rdram_valid_idx16(uint32_t in);
 bool rdram_valid_idx32(uint32_t in);
 
 uint8_t rdram_read_idx8(uint32_t in);
+uint8_t rdram_read_idx8_fast(uint32_t in);
 uint16_t rdram_read_idx16(uint32_t in);
+uint16_t rdram_read_idx16_fast(uint32_t in);
 uint32_t rdram_read_idx32(uint32_t in);
+uint32_t rdram_read_idx32_fast(uint32_t in);
 
 void rdram_write_idx8(uint32_t in, uint8_t val);
 void rdram_write_idx16(uint32_t in, uint16_t val);
