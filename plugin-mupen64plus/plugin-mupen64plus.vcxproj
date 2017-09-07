@@ -19,10 +19,12 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="gl_core_3_3.c" />
     <ClCompile Include="plugin.c" />
     <ClCompile Include="screen_opengl_m64p.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="gl_core_3_3.h" />
     <ClInclude Include="plugin.h" />
     <ClInclude Include="screen_opengl_m64p.h" />
   </ItemGroup>

@@ -1,10 +1,10 @@
 #include "screen_opengl_m64p.h"
 #include "plugin.h"
+#include "gl_core_3_3.h"
+
 #include "core/msg.h"
 
 #include <stdlib.h>
-#include <GL/gl.h>
-#include "glext.h"
 
 extern GFX_INFO gfx;
 extern m64p_dynlib_handle CoreLibHandle;
@@ -21,23 +21,6 @@ ptr_VidExt_GL_GetProcAddress     CoreVideo_GL_GetProcAddress = NULL;
 ptr_VidExt_GL_SetAttribute       CoreVideo_GL_SetAttribute = NULL;
 ptr_VidExt_GL_GetAttribute       CoreVideo_GL_GetAttribute = NULL;
 ptr_VidExt_GL_SwapBuffers        CoreVideo_GL_SwapBuffers = NULL;
-
-PFNGLCREATEPROGRAMPROC g_glCreateProgram;
-PFNGLATTACHSHADERPROC g_glAttachShader;
-PFNGLLINKPROGRAMPROC g_glLinkProgram;
-PFNGLGETPROGRAMIVPROC g_glGetProgramiv;
-PFNGLDELETESHADERPROC g_glDeleteShader;
-PFNGLGETPROGRAMINFOLOGPROC g_glGetProgramInfoLog;
-PFNGLGETSHADERINFOLOGPROC g_glGetShaderInfoLog;
-PFNGLCREATESHADERPROC g_glCreateShader;
-PFNGLCOMPILESHADERPROC g_glCompileShader;
-PFNGLSHADERSOURCEPROC g_glShaderSource;
-PFNGLGETSHADERIVPROC g_glGetShaderiv;
-PFNGLUSEPROGRAMPROC g_glUseProgram;
-PFNGLGENVERTEXARRAYSPROC g_glGenVertexArrays;
-PFNGLBINDVERTEXARRAYPROC g_glBindVertexArray;
-PFNGLDELETEVERTEXARRAYSPROC g_glDeleteVertexArrays;
-PFNGLDELETEPROGRAMPROC g_glDeleteProgram;
 
 // OpenGL objects
 static GLuint program;
@@ -59,39 +42,19 @@ int32_t window_fullscreen;
 #define TEX_FORMAT GL_BGRA
 #define TEX_TYPE GL_UNSIGNED_INT_8_8_8_8_REV
 
-static void glSetupFunctions(void)
-{
-    g_glCreateProgram = (PFNGLCREATEPROGRAMPROC) CoreVideo_GL_GetProcAddress("glCreateProgram");
-    g_glAttachShader = (PFNGLATTACHSHADERPROC) CoreVideo_GL_GetProcAddress("glAttachShader");
-    g_glLinkProgram = (PFNGLLINKPROGRAMPROC) CoreVideo_GL_GetProcAddress("glLinkProgram");
-    g_glGetProgramiv = (PFNGLGETPROGRAMIVPROC) CoreVideo_GL_GetProcAddress("glGetProgramiv");
-    g_glDeleteShader = (PFNGLDELETESHADERPROC) CoreVideo_GL_GetProcAddress("glDeleteShader");
-    g_glGetProgramInfoLog = (PFNGLGETPROGRAMINFOLOGPROC) CoreVideo_GL_GetProcAddress("glGetProgramInfoLog");
-    g_glGetShaderInfoLog = (PFNGLGETSHADERINFOLOGPROC) CoreVideo_GL_GetProcAddress("glGetShaderInfoLog");
-    g_glCreateShader = (PFNGLCREATESHADERPROC) CoreVideo_GL_GetProcAddress("glCreateShader");
-    g_glCompileShader = (PFNGLCOMPILESHADERPROC) CoreVideo_GL_GetProcAddress("glCompileShader");
-    g_glShaderSource = (PFNGLSHADERSOURCEPROC) CoreVideo_GL_GetProcAddress("glShaderSource");
-    g_glGetShaderiv = (PFNGLGETSHADERIVPROC) CoreVideo_GL_GetProcAddress("glGetShaderiv");
-    g_glUseProgram = (PFNGLUSEPROGRAMPROC) CoreVideo_GL_GetProcAddress("glUseProgram");
-    g_glGenVertexArrays = (PFNGLGENVERTEXARRAYSPROC) CoreVideo_GL_GetProcAddress("glGenVertexArrays");
-    g_glBindVertexArray = (PFNGLBINDVERTEXARRAYPROC) CoreVideo_GL_GetProcAddress("glBindVertexArray");
-    g_glDeleteVertexArrays = (PFNGLDELETEVERTEXARRAYSPROC) CoreVideo_GL_GetProcAddress("glDeleteVertexArrays");
-    g_glDeleteProgram = (PFNGLDELETEPROGRAMPROC) CoreVideo_GL_GetProcAddress("glDeleteProgram");
-}
-
 // OpenGL helpers
 static GLuint gl_shader_compile(GLenum type, const GLchar* source)
 {
-    GLuint shader = g_glCreateShader(type);
-    g_glShaderSource(shader, 1, &source, NULL);
-    g_glCompileShader(shader);
+    GLuint shader = glCreateShader(type);
+    glShaderSource(shader, 1, &source, NULL);
+    glCompileShader(shader);
 
     GLint param;
-    g_glGetShaderiv(shader, GL_COMPILE_STATUS, &param);
+    glGetShaderiv(shader, GL_COMPILE_STATUS, &param);
 
     if (!param) {
         GLchar log[4096];
-        g_glGetShaderInfoLog(shader, sizeof(log), NULL, log);
+        glGetShaderInfoLog(shader, sizeof(log), NULL, log);
         msg_error("%s shader error: %s\n", type == GL_FRAGMENT_SHADER ? "Frag" : "Vert", log);
     }
 
@@ -100,22 +63,22 @@ static GLuint gl_shader_compile(GLenum type, const GLchar* source)
 
 static GLuint gl_shader_link(GLuint vert, GLuint frag)
 {
-    GLuint program = g_glCreateProgram();
-    g_glAttachShader(program, vert);
-    g_glAttachShader(program, frag);
-    g_glLinkProgram(program);
+    GLuint program = glCreateProgram();
+    glAttachShader(program, vert);
+    glAttachShader(program, frag);
+    glLinkProgram(program);
 
     GLint param;
-    g_glGetProgramiv(program, GL_LINK_STATUS, &param);
+    glGetProgramiv(program, GL_LINK_STATUS, &param);
 
     if (!param) {
         GLchar log[4096];
-        g_glGetProgramInfoLog(program, sizeof(log), NULL, log);
+        glGetProgramInfoLog(program, sizeof(log), NULL, log);
         msg_error("Shader link error: %s\n", log);
     }
 
-    g_glDeleteShader(frag);
-    g_glDeleteShader(vert);
+    glDeleteShader(frag);
+    glDeleteShader(vert);
 
     return program;
 }
@@ -145,11 +108,11 @@ static void glSetup(void)
     GLuint vert = gl_shader_compile(GL_VERTEX_SHADER, vert_shader);
     GLuint frag = gl_shader_compile(GL_FRAGMENT_SHADER, frag_shader);
     program = gl_shader_link(vert, frag);
-    g_glUseProgram(program);
+    glUseProgram(program);
 
     // prepare dummy VAO
-    g_glGenVertexArrays(1, &vao);
-    g_glBindVertexArray(vao);
+    glGenVertexArrays(1, &vao);
+    glBindVertexArray(vao);
 
     // prepare texture
     glGenTextures(1, &texture);
@@ -180,8 +143,6 @@ static void screen_init(void)
     CoreVideo_GL_SetAttribute(M64P_GL_CONTEXT_MINOR_VERSION, 3);
 
     CoreVideo_SetVideoMode(window_width, window_height, 0, window_fullscreen ? M64VIDEO_FULLSCREEN : M64VIDEO_WINDOWED, M64VIDEOFLAG_SUPPORT_RESIZING);
-
-    glSetupFunctions();
 
     glSetup();
 }
@@ -265,8 +226,8 @@ static void screen_close(void)
     tex_height = 0;
 
     glDeleteTextures(1, &texture);
-    g_glDeleteVertexArrays(1, &vao);
-    g_glDeleteProgram(program);
+    glDeleteVertexArrays(1, &vao);
+    glDeleteProgram(program);
 
     CoreVideo_Quit();
 }

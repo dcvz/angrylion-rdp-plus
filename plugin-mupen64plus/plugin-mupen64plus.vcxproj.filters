@@ -17,12 +17,18 @@
     <ClCompile Include="screen_opengl_m64p.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="gl_core_3_3.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="plugin.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="screen_opengl_m64p.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="gl_core_3_3.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
