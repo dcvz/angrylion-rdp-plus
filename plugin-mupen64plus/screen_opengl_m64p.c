@@ -57,8 +57,7 @@ static void screen_init(void)
 
 static void screen_swap(void)
 {
-    if (toggle_fs)
-    {
+    if (toggle_fs) {
         CoreVideo_ToggleFullScreen();
         toggle_fs = 0;
     }
@@ -103,14 +102,16 @@ void screen_opengl_m64p(struct screen_api* api)
 
 void ogl_readscreen(void *_dest, int *_width, int *_height, int _front)
 {
-    if (_width == NULL || _height == NULL)
+    if (_width == NULL || _height == NULL) {
         return;
+    }
 
     *_width = window_width;
     *_height = window_height;
 
-    if (_dest == NULL)
+    if (_dest == NULL) {
         return;
+    }
 
     unsigned char *pBufferData = (unsigned char*)malloc((*_width)*(*_height) * 4);
     unsigned char *pDest = (unsigned char*)_dest;

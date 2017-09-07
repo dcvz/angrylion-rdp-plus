@@ -69,8 +69,9 @@ static m64p_handle configVideoAngrylionPlus = NULL;
 EXPORT m64p_error CALL PluginStartup(m64p_dynlib_handle _CoreLibHandle, void *Context,
                                      void (*DebugCallback)(void *, int, const char *))
 {
-    if (l_PluginInit)
+    if (l_PluginInit) {
         return M64ERR_ALREADY_INIT;
+    }
 
     /* first thing is to set the callback function for debug info */
     l_DebugCallback = DebugCallback;
@@ -104,8 +105,9 @@ EXPORT m64p_error CALL PluginStartup(m64p_dynlib_handle _CoreLibHandle, void *Co
 
 EXPORT m64p_error CALL PluginShutdown(void)
 {
-    if (!l_PluginInit)
+    if (!l_PluginInit) {
         return M64ERR_NOT_INIT;
+    }
 
     /* reset some local variable */
     l_DebugCallback = NULL;
@@ -118,20 +120,25 @@ EXPORT m64p_error CALL PluginShutdown(void)
 EXPORT m64p_error CALL PluginGetVersion(m64p_plugin_type *PluginType, int *PluginVersion, int *APIVersion, const char **PluginNamePtr, int *Capabilities)
 {
     /* set version info */
-    if (PluginType != NULL)
+    if (PluginType != NULL) {
         *PluginType = M64PLUGIN_GFX;
+    }
 
-    if (PluginVersion != NULL)
+    if (PluginVersion != NULL) {
         *PluginVersion = PLUGIN_VERSION;
+    }
 
-    if (APIVersion != NULL)
+    if (APIVersion != NULL) {
         *APIVersion = VIDEO_PLUGIN_API_VERSION;
+    }
 
-    if (PluginNamePtr != NULL)
+    if (PluginNamePtr != NULL) {
         *PluginNamePtr = CORE_NAME;
+    }
 
-    if (Capabilities != NULL)
+    if (Capabilities != NULL) {
         *Capabilities = 0;
+    }
 
     return M64ERR_SUCCESS;
 }
