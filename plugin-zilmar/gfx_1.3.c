@@ -1,11 +1,12 @@
 #include "gfx_1.3.h"
-#include "core.h"
-#include "parallel_c.hpp"
 #include "plugin_zilmar.h"
-#include "msg.h"
-#include "rdram.h"
 #include "screen_opengl.h"
 #include "resource.h"
+
+#include "core/core.h"
+#include "core/parallel_c.hpp"
+#include "core/msg.h"
+#include "core/rdram.h"
 
 #include <Commctrl.h>
 #include <stdio.h>

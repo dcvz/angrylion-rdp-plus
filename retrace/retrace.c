@@ -1,11 +1,12 @@
-#include "core.h"
-#include "rdp.h"
-#include "vi.h"
 #include "screen_sdl.h"
 #include "screen_headless.h"
-#include "trace_read.h"
 #include "retrace.h"
 #include "plugin_retrace.h"
+
+#include "core/core.h"
+#include "core/rdp.h"
+#include "core/vi.h"
+#include "core/trace_read.h"
 
 #include <stdlib.h>
 #include <stdio.h>

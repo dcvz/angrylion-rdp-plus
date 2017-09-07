@@ -1,6 +1,7 @@
 #include "screen_sdl.h"
-#include "msg.h"
 #include "retrace.h"
+
+#include "core/msg.h"
 
 #include <stdlib.h>
 #include <stdio.h>
