@@ -23,6 +23,10 @@
     <ClCompile Include="screen_opengl_m64p.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="api\m64p_config.h" />
+    <ClInclude Include="api\m64p_plugin.h" />
+    <ClInclude Include="api\m64p_types.h" />
+    <ClInclude Include="api\m64p_vidext.h" />
     <ClInclude Include="plugin_m64p.h" />
     <ClInclude Include="screen_opengl_m64p.h" />
   </ItemGroup>
