@@ -1467,9 +1467,9 @@ static void vi_process(void)
 
 static void vi_process_end(void)
 {
-    int output_width = ispal ? 768 : 640;
-    int output_height = ispal ? 576 : 480;
-    int height = output_height >> lineshifter;
+    int32_t output_width = ispal ? 768 : 640;
+    int32_t output_height = ispal ? 576 : 480;
+    int32_t height = output_height >> lineshifter;
     screen->upload(prescale, PRESCALE_WIDTH, height, output_width, output_height);
 
     if (screenshot_path[0]) {

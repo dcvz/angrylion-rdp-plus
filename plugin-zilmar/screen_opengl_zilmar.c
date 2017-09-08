@@ -22,7 +22,7 @@ static HGLRC glrc_core;
 static bool fullscreen;
 
 // Win32 helpers
-void win32_client_resize(HWND hWnd, int nWidth, int nHeight)
+void win32_client_resize(HWND hWnd, int32_t nWidth, int32_t nHeight)
 {
     RECT rclient;
     GetClientRect(hWnd, &rclient);
@@ -91,7 +91,7 @@ static void screen_init(void)
         msg_error("Can't get device context.");
     }
 
-    int win_pf = ChoosePixelFormat(dc, &win_pfd);
+    int32_t win_pf = ChoosePixelFormat(dc, &win_pfd);
     if (!win_pf) {
         msg_error("Can't choose pixel format.");
     }
@@ -122,7 +122,7 @@ static void screen_init(void)
     gl_screen_init();
 }
 
-static void screen_upload(int* buffer, int width, int height, int output_width, int output_height)
+static void screen_upload(int32_t* buffer, int32_t width, int32_t height, int32_t output_width, int32_t output_height)
 {
     // check if the framebuffer size has changed
     if (gl_screen_upload(buffer, width, height, output_width, output_height)) {
@@ -190,8 +190,8 @@ static void screen_set_fullscreen(bool _fullscreen)
         GetWindowPlacement(gfx.hWnd, &old_pos);
 
         // use virtual screen dimensions for fullscreen mode
-        int vs_width = GetSystemMetrics(SM_CXVIRTUALSCREEN);
-        int vs_height = GetSystemMetrics(SM_CYVIRTUALSCREEN);
+        int32_t vs_width = GetSystemMetrics(SM_CXVIRTUALSCREEN);
+        int32_t vs_height = GetSystemMetrics(SM_CYVIRTUALSCREEN);
 
         // disable all styles to get a borderless window and save it to restore
         // it later

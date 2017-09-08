@@ -68,7 +68,7 @@ static void screen_swap(void)
     CoreVideo_GL_SwapBuffers();
 }
 
-static void screen_upload(int* buffer, int width, int height, int output_width, int output_height)
+static void screen_upload(int32_t* buffer, int32_t width, int32_t height, int32_t output_width, int32_t output_height)
 {
     gl_screen_upload(buffer, width, height, output_width, output_height);
 }
@@ -100,7 +100,7 @@ void screen_opengl_m64p(struct screen_api* api)
     api->close = screen_close;
 }
 
-void ogl_readscreen(void *_dest, int *_width, int *_height, int _front)
+void ogl_readscreen(void *_dest, int32_t *_width, int32_t *_height, int32_t _front)
 {
     if (_width == NULL || _height == NULL) {
         return;
