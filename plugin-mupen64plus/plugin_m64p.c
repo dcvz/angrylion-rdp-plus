@@ -32,7 +32,8 @@
 #include "api/m64p_types.h"
 #include "api/m64p_config.h"
 #include "screen_opengl_m64p.h"
-#include "plugin.h"
+#include "plugin_m64p.h"
+
 #include "core/version.h"
 #include "core/msg.h"
 #include "core/rdram.h"

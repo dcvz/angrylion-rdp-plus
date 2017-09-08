@@ -19,11 +19,11 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="plugin.c" />
+    <ClCompile Include="plugin_m64p.c" />
     <ClCompile Include="screen_opengl_m64p.c" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="plugin.h" />
+    <ClInclude Include="plugin_m64p.h" />
     <ClInclude Include="screen_opengl_m64p.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

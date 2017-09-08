@@ -22,13 +22,13 @@
     <ClInclude Include="gfx_1.3.h" />
     <ClInclude Include="plugin_zilmar.h" />
     <ClInclude Include="resource.h" />
-    <ClInclude Include="screen_opengl.h" />
+    <ClInclude Include="screen_opengl_zilmar.h" />
     <ClInclude Include="wgl_ext.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="gfx_1.3.c" />
     <ClCompile Include="plugin_zilmar.c" />
-    <ClCompile Include="screen_opengl.c" />
+    <ClCompile Include="screen_opengl_zilmar.c" />
     <ClCompile Include="wgl_ext.c" />
   </ItemGroup>
   <ItemGroup>

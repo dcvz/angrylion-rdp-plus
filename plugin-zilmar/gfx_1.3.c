@@ -1,6 +1,6 @@
 #include "gfx_1.3.h"
 #include "plugin_zilmar.h"
-#include "screen_opengl.h"
+#include "screen_opengl_zilmar.h"
 #include "resource.h"
 
 #include "core/core.h"

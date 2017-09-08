@@ -11,18 +11,18 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="plugin.c">
+    <ClCompile Include="screen_opengl_m64p.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="screen_opengl_m64p.c">
+    <ClCompile Include="plugin_m64p.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="plugin.h">
+    <ClInclude Include="screen_opengl_m64p.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="screen_opengl_m64p.h">
+    <ClInclude Include="plugin_m64p.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
