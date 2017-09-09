@@ -17,6 +17,9 @@
     <ClCompile Include="plugin_m64p.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="plugin_m64p_new.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="screen_opengl_m64p.h">
@@ -35,6 +38,9 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="api\m64p_vidext.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="plugin_m64p_new.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

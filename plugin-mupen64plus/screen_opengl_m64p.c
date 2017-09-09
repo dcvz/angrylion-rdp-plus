@@ -6,9 +6,6 @@
 
 #include <stdlib.h>
 
-extern GFX_INFO gfx;
-extern m64p_dynlib_handle CoreLibHandle;
-
 /* definitions of pointers to Core video extension functions */
 static ptr_VidExt_Init                  CoreVideo_Init = NULL;
 static ptr_VidExt_Quit                  CoreVideo_Quit = NULL;
