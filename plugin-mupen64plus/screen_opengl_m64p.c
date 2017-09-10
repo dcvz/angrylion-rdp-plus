@@ -1,5 +1,5 @@
 #include "screen_opengl_m64p.h"
-#include "plugin_m64p.h"
+#include "gfx_m64p.h"
 
 #include "core/msg.h"
 #include "gl-screen/gl_screen.h"

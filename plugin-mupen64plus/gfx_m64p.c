@@ -27,10 +27,10 @@
 #include <string.h>
 #include <ctype.h>
 
+#include "gfx_m64p.h"
 #include "api/m64p_types.h"
 #include "api/m64p_config.h"
 #include "screen_opengl_m64p.h"
-#include "plugin_m64p.h"
 
 #include "core/version.h"
 #include "core/msg.h"

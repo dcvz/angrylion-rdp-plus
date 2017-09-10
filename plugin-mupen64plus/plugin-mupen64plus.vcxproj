@@ -19,7 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="plugin_m64p.c" />
+    <ClCompile Include="gfx_m64p.c" />
     <ClCompile Include="plugin_m64p_new.c" />
     <ClCompile Include="screen_opengl_m64p.c" />
   </ItemGroup>
@@ -28,7 +28,7 @@
     <ClInclude Include="api\m64p_plugin.h" />
     <ClInclude Include="api\m64p_types.h" />
     <ClInclude Include="api\m64p_vidext.h" />
-    <ClInclude Include="plugin_m64p.h" />
+    <ClInclude Include="gfx_m64p.h" />
     <ClInclude Include="plugin_m64p_new.h" />
     <ClInclude Include="screen_opengl_m64p.h" />
   </ItemGroup>
