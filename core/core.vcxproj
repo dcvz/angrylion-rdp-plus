@@ -211,7 +211,8 @@
   <ItemGroup>
     <ClCompile Include="core.c" />
     <ClCompile Include="file.c" />
-    <ClCompile Include="irand.h" />
+    <ClCompile Include="irand.c" />
+    <ClInclude Include="irand.h" />
     <ClCompile Include="msg.c" />
     <ClCompile Include="parallel.cpp" />
     <ClCompile Include="parallel_c.cpp" />
