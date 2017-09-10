@@ -1,4 +1,3 @@
-#include "plugin_m64p_new.h"
 #include "gfx_m64p.h"
 
 #include "core/rdram.h"

@@ -14,10 +14,10 @@
     <ClCompile Include="screen_opengl_m64p.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="plugin_m64p_new.c">
+    <ClCompile Include="gfx_m64p.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="gfx_m64p.c">
+    <ClCompile Include="plugin_m64p.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -35,9 +35,6 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="api\m64p_vidext.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="plugin_m64p_new.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="gfx_m64p.h">
