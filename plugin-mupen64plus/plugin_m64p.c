@@ -3,6 +3,9 @@
 #include "core/rdram.h"
 
 #include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
 
 #define DP_INTERRUPT    0x20
 
