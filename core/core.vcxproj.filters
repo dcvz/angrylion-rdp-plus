@@ -29,9 +29,6 @@
     <ClCompile Include="parallel_c.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="irand.h">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="core.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -88,6 +85,7 @@
     <ClInclude Include="bitmap.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="irand.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="version.h.in">
