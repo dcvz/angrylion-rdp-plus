@@ -101,11 +101,8 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
-      <AdditionalOptions>ddraw.lib dxguid.lib %(AdditionalOptions)</AdditionalOptions>
       <SubSystem>Windows</SubSystem>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
-      <DataExecutionPrevention />
-      <ImportLibrary>$(OutDir)angrylion.lib</ImportLibrary>
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
     <PreBuildEvent>
@@ -124,12 +121,8 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
-      <AdditionalOptions>ddraw.lib dxguid.lib %(AdditionalOptions)</AdditionalOptions>
       <SubSystem>Windows</SubSystem>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
-      <DataExecutionPrevention>
-      </DataExecutionPrevention>
-      <ImportLibrary>$(OutDir)angrylion.lib</ImportLibrary>
     </Link>
     <PreBuildEvent>
       <Command>python "$(SolutionDir)make_version.py" "$(ProjectDir)version.h.in" "$(ProjectDir)version.h"</Command>
@@ -156,15 +149,12 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
-      <AdditionalOptions>ddraw.lib dxguid.lib %(AdditionalOptions)</AdditionalOptions>
       <GenerateMapFile>true</GenerateMapFile>
       <MapExports>true</MapExports>
       <SubSystem>Windows</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
-      <DataExecutionPrevention />
-      <ImportLibrary>$(OutDir)angrylion.lib</ImportLibrary>
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
     <PreBuildEvent>
@@ -193,16 +183,12 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
-      <AdditionalOptions>ddraw.lib dxguid.lib %(AdditionalOptions)</AdditionalOptions>
       <GenerateMapFile>true</GenerateMapFile>
       <MapExports>true</MapExports>
       <SubSystem>Windows</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
-      <DataExecutionPrevention>
-      </DataExecutionPrevention>
-      <ImportLibrary>$(OutDir)angrylion.lib</ImportLibrary>
     </Link>
     <PreBuildEvent>
       <Command>python "$(SolutionDir)make_version.py" "$(ProjectDir)version.h.in" "$(ProjectDir)version.h"</Command>
