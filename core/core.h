@@ -75,7 +75,6 @@ typedef void (*plugin_api_func)(struct plugin_api* api);
 struct core_config
 {
     uint32_t num_workers;
-    bool tv_fading;
     bool trace;
     enum vi_mode vi_mode;
 };

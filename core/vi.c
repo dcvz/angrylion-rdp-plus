@@ -1087,9 +1087,7 @@ static int vi_process_start(void)
     int i;
     if (!(vitype & 2))
     {
-        if (config->tv_fading) {
-            memset(tvfadeoutstate, 0, PRESCALE_HEIGHT * sizeof(uint32_t));
-        }
+        memset(tvfadeoutstate, 0, PRESCALE_HEIGHT * sizeof(uint32_t));
         for (i = 0; i < PRESCALE_HEIGHT; i++)
             memset(&prescale[i * PRESCALE_WIDTH], 0, PRESCALE_WIDTH * sizeof(int32_t));
         prevwasblank = 1;
@@ -1097,10 +1095,6 @@ static int vi_process_start(void)
     else
     {
         prevwasblank = 0;
-
-        if (!config->tv_fading) {
-            return 1;
-        }
 
         int j;
         if (h_start > 0 && h_start < PRESCALE_WIDTH)
