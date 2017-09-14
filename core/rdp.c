@@ -2085,7 +2085,7 @@ static INLINE void fetch_texel(struct color *color, int s, int t, uint32_t tilen
         }
         break;
     default:
-        msg_error("fetch_texel: unknown texture format %d, size %d, tilenum %d\n", tile[tilenum].format, tile[tilenum].size, tilenum);
+        msg_error("fetch_texel: unknown texture format %d, size %d, tilenum %d", tile[tilenum].format, tile[tilenum].size, tilenum);
         break;
     }
 }
@@ -2171,7 +2171,7 @@ static INLINE void fetch_texel_entlut(struct color *color, int s, int t, uint32_
         }
         break;
     default:
-        msg_error("fetch_texel_entlut: unknown texture format %d, size %d, tilenum %d\n", tile[tilenum].format, tile[tilenum].size, tilenum);
+        msg_error("fetch_texel_entlut: unknown texture format %d, size %d, tilenum %d", tile[tilenum].format, tile[tilenum].size, tilenum);
         break;
     }
 
@@ -3028,7 +3028,7 @@ static INLINE void fetch_texel_quadro(struct color *color0, struct color *color1
         }
         break;
     default:
-        msg_error("fetch_texel_quadro: unknown texture format %d, size %d, tilenum %d\n", tile[tilenum].format, tile[tilenum].size, tilenum);
+        msg_error("fetch_texel_quadro: unknown texture format %d, size %d, tilenum %d", tile[tilenum].format, tile[tilenum].size, tilenum);
         break;
     }
 }
@@ -3233,7 +3233,7 @@ static INLINE void fetch_texel_entlut_quadro(struct color *color0, struct color 
         }
         break;
     default:
-        msg_error("fetch_texel_entlut_quadro: unknown texture format %d, size %d, tilenum %d\n", tile[tilenum].format, tile[tilenum].size, tilenum);
+        msg_error("fetch_texel_entlut_quadro: unknown texture format %d, size %d, tilenum %d", tile[tilenum].format, tile[tilenum].size, tilenum);
         break;
     }
 

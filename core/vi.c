@@ -833,7 +833,7 @@ static int vi_process_start(void)
 
     // check for unexpected VI type bits set
     if (vitype & ~3) {
-        msg_warning("Unknown framebuffer format %d\n", vitype);
+        msg_warning("Unknown framebuffer format %d", vitype);
     }
 
     serration_pulses = (vi_control >> 6) & 1;
@@ -841,7 +841,7 @@ static int vi_process_start(void)
     if (((vi_control >> 5) & 1) && !onetimewarnings.vbusclock)
     {
         msg_warning("rdp_update: vbus_clock_enable bit set in VI_CONTROL_REG register. Never run this code on your N64! It's rumored that turning this bit on\
-                    will result in permanent damage to the hardware! Emulation will now continue.\n");
+                    will result in permanent damage to the hardware! Emulation will now continue.");
         onetimewarnings.vbusclock = 1;
     }
 
@@ -1498,7 +1498,7 @@ static int vi_process_start_fast(void)
 
     // check for unexpected VI type bits set
     if (vitype & ~3) {
-        msg_warning("Unknown framebuffer format %d\n", vitype);
+        msg_warning("Unknown framebuffer format %d", vitype);
     }
 
     gamma_value = (vi_control >> 3) & 1;
@@ -1568,7 +1568,7 @@ static void vi_process_fast(void)
                 }
 
                 default:
-                    msg_warning("Unknown VI mode %d\n", config->vi_mode);
+                    msg_warning("Unknown VI mode %d", config->vi_mode);
             }
 
             gamma_filters(&r, &g, &b, gamma_and_dither);
