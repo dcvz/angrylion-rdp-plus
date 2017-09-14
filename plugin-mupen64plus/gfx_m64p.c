@@ -55,7 +55,7 @@ void (*render_callback)(int);
 static m64p_handle configVideoGeneral = NULL;
 static m64p_handle configVideoAngrylionPlus = NULL;
 
-#define PLUGIN_VERSION              0x020000
+#define PLUGIN_VERSION              0x000100
 #define VIDEO_PLUGIN_API_VERSION    0x020200
 
 EXPORT m64p_error CALL PluginStartup(m64p_dynlib_handle _CoreLibHandle, void *Context,
