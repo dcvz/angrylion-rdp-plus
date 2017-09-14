@@ -14,9 +14,6 @@
     <ClCompile Include="rdp.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="msg.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="vi.c">
       <Filter>Source Files</Filter>
     </ClCompile>

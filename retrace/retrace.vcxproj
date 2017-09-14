@@ -193,6 +193,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="msg.c" />
     <ClCompile Include="plugin_retrace.c" />
     <ClCompile Include="retrace.c" />
     <ClCompile Include="screen_headless.c" />

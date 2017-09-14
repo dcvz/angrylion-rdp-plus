@@ -14,7 +14,7 @@
 #include <Shlwapi.h>
 #include <stdio.h>
 
-#define CONFIG_FILE_NAME "angrylionplus-config.bin"
+#define CONFIG_FILE_NAME CORE_SIMPLE_NAME "-config.bin"
 
 static bool warn_hle;
 static struct core_config config;

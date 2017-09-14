@@ -20,6 +20,9 @@
     <ClCompile Include="plugin_m64p.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="msg.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="screen_opengl_m64p.h">

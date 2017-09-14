@@ -27,6 +27,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="gfx_1.3.c" />
+    <ClCompile Include="msg.c" />
     <ClCompile Include="plugin_zilmar.c" />
     <ClCompile Include="screen_opengl_zilmar.c" />
     <ClCompile Include="wgl_ext.c" />

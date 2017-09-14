@@ -38,6 +38,9 @@
     <ClCompile Include="screen_opengl_zilmar.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="msg.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="config.rc">
