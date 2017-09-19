@@ -79,6 +79,7 @@ struct core_config
     } dp;
     struct {
         enum vi_mode mode;
+        bool widescreen;
     } vi;
     uint32_t num_workers;
 };

@@ -99,8 +99,11 @@ BOOL CALLBACK ConfigDialogProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM l
             }
             SendMessage(hCombo1, CB_SETCURSEL, (WPARAM)config.vi.mode, 0);
 
-            HWND hCheck1 = GetDlgItem(hwnd, IDC_CHECK1);
-            SendMessage(hCheck1, BM_SETCHECK, (WPARAM)config.dp.trace_record, 0);
+            HWND hCheckTrace = GetDlgItem(hwnd, IDC_CHECK_TRACE);
+            SendMessage(hCheckTrace, BM_SETCHECK, (WPARAM)config.dp.trace_record, 0);
+
+            HWND hCheckWidescreen = GetDlgItem(hwnd, IDC_CHECK_WIDESCREEN);
+            SendMessage(hCheckWidescreen, BM_SETCHECK, (WPARAM)config.vi.widescreen, 0);
 
             SetDlgItemInt(hwnd, IDC_EDIT1, config.num_workers, FALSE);
 
@@ -114,8 +117,11 @@ BOOL CALLBACK ConfigDialogProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM l
                     HWND hCombo1 = GetDlgItem(hwnd, IDC_COMBO1);
                     config.vi.mode = SendMessage(hCombo1, CB_GETCURSEL, 0, 0);
 
-                    HWND hCheck1 = GetDlgItem(hwnd, IDC_CHECK1);
-                    config.dp.trace_record = SendMessage(hCheck1, BM_GETCHECK, 0, 0);
+                    HWND hCheckWidescreen = GetDlgItem(hwnd, IDC_CHECK_WIDESCREEN);
+                    config.vi.widescreen = SendMessage(hCheckWidescreen, BM_GETCHECK, 0, 0);
+
+                    HWND hCheckTrace = GetDlgItem(hwnd, IDC_CHECK_TRACE);
+                    config.dp.trace_record = SendMessage(hCheckTrace, BM_GETCHECK, 0, 0);
 
                     config.num_workers = GetDlgItemInt(hwnd, IDC_EDIT1, FALSE, FALSE);
 

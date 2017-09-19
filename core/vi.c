@@ -1464,6 +1464,11 @@ static void vi_process_end(void)
     int32_t output_width = ispal ? 768 : 640;
     int32_t output_height = ispal ? 576 : 480;
     int32_t height = output_height >> lineshifter;
+
+    if (config->vi.widescreen) {
+         output_height = ispal ? 432 : 360;
+    }
+
     screen->upload(prescale, PRESCALE_WIDTH, height, output_width, output_height);
 
     if (screenshot_path[0]) {
