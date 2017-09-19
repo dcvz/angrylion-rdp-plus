@@ -59,6 +59,8 @@ static void screen_swap(void)
 
 static void screen_upload(int32_t* buffer, int32_t width, int32_t height, int32_t output_width, int32_t output_height)
 {
+    SDL_RenderSetLogicalSize(renderer, output_width, output_height);
+
     if (texture_width != width || texture_height != height) {
         texture_width = width;
         texture_height = height;
@@ -69,7 +71,6 @@ static void screen_upload(int32_t* buffer, int32_t width, int32_t height, int32_
         // update window size and position
         SDL_SetWindowSize(window, output_width, output_height);
         SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
-        SDL_RenderSetLogicalSize(renderer, output_width, output_height);
 
         // (re)create frame buffer texture
         if (texture) {
