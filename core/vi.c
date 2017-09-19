@@ -1529,7 +1529,7 @@ static void vi_process_fast(void)
         for (int32_t x = 0; x < hres_raw; x++) {
             uint32_t r, g, b;
 
-            switch (config->vi_mode) {
+            switch (config->vi.mode) {
                 case VI_MODE_COLOR:
                     switch (vitype) {
                         case VI_TYPE_RGBA5551: {
@@ -1568,7 +1568,7 @@ static void vi_process_fast(void)
                 }
 
                 default:
-                    msg_warning("Unknown VI mode %d", config->vi_mode);
+                    msg_warning("Unknown VI mode %d", config->vi.mode);
             }
 
             gamma_filters(&r, &g, &b, gamma_and_dither);
@@ -1591,9 +1591,9 @@ void vi_update(void)
 {
     // clear buffer after switching VI modes to make sure that black borders are
     // actually black and don't contain garbage
-    if (config->vi_mode != vi_mode) {
+    if (config->vi.mode != vi_mode) {
         memset(prescale, 0, sizeof(prescale));
-        vi_mode = config->vi_mode;
+        vi_mode = config->vi.mode;
     }
 
     if (trace_write_is_open()) {
@@ -1605,7 +1605,7 @@ void vi_update(void)
     void (*vi_process_ptr)(void);
     void (*vi_process_end_ptr)(void);
 
-    if (config->vi_mode == VI_MODE_NORMAL) {
+    if (config->vi.mode == VI_MODE_NORMAL) {
         vi_process_start_ptr = vi_process_start;
         vi_process_ptr = vi_process;
         vi_process_end_ptr = vi_process_end;

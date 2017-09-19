@@ -97,10 +97,10 @@ BOOL CALLBACK ConfigDialogProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM l
             for (int i = 0; i < VI_MODE_NUM; i++) {
                 SendMessage(hCombo1, CB_ADDSTRING, i, (LPARAM)vi_mode_strings[i]);
             }
-            SendMessage(hCombo1, CB_SETCURSEL, (WPARAM)config.vi_mode, 0);
+            SendMessage(hCombo1, CB_SETCURSEL, (WPARAM)config.vi.mode, 0);
 
             HWND hCheck1 = GetDlgItem(hwnd, IDC_CHECK1);
-            SendMessage(hCheck1, BM_SETCHECK, (WPARAM)config.trace, 0);
+            SendMessage(hCheck1, BM_SETCHECK, (WPARAM)config.dp.trace_record, 0);
 
             SetDlgItemInt(hwnd, IDC_EDIT1, config.num_workers, FALSE);
 
@@ -112,10 +112,10 @@ BOOL CALLBACK ConfigDialogProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM l
             switch (LOWORD(wParam)) {
                 case IDOK: {
                     HWND hCombo1 = GetDlgItem(hwnd, IDC_COMBO1);
-                    config.vi_mode = SendMessage(hCombo1, CB_GETCURSEL, 0, 0);
+                    config.vi.mode = SendMessage(hCombo1, CB_GETCURSEL, 0, 0);
 
                     HWND hCheck1 = GetDlgItem(hwnd, IDC_CHECK1);
-                    config.trace = SendMessage(hCheck1, BM_GETCHECK, 0, 0);
+                    config.dp.trace_record = SendMessage(hCheck1, BM_GETCHECK, 0, 0);
 
                     config.num_workers = GetDlgItemInt(hwnd, IDC_EDIT1, FALSE, FALSE);
 

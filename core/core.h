@@ -74,9 +74,13 @@ typedef void (*plugin_api_func)(struct plugin_api* api);
 
 struct core_config
 {
+    struct {
+        bool trace_record;
+    } dp;
+    struct {
+        enum vi_mode mode;
+    } vi;
     uint32_t num_workers;
-    bool trace;
-    enum vi_mode vi_mode;
 };
 
 void core_init(struct core_config* config, screen_api_func screen_api, plugin_api_func plugin_api);

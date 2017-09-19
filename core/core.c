@@ -62,7 +62,7 @@ void core_sync_dp(void)
         config_new = NULL;
 
         // open trace file when tracing has been enabled with no file open
-        if (config.trace && !trace_write_is_open()) {
+        if (config.dp.trace_record && !trace_write_is_open()) {
             // get ROM name from plugin and use placeholder if empty
             char rom_name[32];
             if (!plugin.get_rom_name(rom_name, sizeof(rom_name))) {
@@ -82,7 +82,7 @@ void core_sync_dp(void)
         }
 
         // close trace file when tracing has been disabled
-        if (!config.trace && trace_write_is_open()) {
+        if (!config.dp.trace_record && trace_write_is_open()) {
             trace_write_close();
             config.num_workers = trace_num_workers;
         }

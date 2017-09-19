@@ -166,7 +166,7 @@ EXPORT int CALL RomOpen (void)
     window_height = ConfigGetParamInt(configVideoGeneral, "ScreenHeight");
 
     config.num_workers = ConfigGetParamInt(configVideoAngrylionPlus, "NumWorkers");
-    config.vi_mode = ConfigGetParamInt(configVideoAngrylionPlus, "ViMode");
+    config.vi.mode = ConfigGetParamInt(configVideoAngrylionPlus, "ViMode");
 
     core_init(&config, screen_opengl_m64p, plugin_mupen64plus);
     return 1;
