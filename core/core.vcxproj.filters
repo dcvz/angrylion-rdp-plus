@@ -82,7 +82,9 @@
     <ClInclude Include="bitmap.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="irand.h" />
+    <ClInclude Include="irand.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="version.h.in">
