@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8)
 
-project(angrylion-rdp-plus)
+project(angrylion-plus)
 
 set(CMAKE_CXX_STANDARD 14)
 set(COMPILE_DEFINITIONS -O3 -Wall -Wextra -Winline)
@@ -45,19 +45,21 @@ if ( NOT MINGW )
 endif ( NOT MINGW )
 
 # Mupen64Plus GFX plugin
+set(NAME_PLUGIN_M64P "mupen64plus-video-${CMAKE_PROJECT_NAME}")
 set(PATH_PLUGIN_M64P "plugin-mupen64plus")
 
 file(GLOB SOURCES_PLUGIN_M64P "${PATH_PLUGIN_M64P}/*.c")
-add_library(mupen64plus-video-angrylionplus SHARED ${SOURCES_PLUGIN_M64P})
+add_library(${NAME_PLUGIN_M64P} SHARED ${SOURCES_PLUGIN_M64P})
 
-set_target_properties(mupen64plus-video-angrylionplus PROPERTIES PREFIX "")
+set_target_properties(${NAME_PLUGIN_M64P} PROPERTIES PREFIX "")
 
-target_link_libraries(mupen64plus-video-angrylionplus core gl-screen ${OPENGL_LIBRARIES})
+target_link_libraries(${NAME_PLUGIN_M64P} core gl-screen ${OPENGL_LIBRARIES})
 
 # RDP retracer
+set(NAME_RETRACER "${CMAKE_PROJECT_NAME}-retrace")
 set(PATH_RETRACER "retrace")
 
 file(GLOB SOURCES_RETRACE "${PATH_RETRACER}/*.c")
-add_executable(retrace ${SOURCES_RETRACE})
+add_executable(${NAME_RETRACER} ${SOURCES_RETRACE})
 
-target_link_libraries(retrace core pthread SDL2)
+target_link_libraries(${NAME_RETRACER} core pthread SDL2)
