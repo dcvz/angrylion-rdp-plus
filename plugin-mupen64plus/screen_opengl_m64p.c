@@ -2,7 +2,7 @@
 #include "gfx_m64p.h"
 
 #include "core/msg.h"
-#include "gl-screen/gl_screen.h"
+#include "plugin-common/gl_screen.h"
 
 #include <stdlib.h>
 

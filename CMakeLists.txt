@@ -35,13 +35,13 @@ endif ( NOT MINGW )
 include_directories(${CMAKE_SOURCE_DIR})
 
 # OpenGL screen library
-set(PATH_GL_SCREEN "gl-screen")
+set(PATH_PLUGIN_COMMON "plugin-common")
 
-file(GLOB SOURCES_GL_SCREEN "${PATH_GL_SCREEN}/*.c")
-add_library(gl-screen STATIC ${SOURCES_GL_SCREEN})
+file(GLOB SOURCES_PLUGIN_COMMON "${PATH_PLUGIN_COMMON}/*.c")
+add_library(plugin-common STATIC ${SOURCES_PLUGIN_COMMON})
 
 if ( NOT MINGW )
-    set_target_properties(gl-screen PROPERTIES POSITION_INDEPENDENT_CODE ON)
+    set_target_properties(plugin-common PROPERTIES POSITION_INDEPENDENT_CODE ON)
 endif ( NOT MINGW )
 
 # Mupen64Plus GFX plugin
@@ -53,7 +53,7 @@ add_library(${NAME_PLUGIN_M64P} SHARED ${SOURCES_PLUGIN_M64P})
 
 set_target_properties(${NAME_PLUGIN_M64P} PROPERTIES PREFIX "")
 
-target_link_libraries(${NAME_PLUGIN_M64P} core gl-screen ${OPENGL_LIBRARIES})
+target_link_libraries(${NAME_PLUGIN_M64P} core plugin-common ${OPENGL_LIBRARIES})
 
 # RDP retracer
 set(NAME_RETRACER "${CMAKE_PROJECT_NAME}-retrace")

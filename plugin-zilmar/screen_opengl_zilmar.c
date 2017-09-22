@@ -1,6 +1,6 @@
 #include "screen_opengl_zilmar.h"
 #include "gfx_1.3.h"
-#include "gl-screen/gl_screen.h"
+#include "plugin-common/gl_screen.h"
 #include "wgl_ext.h"
 
 #include "core/msg.h"
