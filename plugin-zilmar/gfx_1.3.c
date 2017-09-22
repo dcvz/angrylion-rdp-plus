@@ -163,7 +163,15 @@ EXPORT void CALL CloseDLL(void)
 
 EXPORT void CALL DllAbout(HWND hParent)
 {
-    msg_warning(CORE_BASE_NAME ". MESS source code used.");
+    msg_warning(
+        CORE_NAME "\n\n"
+        "Build commit:\n"
+        GIT_BRANCH "\n"
+        GIT_COMMIT_HASH "\n"
+        GIT_COMMIT_DATE "\n\n"
+        "Build date: " __DATE__ " " __TIME__ "\n\n"
+        "https://github.com/ata4/angrylion-rdp-plus"
+    );
 }
 
 EXPORT void CALL DllConfig(HWND hParent)
