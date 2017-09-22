@@ -45,8 +45,8 @@ static ptr_ConfigGetParamBool     ConfigGetParamBool = NULL;
 
 static bool warn_hle;
 static bool plugin_initialized;
-static void (*debug_callback)(void *, int, const char *);
-static void *debug_call_context;
+void (*debug_callback)(void *, int, const char *);
+void *debug_call_context;
 static struct core_config config;
 
 m64p_dynlib_handle CoreLibHandle;
@@ -80,7 +80,7 @@ EXPORT m64p_error CALL PluginStartup(m64p_dynlib_handle _CoreLibHandle, void *Co
     ConfigGetParamBool = (ptr_ConfigGetParamBool)DLSYM(CoreLibHandle, "ConfigGetParamBool");
 
     ConfigOpenSection("Video-General", &configVideoGeneral);
-    ConfigOpenSection("Video-AngrylionPlus", &configVideoAngrylionPlus);
+    ConfigOpenSection("Video-Angrylion-Plus", &configVideoAngrylionPlus);
 
     ConfigSetDefaultBool(configVideoGeneral, "Fullscreen", 0, "Use fullscreen mode if True, or windowed mode if False");
     ConfigSetDefaultInt(configVideoGeneral, "ScreenWidth", 640, "Width of output window or fullscreen width");
@@ -91,7 +91,7 @@ EXPORT m64p_error CALL PluginStartup(m64p_dynlib_handle _CoreLibHandle, void *Co
     ConfigSetDefaultBool(configVideoAngrylionPlus, "AnamorphicWidescreen", 0, "Use anamorphic 16:9 output mode if True");
 
     ConfigSaveSection("Video-General");
-    ConfigSaveSection("Video-AngrylionPlus");
+    ConfigSaveSection("Video-Angrylion-Plus");
 
     plugin_initialized = true;
     return M64ERR_SUCCESS;
