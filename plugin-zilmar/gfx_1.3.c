@@ -14,6 +14,7 @@
 #include <stdio.h>
 
 #define CONFIG_FILE_NAME CORE_SIMPLE_NAME "-config.bin"
+#define CONFIG_VERSION 1
 
 static bool warn_hle;
 static struct core_config config;
@@ -38,11 +39,18 @@ static void load_config(struct core_config* config)
 
     if (!fp) {
         // file may not exist yet, don't display warning
+        msg_debug("Config file not found, using defaults");
         return;
     }
 
-    if (!fread(config, sizeof(struct core_config), 1, fp)) {
-        msg_warning("Invalid config file size.");
+    uint8_t version = fgetc(fp);
+
+    if (version == CONFIG_VERSION) {
+        if (!fread(config, sizeof(struct core_config), 1, fp)) {
+            msg_warning("Invalid config file size.");
+        }
+    } else {
+        msg_debug("Unsupported config version %d, ignoring config file", version);
     }
 
     fclose(fp);
@@ -59,7 +67,7 @@ static void save_config(struct core_config* config)
         return;
     }
 
-    if (!fwrite(config, sizeof(struct core_config), 1, fp)) {
+    if (!fputc(CONFIG_VERSION, fp) || !fwrite(config, sizeof(struct core_config), 1, fp)) {
         msg_warning("Can't write contents to config file.");
     }
 
