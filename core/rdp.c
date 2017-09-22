@@ -1,6 +1,7 @@
 #include "rdp.h"
 #include "vi.h"
 #include "common.h"
+#include "plugin.h"
 #include "rdram.h"
 #include "trace_write.h"
 #include "msg.h"
@@ -906,10 +907,9 @@ static STRICTINLINE void tcclamp_cycle_light(int32_t* S, int32_t* T, int32_t max
 }
 
 
-int rdp_init(struct core_config* _config, struct plugin_api* _plugin)
+int rdp_init(struct core_config* _config)
 {
     config = _config;
-    plugin = _plugin;
 
     fbread1_ptr = fbread_func[0];
     fbread2_ptr = fbread2_func[0];
@@ -7416,7 +7416,7 @@ void rdp_update(void)
     int i, length;
     uint32_t cmd, cmd_length;
 
-    uint32_t** dp_reg = plugin->get_dp_registers();
+    uint32_t** dp_reg = plugin_get_dp_registers();
     uint32_t dp_current_al = *dp_reg[DP_CURRENT] & ~7, dp_end_al = *dp_reg[DP_END] & ~7;
 
     *dp_reg[DP_STATUS] &= ~DP_STATUS_FREEZE;
@@ -7462,7 +7462,7 @@ void rdp_update(void)
 
     if (*dp_reg[DP_STATUS] & DP_STATUS_XBUS_DMA)
     {
-        uint32_t* dmem = (uint32_t*)plugin->get_dmem();
+        uint32_t* dmem = (uint32_t*)plugin_get_dmem();
         for (i = 0; i < toload; i ++)
         {
             rdp_cmd_data[rdp_cmd_ptr] = dmem[dp_current_al & 0x3ff];

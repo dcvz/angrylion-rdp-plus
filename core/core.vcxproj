@@ -215,6 +215,7 @@
     <ClInclude Include="msg.h" />
     <ClInclude Include="parallel.hpp" />
     <ClInclude Include="parallel_c.hpp" />
+    <ClInclude Include="plugin.h" />
     <ClInclude Include="rdram.h" />
     <ClInclude Include="rdp.h" />
     <ClInclude Include="trace.h" />

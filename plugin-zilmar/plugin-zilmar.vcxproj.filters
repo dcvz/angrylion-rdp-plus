@@ -17,9 +17,6 @@
     <ClInclude Include="wgl_ext.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="plugin_zilmar.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="resource.h" />
     <ClInclude Include="screen_opengl_zilmar.h">
       <Filter>Source Files</Filter>

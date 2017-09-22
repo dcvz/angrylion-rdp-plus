@@ -7,6 +7,7 @@
 #include "core/rdp.h"
 #include "core/vi.h"
 #include "core/trace_read.h"
+#include "core/plugin.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -56,7 +57,7 @@ bool retrace_frame(uint64_t* num_cmds)
                 break;
 
             case TRACE_VI:
-                trace_read_vi(core_get_plugin()->get_vi_registers());
+                trace_read_vi(plugin_get_vi_registers());
                 vi_update();
                 break;
         }
@@ -178,7 +179,7 @@ int main(int argc, char** argv)
     trace_read_header(&rdram_size);
     plugin_set_rdram_size(rdram_size);
 
-    core_init(&config, benchmark ? screen_headless : screen_sdl, plugin_retrace);
+    core_init(&config, benchmark ? screen_headless : screen_sdl);
 
     if (benchmark) {
         retrace_frames_verbose();

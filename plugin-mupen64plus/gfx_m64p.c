@@ -170,7 +170,7 @@ EXPORT int CALL RomOpen (void)
     config.vi.mode = ConfigGetParamInt(configVideoAngrylionPlus, "ViMode");
     config.vi.widescreen = ConfigGetParamBool(configVideoGeneral, "AnamorphicWidescreen");
 
-    core_init(&config, screen_opengl_m64p, plugin_mupen64plus);
+    core_init(&config, screen_opengl_m64p);
     return 1;
 }
 

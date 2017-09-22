@@ -20,7 +20,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="gfx_1.3.h" />
-    <ClInclude Include="plugin_zilmar.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="screen_opengl_zilmar.h" />
     <ClInclude Include="wgl_ext.h" />

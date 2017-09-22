@@ -1,6 +1,7 @@
 #include "vi.h"
 #include "rdp.h"
 #include "common.h"
+#include "plugin.h"
 #include "rdram.h"
 #include "trace_write.h"
 #include "msg.h"
@@ -34,7 +35,6 @@ struct ccvg
 // config
 static struct core_config* config;
 static struct screen_api* screen;
-static struct plugin_api* plugin;
 
 static uint32_t** vi_reg_ptr;
 
@@ -746,13 +746,12 @@ static uint32_t vi_integer_sqrt(uint32_t a)
     return res;
 }
 
-void vi_init(struct core_config* _config, struct plugin_api* _plugin, struct screen_api* _screen)
+void vi_init(struct core_config* _config, struct screen_api* _screen)
 {
     config = _config;
     screen = _screen;
-    plugin = _plugin;
 
-    vi_reg_ptr = plugin->get_vi_registers();
+    vi_reg_ptr = plugin_get_vi_registers();
 
     for (int i = 0; i < 256; i++)
     {

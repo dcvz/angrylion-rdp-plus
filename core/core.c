@@ -5,6 +5,7 @@
 #include "rdram.h"
 #include "file.h"
 #include "msg.h"
+#include "plugin.h"
 #include "trace_write.h"
 #include "parallel_c.hpp"
 
@@ -19,9 +20,8 @@ static uint32_t num_workers;
 static struct core_config* config_new;
 static struct core_config config;
 static struct screen_api screen;
-static struct plugin_api plugin;
 
-void core_init(struct core_config* _config, screen_api_func screen_api, plugin_api_func plugin_api)
+void core_init(struct core_config* _config, screen_api_func screen_api)
 {
     config = *_config;
 
@@ -32,17 +32,11 @@ void core_init(struct core_config* _config, screen_api_func screen_api, plugin_a
     screen_api(&screen);
     screen.init();
 
-    if (!plugin_api) {
-        msg_error("core: plugin API not defined!");
-    }
+    plugin_init();
+    rdram_init();
 
-    plugin_api(&plugin);
-    plugin.init();
-
-    rdram_init(&plugin);
-
-    rdp_init(&config, &plugin);
-    vi_init(&config, &plugin, &screen);
+    rdp_init(&config);
+    vi_init(&config, &screen);
 
     num_workers = config.num_workers;
 
@@ -65,7 +59,7 @@ void core_sync_dp(void)
         if (config.dp.trace_record && !trace_write_is_open()) {
             // get ROM name from plugin and use placeholder if empty
             char rom_name[32];
-            if (!plugin.get_rom_name(rom_name, sizeof(rom_name))) {
+            if (!plugin_get_rom_name(rom_name, sizeof(rom_name))) {
                 strcpy(rom_name, "trace");
             }
 
@@ -75,7 +69,7 @@ void core_sync_dp(void)
                 "dpt", &trace_index);
 
             trace_write_open(trace_path);
-            trace_write_header(plugin.get_rdram_size());
+            trace_write_header(plugin_get_rdram_size());
             trace_write_reset();
             trace_num_workers = config.num_workers;
             config.num_workers = 1;
@@ -99,7 +93,7 @@ void core_sync_dp(void)
     }
 
     // signal plugin to handle interrupts
-    plugin.sync_dp();
+    plugin_sync_dp();
 }
 
 void core_update_config(struct core_config* _config)
@@ -121,7 +115,7 @@ void core_screenshot(char* directory)
 {
     // get ROM name from plugin and use placeholder if empty
     char rom_name[32];
-    if (!plugin.get_rom_name(rom_name, sizeof(rom_name))) {
+    if (!plugin_get_rom_name(rom_name, sizeof(rom_name))) {
         strcpy(rom_name, "screenshot");
     }
 
@@ -143,7 +137,7 @@ void core_close(void)
 {
     parallel_close();
     vi_close();
-    plugin.close();
+    plugin_close();
     screen.close();
     if (trace_write_is_open()) {
         trace_write_close();
@@ -153,9 +147,4 @@ void core_close(void)
 struct screen_api* core_get_screen(void)
 {
     return &screen;
-}
-
-struct plugin_api* core_get_plugin(void)
-{
-    return &plugin;
 }
