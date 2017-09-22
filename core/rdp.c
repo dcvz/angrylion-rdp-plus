@@ -407,7 +407,6 @@ struct spansigs {
 
 static void rdp_set_other_modes(const uint32_t* args);
 static INLINE void fetch_texel(struct color *color, int s, int t, uint32_t tilenum);
-static INLINE void fetch_texel_entlut(struct color *color, int s, int t, uint32_t tilenum);
 static INLINE void fetch_texel_quadro(struct color *color0, struct color *color1, struct color *color2, struct color *color3, int s0, int sdiff, int t0, int tdiff, uint32_t tilenum, int unequaluppers);
 static INLINE void fetch_texel_entlut_quadro(struct color *color0, struct color *color1, struct color *color2, struct color *color3, int s0, int sdiff, int t0, int tdiff, uint32_t tilenum, int isupper, int isupperrg);
 static INLINE void fetch_texel_entlut_quadro_nearest(struct color *color0, struct color *color1, struct color *color2, struct color *color3, int s0, int t0, uint32_t tilenum, int isupper, int isupperrg);
@@ -2131,106 +2130,6 @@ static INLINE void fetch_texel(struct color *color, int s, int t, uint32_t tilen
         break;
     }
 }
-
-static INLINE void fetch_texel_entlut(struct color *color, int s, int t, uint32_t tilenum)
-{
-
-    uint32_t tbase = tile[tilenum].line * t + tile[tilenum].tmem;
-    uint32_t tpal  = tile[tilenum].palette << 4;
-    uint16_t *tc16 = (uint16_t*)tmem;
-    uint32_t taddr;
-    uint32_t c;
-
-
-
-    switch(tile[tilenum].f.tlutswitch)
-    {
-    case 0:
-    case 1:
-    case 2:
-        {
-            taddr = ((tbase << 4) + s) >> 1;
-            taddr ^= ((t & 1) ? BYTE_XOR_DWORD_SWAP : BYTE_ADDR_XOR);
-            c = tmem[taddr & 0x7ff];
-            c = (s & 1) ? (c & 0xf) : (c >> 4);
-            c = tlut[((tpal | c) << 2) ^ WORD_ADDR_XOR];
-        }
-        break;
-    case 3:
-        {
-            taddr = (tbase << 3) + s;
-            taddr ^= ((t & 1) ? BYTE_XOR_DWORD_SWAP : BYTE_ADDR_XOR);
-            c = tmem[taddr & 0x7ff];
-            c >>= 4;
-            c = tlut[((tpal | c) << 2) ^ WORD_ADDR_XOR];
-        }
-        break;
-    case 4:
-    case 5:
-    case 6:
-    case 7:
-        {
-            taddr = (tbase << 3) + s;
-            taddr ^= ((t & 1) ? BYTE_XOR_DWORD_SWAP : BYTE_ADDR_XOR);
-            c = tmem[taddr & 0x7ff];
-            c = tlut[(c << 2) ^ WORD_ADDR_XOR];
-        }
-        break;
-    case 8:
-    case 9:
-    case 10:
-        {
-            taddr = (tbase << 2) + s;
-            taddr ^= ((t & 1) ? WORD_XOR_DWORD_SWAP : WORD_ADDR_XOR);
-            c = tc16[taddr & 0x3ff];
-            c = tlut[((c >> 6) & ~3) ^ WORD_ADDR_XOR];
-
-        }
-        break;
-    case 11:
-        {
-            taddr = (tbase << 3) + s;
-            taddr ^= ((t & 1) ? BYTE_XOR_DWORD_SWAP : BYTE_ADDR_XOR);
-            c = tmem[taddr & 0x7ff];
-            c = tlut[(c << 2) ^ WORD_ADDR_XOR];
-        }
-        break;
-    case 12:
-    case 13:
-    case 14:
-        {
-            taddr = (tbase << 2) + s;
-            taddr ^= ((t & 1) ? WORD_XOR_DWORD_SWAP : WORD_ADDR_XOR);
-            c = tc16[taddr & 0x3ff];
-            c = tlut[((c >> 6) & ~3) ^ WORD_ADDR_XOR];
-        }
-        break;
-    case 15:
-    default:
-        {
-            taddr = (tbase << 3) + s;
-            taddr ^= ((t & 1) ? BYTE_XOR_DWORD_SWAP : BYTE_ADDR_XOR);
-            c = tmem[taddr & 0x7ff];
-            c = tlut[(c << 2) ^ WORD_ADDR_XOR];
-        }
-        break;
-    }
-
-    if (!other_modes.tlut_type)
-    {
-        color->r = GET_HI_RGBA16_TMEM(c);
-        color->g = GET_MED_RGBA16_TMEM(c);
-        color->b = GET_LOW_RGBA16_TMEM(c);
-        color->a = (c & 1) ? 0xff : 0;
-    }
-    else
-    {
-        color->r = color->g = color->b = c >> 8;
-        color->a = c & 0xff;
-    }
-
-}
-
 
 
 static INLINE void fetch_texel_quadro(struct color *color0, struct color *color1, struct color *color2, struct color *color3, int s0, int sdiff, int t0, int tdiff, uint32_t tilenum, int unequaluppers)
@@ -4017,9 +3916,9 @@ static STRICTINLINE void texture_pipeline_cycle(struct color* TEX, struct color*
 
 
 
-    int32_t maxs, maxt, invt0r, invt0g, invt0b, invt0a;
+    int32_t maxs, maxt, invt3r, invt3g, invt3b, invt3a;
     int32_t sfrac, tfrac, invsf, invtf, sfracrg, invsfrg;
-    int upper, upperrg;
+    int upper, upperrg, center, centerrg;
 
 
     int bilerp = cycle ? other_modes.bi_lerp1 : other_modes.bi_lerp0;
@@ -4032,7 +3931,6 @@ static STRICTINLINE void texture_pipeline_cycle(struct color* TEX, struct color*
 
     tcshift_cycle(&sss1, &sst1, &maxs, &maxt, tilenum);
 
-
     sss1 = TRELATIVE(sss1, tile[tilenum].sl);
     sst1 = TRELATIVE(sst1, tile[tilenum].tl);
 
@@ -4040,6 +3938,9 @@ static STRICTINLINE void texture_pipeline_cycle(struct color* TEX, struct color*
     {
         sfrac = sss1 & 0x1f;
         tfrac = sst1 & 0x1f;
+
+
+
 
         tcclamp_cycle(&sss1, &sst1, &sfrac, &tfrac, maxs, maxt, tilenum);
 
@@ -4049,6 +3950,43 @@ static STRICTINLINE void texture_pipeline_cycle(struct color* TEX, struct color*
 
 
         tcmask_coupled(&sss1, &sdiff, &sst1, &tdiff, tilenum);
+
+
+
+
+
+
+
+        upper = (sfrac + tfrac) & 0x20;
+
+
+
+
+        if (tile[tilenum].format == FORMAT_YUV)
+        {
+            sfracrg = (sfrac >> 1) | ((sss1 & 1) << 4);
+
+
+
+            upperrg = (sfracrg + tfrac) & 0x20;
+        }
+        else
+        {
+            upperrg = upper;
+            sfracrg = sfrac;
+        }
+
+
+
+
+
+        if (!other_modes.sample_type)
+            fetch_texel_entlut_quadro_nearest(&t0, &t1, &t2, &t3, sss1, sst1, tilenum, upper, upperrg);
+        else if (other_modes.en_tlut)
+            fetch_texel_entlut_quadro(&t0, &t1, &t2, &t3, sss1, sdiff, sst1, tdiff, tilenum, upper, upperrg);
+        else
+            fetch_texel_quadro(&t0, &t1, &t2, &t3, sss1, sdiff, sst1, tdiff, tilenum, upper - upperrg);
+
 
 
 
@@ -4066,67 +4004,26 @@ static STRICTINLINE void texture_pipeline_cycle(struct color* TEX, struct color*
 
         if (bilerp)
         {
-
-            upper = (sfrac + tfrac) & 0x20;
-
-
-
-
-            if (tile[tilenum].format == FORMAT_YUV)
-            {
-                sfracrg = (sfrac >> 1) | ((sss1 & 1) << 4);
-
-
-
-                upperrg = (sfracrg + tfrac) & 0x20;
-            }
+            if (!other_modes.mid_texel)
+                center = centerrg = 0;
             else
             {
-                upperrg = upper;
-                sfracrg = sfrac;
+
+                center = (sfrac == 0x10 && tfrac == 0x10);
+                centerrg = (sfracrg == 0x10 && tfrac == 0x10);
             }
 
+            invtf = 0x20 - tfrac;
 
-
-
-
-            if (!other_modes.sample_type)
-                fetch_texel_entlut_quadro_nearest(&t0, &t1, &t2, &t3, sss1, sst1, tilenum, upper, upperrg);
-            else if (other_modes.en_tlut)
-                fetch_texel_entlut_quadro(&t0, &t1, &t2, &t3, sss1, sdiff, sst1, tdiff, tilenum, upper, upperrg);
-            else
-                fetch_texel_quadro(&t0, &t1, &t2, &t3, sss1, sdiff, sst1, tdiff, tilenum, upper - upperrg);
-
-
-
-
-
-
-
-            if (!other_modes.mid_texel || sfrac != 0x10 || tfrac != 0x10)
+            if (!centerrg)
             {
                 if (!convert)
                 {
 
-                    invtf = 0x20 - tfrac;
-
-
-                    if (upper)
-                    {
-
-                        invsf = 0x20 - sfrac;
-
-                        TEX->b = t3.b + ((invsf * (t2.b - t3.b) + invtf * (t1.b - t3.b) + 0x10) >> 5);
-                        TEX->a = t3.a + ((invsf * (t2.a - t3.a) + invtf * (t1.a - t3.a) + 0x10) >> 5);
-                    }
-                    else
-                    {
-                        TEX->b = t0.b + ((sfrac * (t1.b - t0.b) + tfrac * (t2.b - t0.b) + 0x10) >> 5);
-                        TEX->a = t0.a + ((sfrac * (t1.a - t0.a) + tfrac * (t2.a - t0.a) + 0x10) >> 5);
-                    }
 
                     if (upperrg)
                     {
+
                         invsfrg = 0x20 - sfracrg;
 
                         TEX->r = t3.r + ((invsfrg * (t2.r - t3.r) + invtf * (t1.r - t3.r) + 0x10) >> 5);
@@ -4140,63 +4037,125 @@ static STRICTINLINE void texture_pipeline_cycle(struct color* TEX, struct color*
                 }
                 else
                 {
-                    if (upper)
+                    if (upperrg)
                     {
                         TEX->r = prev->b + ((prev->r * (t2.r - t3.r) + prev->g * (t1.r - t3.r) + 0x80) >> 8);
                         TEX->g = prev->b + ((prev->r * (t2.g - t3.g) + prev->g * (t1.g - t3.g) + 0x80) >> 8);
-                        TEX->b = prev->b + ((prev->r * (t2.b - t3.b) + prev->g * (t1.b - t3.b) + 0x80) >> 8);
-                        TEX->a = prev->b + ((prev->r * (t2.a - t3.a) + prev->g * (t1.a - t3.a) + 0x80) >> 8);
                     }
                     else
                     {
                         TEX->r = prev->b + ((prev->r * (t1.r - t0.r) + prev->g * (t2.r - t0.r) + 0x80) >> 8);
                         TEX->g = prev->b + ((prev->r * (t1.g - t0.g) + prev->g * (t2.g - t0.g) + 0x80) >> 8);
+                    }
+                }
+            }
+            else
+            {
+                invt3r  = ~t3.r;
+                invt3g = ~t3.g;
+
+                if (!convert)
+                {
+
+                    TEX->r = t3.r + ((((t1.r + t2.r) << 6) - (t3.r << 7) + ((invt3r + t0.r) << 6) + 0xc0) >> 8);
+                    TEX->g = t3.g + ((((t1.g + t2.g) << 6) - (t3.g << 7) + ((invt3g + t0.g) << 6) + 0xc0) >> 8);
+                }
+                else
+                {
+                    TEX->r = prev->b + ((prev->r * (t2.r - t3.r) + prev->g * (t1.r - t3.r) + ((invt3r + t0.r) << 6) + 0xc0) >> 8);
+                    TEX->g = prev->b + ((prev->r * (t2.g - t3.g) + prev->g * (t1.g - t3.g) + ((invt3g + t0.g) << 6) + 0xc0) >> 8);
+                }
+            }
+
+            if (!center)
+            {
+                if (!convert)
+                {
+                    if (upper)
+                    {
+                        invsf = 0x20 - sfrac;
+
+                        TEX->b = t3.b + ((invsf * (t2.b - t3.b) + invtf * (t1.b - t3.b) + 0x10) >> 5);
+                        TEX->a = t3.a + ((invsf * (t2.a - t3.a) + invtf * (t1.a - t3.a) + 0x10) >> 5);
+                    }
+                    else
+                    {
+                        TEX->b = t0.b + ((sfrac * (t1.b - t0.b) + tfrac * (t2.b - t0.b) + 0x10) >> 5);
+                        TEX->a = t0.a + ((sfrac * (t1.a - t0.a) + tfrac * (t2.a - t0.a) + 0x10) >> 5);
+                    }
+                }
+                else
+                {
+                    if (upper)
+                    {
+                        TEX->b = prev->b + ((prev->r * (t2.b - t3.b) + prev->g * (t1.b - t3.b) + 0x80) >> 8);
+                        TEX->a = prev->b + ((prev->r * (t2.a - t3.a) + prev->g * (t1.a - t3.a) + 0x80) >> 8);
+                    }
+                    else
+                    {
                         TEX->b = prev->b + ((prev->r * (t1.b - t0.b) + prev->g * (t2.b - t0.b) + 0x80) >> 8);
                         TEX->a = prev->b + ((prev->r * (t1.a - t0.a) + prev->g * (t2.a - t0.a) + 0x80) >> 8);
                     }
                 }
-
             }
             else
             {
-                invt0r  = ~t0.r;
-                invt0g = ~t0.g;
-                invt0b = ~t0.b;
-                invt0a = ~t0.a;
+                invt3b = ~t3.b;
+                invt3a = ~t3.a;
+
                 if (!convert)
                 {
-                    sfrac <<= 2;
-                    tfrac <<= 2;
-                    TEX->r = t0.r + ((sfrac * (t1.r - t0.r) + tfrac * (t2.r - t0.r) + ((invt0r + t3.r) << 6) + 0xc0) >> 8);
-                    TEX->g = t0.g + ((sfrac * (t1.g - t0.g) + tfrac * (t2.g - t0.g) + ((invt0g + t3.g) << 6) + 0xc0) >> 8);
-                    TEX->b = t0.b + ((sfrac * (t1.b - t0.b) + tfrac * (t2.b - t0.b) + ((invt0b + t3.b) << 6) + 0xc0) >> 8);
-                    TEX->a = t0.a + ((sfrac * (t1.a - t0.a) + tfrac * (t2.a - t0.a) + ((invt0a + t3.a) << 6) + 0xc0) >> 8);
+                    TEX->b = t3.b + ((((t1.b + t2.b) << 6) - (t3.b << 7) + ((invt3b + t0.b) << 6) + 0xc0) >> 8);
+                    TEX->a = t3.a + ((((t1.a + t2.a) << 6) - (t3.a << 7) + ((invt3a + t0.a) << 6) + 0xc0) >> 8);
                 }
                 else
                 {
-                    TEX->r = prev->b + ((prev->r * (t1.r - t0.r) + prev->g * (t2.r - t0.r) + ((invt0r + t3.r) << 6) + 0xc0) >> 8);
-                    TEX->g = prev->b + ((prev->r * (t1.g - t0.g) + prev->g * (t2.g - t0.g) + ((invt0g + t3.g) << 6) + 0xc0) >> 8);
-                    TEX->b = prev->b + ((prev->r * (t1.b - t0.b) + prev->g * (t2.b - t0.b) + ((invt0b + t3.b) << 6) + 0xc0) >> 8);
-                    TEX->a = prev->b + ((prev->r * (t1.a - t0.a) + prev->g * (t2.a - t0.a) + ((invt0a + t3.a) << 6) + 0xc0) >> 8);
+                    TEX->b = prev->b + ((prev->r * (t2.b - t3.b) + prev->g * (t1.b - t3.b) + ((invt3b + t0.b) << 6) + 0xc0) >> 8);
+                    TEX->a = prev->b + ((prev->r * (t2.a - t3.a) + prev->g * (t1.a - t3.a) + ((invt3a + t0.a) << 6) + 0xc0) >> 8);
                 }
             }
-
         }
         else
         {
-            if (!other_modes.en_tlut)
-                fetch_texel(&t0, sss1, sst1, tilenum);
-            else
-                fetch_texel_entlut(&t0, sss1, sst1, tilenum);
 
             if (convert)
-                t0 = *prev;
+                t0 = t3 = *prev;
 
 
-            TEX->r = t0.b + ((k0_tf * t0.g + 0x80) >> 8);
-            TEX->g = t0.b + ((k1_tf * t0.r + k2_tf * t0.g + 0x80) >> 8);
-            TEX->b = t0.b + ((k3_tf * t0.r + 0x80) >> 8);
-            TEX->a = t0.b;
+            if (upperrg)
+            {
+                if (upper)
+                {
+                    TEX->r = t3.b + ((k0_tf * t3.g + 0x80) >> 8);
+                    TEX->g = t3.b + ((k1_tf * t3.r + k2_tf * t3.g + 0x80) >> 8);
+                    TEX->b = t3.b + ((k3_tf * t3.r + 0x80) >> 8);
+                    TEX->a = t3.b;
+                }
+                else
+                {
+                    TEX->r = t0.b + ((k0_tf * t3.g + 0x80) >> 8);
+                    TEX->g = t0.b + ((k1_tf * t3.r + k2_tf * t3.g + 0x80) >> 8);
+                    TEX->b = t0.b + ((k3_tf * t3.r + 0x80) >> 8);
+                    TEX->a = t0.b;
+                }
+            }
+            else
+            {
+                if (upper)
+                {
+                    TEX->r = t3.b + ((k0_tf * t0.g + 0x80) >> 8);
+                    TEX->g = t3.b + ((k1_tf * t0.r + k2_tf * t0.g + 0x80) >> 8);
+                    TEX->b = t3.b + ((k3_tf * t0.r + 0x80) >> 8);
+                    TEX->a = t3.b;
+                }
+                else
+                {
+                    TEX->r = t0.b + ((k0_tf * t0.g + 0x80) >> 8);
+                    TEX->g = t0.b + ((k1_tf * t0.r + k2_tf * t0.g + 0x80) >> 8);
+                    TEX->b = t0.b + ((k3_tf * t0.r + 0x80) >> 8);
+                    TEX->a = t0.b;
+                }
+            }
         }
 
         TEX->r &= 0x1ff;
@@ -4243,12 +4202,10 @@ static STRICTINLINE void texture_pipeline_cycle(struct color* TEX, struct color*
             TEX->r &= 0x1ff;
             TEX->g &= 0x1ff;
             TEX->b &= 0x1ff;
-            TEX->a &= 0x1ff;
         }
     }
 
 }
-
 
 static STRICTINLINE void tc_pipeline_copy(int32_t* sss0, int32_t* sss1, int32_t* sss2, int32_t* sss3, int32_t* sst, int tilenum)
 {
@@ -8273,8 +8230,7 @@ static INLINE void precalc_cvmask_derivatives(void)
 
 static STRICTINLINE uint16_t decompress_cvmask_frombyte(uint8_t x)
 {
-    uint16_t y = (x & 1) | ((x & 2) << 4) | (x & 4) | ((x & 8) << 4) |
-        ((x & 0x10) << 4) | ((x & 0x20) << 8) | ((x & 0x40) << 4) | ((x & 0x80) << 8);
+    uint16_t y = (x & 0x5) | ((x & 0x5a) << 4) | ((x & 0xa0) << 8);
     return y;
 }
 
