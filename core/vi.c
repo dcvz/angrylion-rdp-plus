@@ -2,6 +2,7 @@
 #include "rdp.h"
 #include "common.h"
 #include "plugin.h"
+#include "screen.h"
 #include "rdram.h"
 #include "trace_write.h"
 #include "msg.h"
@@ -34,7 +35,6 @@ struct ccvg
 
 // config
 static struct core_config* config;
-static struct screen_api* screen;
 
 static uint32_t** vi_reg_ptr;
 
@@ -746,10 +746,9 @@ static uint32_t vi_integer_sqrt(uint32_t a)
     return res;
 }
 
-void vi_init(struct core_config* _config, struct screen_api* _screen)
+void vi_init(struct core_config* _config)
 {
     config = _config;
-    screen = _screen;
 
     vi_reg_ptr = plugin_get_vi_registers();
 
@@ -1468,7 +1467,7 @@ static void vi_process_end(void)
          output_height = ispal ? 432 : 360;
     }
 
-    screen->upload(prescale, PRESCALE_WIDTH, height, output_width, output_height);
+    screen_upload(prescale, PRESCALE_WIDTH, height, output_width, output_height);
 
     if (screenshot_path[0]) {
         vi_screenshot_write(screenshot_path, prescale, PRESCALE_WIDTH, height, output_width, output_height);
@@ -1584,7 +1583,7 @@ static void vi_process_fast(void)
 
 static void vi_process_end_fast(void)
 {
-    screen->upload(prescale, hres_raw, vres_raw, hres_raw << 1, vres_raw << 1);
+    screen_upload(prescale, hres_raw, vres_raw, hres_raw << 1, vres_raw << 1);
     if (screenshot_path[0]) {
         vi_screenshot_write(screenshot_path, prescale, hres_raw, vres_raw, hres_raw, vres_raw);
         screenshot_path[0] = 0;
@@ -1635,7 +1634,7 @@ void vi_update(void)
     vi_process_end_ptr();
 
     // render frame to screen
-    screen->swap();
+    screen_swap();
 }
 
 void vi_screenshot(char* path)

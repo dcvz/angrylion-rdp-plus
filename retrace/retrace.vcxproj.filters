@@ -24,9 +24,6 @@
     <ClCompile Include="plugin_retrace.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="screen_headless.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="msg.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -38,13 +35,7 @@
     <ClInclude Include="retrace.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="screen_sdl.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="plugin_retrace.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="screen_headless.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

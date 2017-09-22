@@ -6,6 +6,7 @@
 #include "file.h"
 #include "msg.h"
 #include "plugin.h"
+#include "screen.h"
 #include "trace_write.h"
 #include "parallel_c.hpp"
 
@@ -19,24 +20,17 @@ static uint32_t num_workers;
 
 static struct core_config* config_new;
 static struct core_config config;
-static struct screen_api screen;
 
-void core_init(struct core_config* _config, screen_api_func screen_api)
+void core_init(struct core_config* _config)
 {
     config = *_config;
 
-    if (!screen_api) {
-        msg_error("core: screen API not defined!");
-    }
-
-    screen_api(&screen);
-    screen.init();
-
+    screen_init();
     plugin_init();
     rdram_init();
 
     rdp_init(&config);
-    vi_init(&config, &screen);
+    vi_init(&config);
 
     num_workers = config.num_workers;
 
@@ -130,7 +124,7 @@ void core_screenshot(char* directory)
 
 void core_toggle_fullscreen(void)
 {
-    screen.set_fullscreen(!screen.get_fullscreen());
+    screen_set_fullscreen(!screen_get_fullscreen());
 }
 
 void core_close(void)
@@ -138,13 +132,8 @@ void core_close(void)
     parallel_close();
     vi_close();
     plugin_close();
-    screen.close();
+    screen_close();
     if (trace_write_is_open()) {
         trace_write_close();
     }
-}
-
-struct screen_api* core_get_screen(void)
-{
-    return &screen;
 }

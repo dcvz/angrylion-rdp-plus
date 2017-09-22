@@ -196,7 +196,6 @@
     <ClCompile Include="msg.c" />
     <ClCompile Include="plugin_retrace.c" />
     <ClCompile Include="retrace.c" />
-    <ClCompile Include="screen_headless.c" />
     <ClCompile Include="screen_sdl.c" />
   </ItemGroup>
   <ItemGroup>
@@ -205,8 +204,6 @@
   <ItemGroup>
     <ClInclude Include="plugin_retrace.h" />
     <ClInclude Include="retrace.h" />
-    <ClInclude Include="screen_headless.h" />
-    <ClInclude Include="screen_sdl.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

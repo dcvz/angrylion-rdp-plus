@@ -44,20 +44,6 @@ enum vi_mode
     VI_MODE_NUM
 };
 
-
-struct screen_api
-{
-    void (*init)(void);
-    void (*swap)(void);
-    void (*upload)(int32_t* buffer, int32_t width, int32_t height, int32_t output_width, int32_t output_height);
-    void (*set_fullscreen)(bool fullscreen);
-    bool (*get_fullscreen)(void);
-    void (*close)(void);
-};
-
-typedef void (*screen_api_func)(struct screen_api* api);
-typedef void (*plugin_api_func)(struct plugin_api* api);
-
 struct core_config
 {
     struct {
@@ -70,7 +56,7 @@ struct core_config
     uint32_t num_workers;
 };
 
-void core_init(struct core_config* config, screen_api_func screen_api);
+void core_init(struct core_config* config);
 void core_close(void);
 void core_sync_dp(void);
 void core_update_config(struct core_config* config);
@@ -78,4 +64,3 @@ void core_update_dp(void);
 void core_update_vi(void);
 void core_screenshot(char* directory);
 void core_toggle_fullscreen(void);
-struct screen_api* core_get_screen(void);

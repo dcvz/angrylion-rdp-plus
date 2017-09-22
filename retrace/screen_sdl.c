@@ -1,6 +1,6 @@
-#include "screen_sdl.h"
 #include "retrace.h"
 
+#include "core/screen.h"
 #include "core/version.h"
 #include "core/msg.h"
 
@@ -22,7 +22,7 @@ static int32_t texture_width;
 static int32_t texture_height;
 static bool fullscreen;
 
-static void screen_init(void)
+void screen_init(void)
 {
     SDL_Init(SDL_INIT_VIDEO);
     SDL_SetThreadPriority(SDL_THREAD_PRIORITY_HIGH);
@@ -51,13 +51,13 @@ static void screen_init(void)
     texture_height = 0;
 }
 
-static void screen_swap(void)
+void screen_swap(void)
 {
     SDL_RenderCopy(renderer, texture, NULL, NULL);
     SDL_RenderPresent(renderer);
 }
 
-static void screen_upload(int32_t* buffer, int32_t width, int32_t height, int32_t output_width, int32_t output_height)
+void screen_upload(int32_t* buffer, int32_t width, int32_t height, int32_t output_width, int32_t output_height)
 {
     SDL_RenderSetLogicalSize(renderer, output_width, output_height);
 
@@ -93,19 +93,19 @@ static void screen_upload(int32_t* buffer, int32_t width, int32_t height, int32_
     SDL_UpdateTexture(texture, NULL, buffer, width * 4);
 }
 
-static void screen_set_fullscreen(bool _fullscreen)
+void screen_set_fullscreen(bool _fullscreen)
 {
     uint32_t flags = _fullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0;
     SDL_SetWindowFullscreen(window, flags);
     fullscreen = _fullscreen;
 }
 
-static bool screen_get_fullscreen(void)
+bool screen_get_fullscreen(void)
 {
     return fullscreen;
 }
 
-static void screen_close(void)
+void screen_close(void)
 {
     SDL_DestroyTexture(texture);
     texture = NULL;
@@ -115,14 +115,4 @@ static void screen_close(void)
 
     SDL_DestroyWindow(window);
     window = NULL;
-}
-
-void screen_sdl(struct screen_api* api)
-{
-    api->init = screen_init;
-    api->swap = screen_swap;
-    api->upload = screen_upload;
-    api->set_fullscreen = screen_set_fullscreen;
-    api->get_fullscreen = screen_get_fullscreen;
-    api->close = screen_close;
 }

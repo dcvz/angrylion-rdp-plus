@@ -1,5 +1,4 @@
 #include "gfx_1.3.h"
-#include "screen_opengl_zilmar.h"
 #include "resource.h"
 
 #include "core/core.h"
@@ -214,7 +213,7 @@ EXPORT void CALL RomClosed(void)
 EXPORT void CALL RomOpen(void)
 {
     load_config(&config);
-    core_init(&config, screen_opengl);
+    core_init(&config);
 }
 
 EXPORT void CALL ShowCFB(void)

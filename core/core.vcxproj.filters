@@ -88,6 +88,9 @@
     <ClInclude Include="plugin.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="screen.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="version.h.in">

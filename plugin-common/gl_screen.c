@@ -1,4 +1,5 @@
 #include "gl_screen.h"
+#include "gl_core_3_3.h"
 
 #include "core/msg.h"
 
