@@ -1,5 +1,6 @@
 #include "core/msg.h"
 #include "core/version.h"
+#include "gfx_m64p.h"
 
 #include <stdarg.h>
 #include <stdio.h>
@@ -9,38 +10,46 @@
 
 void msg_error(const char * err, ...)
 {
-    printf(CORE_SIMPLE_NAME "-error: ");
+    if (debug_callback == NULL)
+        return;
 
     va_list arg;
     va_start(arg, err);
-    vprintf(err, arg);
+    char buf[MSG_BUFFER_LEN];
+    vsprintf(buf, err, arg);
+
+    (*debug_callback)(debug_call_context, M64MSG_ERROR, buf);
+
     va_end(arg);
-
-    printf("\n");
-
     exit(0);
 }
 
 void msg_warning(const char* err, ...)
 {
-    printf(CORE_SIMPLE_NAME "-warning: ");
+    if (debug_callback == NULL)
+        return;
 
     va_list arg;
     va_start(arg, err);
-    vprintf(err, arg);
-    va_end(arg);
+    char buf[MSG_BUFFER_LEN];
+    vsprintf(buf, err, arg);
 
-    printf("\n");
+    (*debug_callback)(debug_call_context, M64MSG_WARNING, buf);
+
+    va_end(arg);
 }
 
 void msg_debug(const char* err, ...)
 {
-    printf(CORE_SIMPLE_NAME "-debug: ");
+    if (debug_callback == NULL)
+        return;
 
     va_list arg;
     va_start(arg, err);
-    vprintf(err, arg);
-    va_end(arg);
+    char buf[MSG_BUFFER_LEN];
+    vsprintf(buf, err, arg);
 
-    printf("\n");
+    (*debug_callback)(debug_call_context, M64MSG_VERBOSE, buf);
+
+    va_end(arg);
 }
