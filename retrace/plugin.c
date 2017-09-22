@@ -1,6 +1,6 @@
-#include "plugin_retrace.h"
-#include "retrace.h"
-#include "core/plugin.h"
+#include "plugin.h"
+
+#include "core/core.h"
 
 #include <memory.h>
 

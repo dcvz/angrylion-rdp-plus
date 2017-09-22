@@ -1,5 +1,3 @@
-#include "retrace.h"
-
 #include "core/screen.h"
 #include "core/version.h"
 #include "core/msg.h"

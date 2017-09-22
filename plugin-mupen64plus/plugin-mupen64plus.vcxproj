@@ -21,8 +21,8 @@
   <ItemGroup>
     <ClCompile Include="gfx_m64p.c" />
     <ClCompile Include="msg.c" />
-    <ClCompile Include="plugin_m64p.c" />
-    <ClCompile Include="screen_opengl_m64p.c" />
+    <ClCompile Include="plugin.c" />
+    <ClCompile Include="screen.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="api\m64p_config.h" />
@@ -30,7 +30,7 @@
     <ClInclude Include="api\m64p_types.h" />
     <ClInclude Include="api\m64p_vidext.h" />
     <ClInclude Include="gfx_m64p.h" />
-    <ClInclude Include="screen_opengl_m64p.h" />
+    <ClInclude Include="screen.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{54BDC4EF-2526-47F7-A73E-C1C0FBC0237C}</ProjectGuid>

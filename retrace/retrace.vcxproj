@@ -194,16 +194,15 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="msg.c" />
-    <ClCompile Include="plugin_retrace.c" />
+    <ClCompile Include="plugin.c" />
     <ClCompile Include="retrace.c" />
-    <ClCompile Include="screen_sdl.c" />
+    <ClCompile Include="screen.c" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="plugin_retrace.h" />
-    <ClInclude Include="retrace.h" />
+    <ClInclude Include="plugin.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

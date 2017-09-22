@@ -1,11 +1,9 @@
-#include "retrace.h"
-#include "plugin_retrace.h"
+#include "plugin.h"
 
 #include "core/core.h"
 #include "core/rdp.h"
 #include "core/vi.h"
 #include "core/trace_read.h"
-#include "core/plugin.h"
 #include "core/screen.h"
 
 #include <stdlib.h>

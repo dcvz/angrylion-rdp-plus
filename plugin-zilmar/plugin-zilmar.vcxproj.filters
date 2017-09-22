@@ -26,13 +26,13 @@
     <ClCompile Include="wgl_ext.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="plugin_zilmar.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="screen_opengl_zilmar.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="msg.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="screen.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="plugin.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

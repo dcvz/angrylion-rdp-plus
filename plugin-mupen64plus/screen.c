@@ -1,11 +1,10 @@
-#include "screen_opengl_m64p.h"
+#include "screen.h"
 #include "gfx_m64p.h"
 
 #include "plugin-common/gl_screen.h"
 #include "plugin-common/gl_core_3_3.h"
 
 #include "core/msg.h"
-#include "core/screen.h"
 
 #include <stdlib.h>
 
