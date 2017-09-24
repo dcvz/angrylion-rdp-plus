@@ -9,6 +9,9 @@
       <UniqueIdentifier>{142a5325-573c-4fde-9d8f-af10cb6e28e5}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe</Extensions>
     </Filter>
+    <Filter Include="Source Files\rdp">
+      <UniqueIdentifier>{708e14fa-0950-4210-9679-64e4b25cd6ff}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="rdp.c">
@@ -40,6 +43,9 @@
     </ClCompile>
     <ClCompile Include="irand.c">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="rdp\cmd.c">
+      <Filter>Source Files\rdp</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
