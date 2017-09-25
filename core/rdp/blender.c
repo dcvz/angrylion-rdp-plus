@@ -1,3 +1,15 @@
+static TLS struct
+{
+    int32_t *i1a_r[2];
+    int32_t *i1a_g[2];
+    int32_t *i1a_b[2];
+    int32_t *i1b_a[2];
+    int32_t *i2a_r[2];
+    int32_t *i2a_g[2];
+    int32_t *i2a_b[2];
+    int32_t *i2b_a[2];
+} blender;
+
 static TLS struct color blend_color;
 static TLS struct color fog_color;
 

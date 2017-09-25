@@ -274,19 +274,6 @@ static int32_t one_color = 0x100;
 static int32_t zero_color = 0x00;
 static int32_t blenderone   = 0xff;
 
-// blender inputs
-static TLS struct
-{
-    int32_t *i1a_r[2];
-    int32_t *i1a_g[2];
-    int32_t *i1a_b[2];
-    int32_t *i1b_a[2];
-    int32_t *i2a_r[2];
-    int32_t *i2a_g[2];
-    int32_t *i2a_b[2];
-    int32_t *i2b_a[2];
-} blender;
-
 static TLS struct color pixel_color;
 static TLS struct color inv_pixel_color;
 static TLS struct color blended_pixel_color;
