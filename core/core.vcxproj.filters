@@ -53,6 +53,9 @@
     <ClCompile Include="rdp\combiner.c">
       <Filter>Source Files\rdp</Filter>
     </ClCompile>
+    <ClCompile Include="rdp\coverage.c">
+      <Filter>Source Files\rdp</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="common.h">

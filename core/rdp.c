@@ -83,7 +83,6 @@ struct span
 };
 
 static TLS struct span span[1024];
-static TLS uint8_t cvgbuf[1024];
 
 // span states
 static TLS struct
@@ -257,12 +256,6 @@ struct other_modes
 #define TEXEL_I32               0x13
 
 
-#define CVG_CLAMP               0
-#define CVG_WRAP                1
-#define CVG_ZAP                 2
-#define CVG_SAVE                3
-
-
 #define ZMODE_OPAQUE            0
 #define ZMODE_INTERPENETRATING  1
 #define ZMODE_TRANSPARENT       2
@@ -372,10 +365,6 @@ static STRICTINLINE void tcshift_cycle(int32_t* S, int32_t* T, int32_t* maxs, in
 static STRICTINLINE void tcshift_copy(int32_t* S, int32_t* T, uint32_t num);
 static INLINE void precalculate_everything(void);
 static STRICTINLINE int alpha_compare(int32_t comb_alpha);
-static STRICTINLINE uint32_t rightcvghex(uint32_t x, uint32_t fmask);
-static STRICTINLINE uint32_t leftcvghex(uint32_t x, uint32_t fmask);
-static STRICTINLINE void compute_cvg_noflip(int32_t scanline);
-static STRICTINLINE void compute_cvg_flip(int32_t scanline);
 static void fbwrite_4(uint32_t curpixel, uint32_t r, uint32_t g, uint32_t b, uint32_t blend_en, uint32_t curpixel_cvg, uint32_t curpixel_memcvg);
 static void fbwrite_8(uint32_t curpixel, uint32_t r, uint32_t g, uint32_t b, uint32_t blend_en, uint32_t curpixel_cvg, uint32_t curpixel_memcvg);
 static void fbwrite_16(uint32_t curpixel, uint32_t r, uint32_t g, uint32_t b, uint32_t blend_en, uint32_t curpixel_cvg, uint32_t curpixel_memcvg);
@@ -396,9 +385,6 @@ static STRICTINLINE uint32_t z_decompress(uint32_t rawz);
 static STRICTINLINE uint32_t dz_decompress(uint32_t compresseddz);
 static STRICTINLINE uint32_t dz_compress(uint32_t value);
 static INLINE void z_build_com_table(void);
-static INLINE void precalc_cvmask_derivatives(void);
-static STRICTINLINE uint16_t decompress_cvmask_frombyte(uint8_t byte);
-static STRICTINLINE void lookup_cvmask_derivatives(uint32_t mask, uint8_t* offx, uint8_t* offy, uint32_t* curpixel_cvg, uint32_t* curpixel_cvbit);
 static STRICTINLINE void z_store(uint32_t zcurpixel, uint32_t z, int dzpixenc);
 static STRICTINLINE uint32_t z_compare(uint32_t zcurpixel, uint32_t sz, uint16_t dzpix, int dzpixenc, uint32_t* blend_en, uint32_t* prewrap, uint32_t* curpixel_cvg, uint32_t curpixel_memcvg);
 static STRICTINLINE int finalize_spanalpha(uint32_t blend_en, uint32_t curpixel_cvg, uint32_t curpixel_memcvg);
@@ -499,13 +485,6 @@ static TLS void (*tcdiv_ptr)(int32_t, int32_t, int32_t, int32_t*, int32_t*);
 static TLS void (*render_spans_1cycle_ptr)(int, int, int, int);
 static TLS void (*render_spans_2cycle_ptr)(int, int, int, int);
 
-struct cvtcmaskderivative {
-    uint8_t cvg;
-    uint8_t cvbit;
-    uint8_t xoff;
-    uint8_t yoff;
-};
-
 static uint16_t z_com_table[0x40000];
 static uint32_t z_complete_dec_table[0x4000];
 static uint8_t replicated_rgba[32];
@@ -516,7 +495,6 @@ static int32_t tcdiv_table[0x8000];
 static uint16_t deltaz_comparator_lut[0x10000];
 static int32_t clamp_t_diff[8];
 static int32_t clamp_s_diff[8];
-static struct cvtcmaskderivative cvarray[0x100];
 
 static struct
 {
@@ -530,6 +508,7 @@ static int rdp_pipeline_crashed = 0;
 #include "rdp/cmd.c"
 #include "rdp/blender.c"
 #include "rdp/combiner.c"
+#include "rdp/coverage.c"
 
 static STRICTINLINE void tcmask(int32_t* S, int32_t* T, int32_t num)
 {
@@ -3625,7 +3604,7 @@ static void render_spans_1cycle_complete(int start, int end, int tilenum, int fl
             sigs.endspan = (j == length);
             sigs.preendspan = (j == (length - 1));
 
-            lookup_cvmask_derivatives(cvgbuf[x], &offx, &offy, &curpixel_cvg, &curpixel_cvbit);
+            lookup_cvmask_derivatives(x, &offx, &offy, &curpixel_cvg, &curpixel_cvbit);
 
 
             get_texel1_1cycle(&news, &newt, s, t, w, dsinc, dtinc, dwinc, i, &sigs);
@@ -3826,7 +3805,7 @@ static void render_spans_1cycle_notexel1(int start, int end, int tilenum, int fl
             sigs.endspan = (j == length);
             sigs.preendspan = (j == (length - 1));
 
-            lookup_cvmask_derivatives(cvgbuf[x], &offx, &offy, &curpixel_cvg, &curpixel_cvbit);
+            lookup_cvmask_derivatives(x, &offx, &offy, &curpixel_cvg, &curpixel_cvbit);
 
             tcdiv_ptr(ss, st, sw, &sss, &sst);
 
@@ -3968,7 +3947,7 @@ static void render_spans_1cycle_notex(int start, int end, int tilenum, int flip)
             sa = a >> 14;
             sz = (z >> 10) & 0x3fffff;
 
-            lookup_cvmask_derivatives(cvgbuf[x], &offx, &offy, &curpixel_cvg, &curpixel_cvbit);
+            lookup_cvmask_derivatives(x, &offx, &offy, &curpixel_cvg, &curpixel_cvbit);
 
             rgbaz_correct_clip(offx, offy, sr, sg, sb, sa, &sz, curpixel_cvg);
 
@@ -4138,7 +4117,7 @@ static void render_spans_2cycle_complete(int start, int end, int tilenum, int fl
             sz = (z >> 10) & 0x3fffff;
 
 
-            lookup_cvmask_derivatives(cvgbuf[x], &offx, &offy, &curpixel_cvg, &curpixel_cvbit);
+            lookup_cvmask_derivatives(x, &offx, &offy, &curpixel_cvg, &curpixel_cvbit);
 
             get_nexttexel0_2cycle(&news, &newt, s, t, w, dsinc, dtinc, dwinc);
 
@@ -4335,7 +4314,7 @@ static void render_spans_2cycle_notexelnext(int start, int end, int tilenum, int
             sw = w >> 16;
             sz = (z >> 10) & 0x3fffff;
 
-            lookup_cvmask_derivatives(cvgbuf[x], &offx, &offy, &curpixel_cvg, &curpixel_cvbit);
+            lookup_cvmask_derivatives(x, &offx, &offy, &curpixel_cvg, &curpixel_cvbit);
 
             tcdiv_ptr(ss, st, sw, &sss, &sst);
 
@@ -4504,7 +4483,7 @@ static void render_spans_2cycle_notexel1(int start, int end, int tilenum, int fl
             sw = w >> 16;
             sz = (z >> 10) & 0x3fffff;
 
-            lookup_cvmask_derivatives(cvgbuf[x], &offx, &offy, &curpixel_cvg, &curpixel_cvbit);
+            lookup_cvmask_derivatives(x, &offx, &offy, &curpixel_cvg, &curpixel_cvbit);
 
             tcdiv_ptr(ss, st, sw, &sss, &sst);
 
@@ -4651,7 +4630,7 @@ static void render_spans_2cycle_notex(int start, int end, int tilenum, int flip)
             sa = a >> 14;
             sz = (z >> 10) & 0x3fffff;
 
-            lookup_cvmask_derivatives(cvgbuf[x], &offx, &offy, &curpixel_cvg, &curpixel_cvbit);
+            lookup_cvmask_derivatives(x, &offx, &offy, &curpixel_cvg, &curpixel_cvbit);
 
             rgbaz_correct_clip(offx, offy, sr, sg, sb, sa, &sz, curpixel_cvg);
 
@@ -6369,148 +6348,6 @@ static void rdp_set_color_image(const uint32_t* args)
     fbfill_ptr = fbfill_func[fb_size];
 }
 
-static STRICTINLINE uint32_t rightcvghex(uint32_t x, uint32_t fmask)
-{
-    uint32_t covered = ((x & 7) + 1) >> 1;
-
-    covered = 0xf0 >> covered;
-    return (covered & fmask);
-}
-
-static STRICTINLINE uint32_t leftcvghex(uint32_t x, uint32_t fmask)
-{
-    uint32_t covered = ((x & 7) + 1) >> 1;
-    covered = 0xf >> covered;
-    return (covered & fmask);
-}
-
-
-
-static STRICTINLINE void compute_cvg_flip(int32_t scanline)
-{
-    int32_t purgestart, purgeend;
-    int i, length, fmask, maskshift, fmaskshifted;
-    int32_t minorcur, majorcur, minorcurint, majorcurint, samecvg;
-
-    purgestart = span[scanline].rx;
-    purgeend = span[scanline].lx;
-    length = purgeend - purgestart;
-    if (length >= 0)
-    {
-
-
-
-
-
-
-        memset(&cvgbuf[purgestart], 0xff, length + 1);
-        for(i = 0; i < 4; i++)
-        {
-
-                fmask = 0xa >> (i & 1);
-
-
-
-
-                maskshift = (i - 2) & 4;
-                fmaskshifted = fmask << maskshift;
-
-                if (!span[scanline].invalyscan[i])
-                {
-                    minorcur = span[scanline].minorx[i];
-                    majorcur = span[scanline].majorx[i];
-                    minorcurint = minorcur >> 3;
-                    majorcurint = majorcur >> 3;
-
-
-                    for (int k = purgestart; k <= majorcurint; k++)
-                        cvgbuf[k] &= ~fmaskshifted;
-                    for (int k = minorcurint; k <= purgeend; k++)
-                        cvgbuf[k] &= ~fmaskshifted;
-
-
-
-
-
-
-
-
-
-                    if (minorcurint > majorcurint)
-                    {
-                        cvgbuf[minorcurint] |= (rightcvghex(minorcur, fmask) << maskshift);
-                        cvgbuf[majorcurint] |= (leftcvghex(majorcur, fmask) << maskshift);
-                    }
-                    else if (minorcurint == majorcurint)
-                    {
-                        samecvg = rightcvghex(minorcur, fmask) & leftcvghex(majorcur, fmask);
-                        cvgbuf[majorcurint] |= (samecvg << maskshift);
-                    }
-                }
-                else
-                {
-                    for (int k = purgestart; k <= purgeend; k++)
-                        cvgbuf[k] &= ~fmaskshifted;
-                }
-
-        }
-    }
-
-
-}
-
-static STRICTINLINE void compute_cvg_noflip(int32_t scanline)
-{
-    int32_t purgestart, purgeend;
-    int i, length, fmask, maskshift, fmaskshifted;
-    int32_t minorcur, majorcur, minorcurint, majorcurint, samecvg;
-
-    purgestart = span[scanline].lx;
-    purgeend = span[scanline].rx;
-    length = purgeend - purgestart;
-
-    if (length >= 0)
-    {
-        memset(&cvgbuf[purgestart], 0xff, length + 1);
-
-        for(i = 0; i < 4; i++)
-        {
-            fmask = 0xa >> (i & 1);
-            maskshift = (i - 2) & 4;
-            fmaskshifted = fmask << maskshift;
-
-            if (!span[scanline].invalyscan[i])
-            {
-                minorcur = span[scanline].minorx[i];
-                majorcur = span[scanline].majorx[i];
-                minorcurint = minorcur >> 3;
-                majorcurint = majorcur >> 3;
-
-                for (int k = purgestart; k <= minorcurint; k++)
-                    cvgbuf[k] &= ~fmaskshifted;
-                for (int k = majorcurint; k <= purgeend; k++)
-                    cvgbuf[k] &= ~fmaskshifted;
-
-                if (majorcurint > minorcurint)
-                {
-                    cvgbuf[minorcurint] |= (leftcvghex(minorcur, fmask) << maskshift);
-                    cvgbuf[majorcurint] |= (rightcvghex(majorcur, fmask) << maskshift);
-                }
-                else if (minorcurint == majorcurint)
-                {
-                    samecvg = leftcvghex(minorcur, fmask) & rightcvghex(majorcur, fmask);
-                    cvgbuf[majorcurint] |= (samecvg << maskshift);
-                }
-            }
-            else
-            {
-                for (int k = purgestart; k <= purgeend; k++)
-                    cvgbuf[k] &= ~fmaskshifted;
-            }
-        }
-    }
-}
-
 static void fbwrite_4(uint32_t curpixel, uint32_t r, uint32_t g, uint32_t b, uint32_t blend_en, uint32_t curpixel_cvg, uint32_t curpixel_memcvg)
 {
     uint32_t fb = fb_address + curpixel;
@@ -6934,54 +6771,6 @@ static INLINE void z_build_com_table(void)
     }
 }
 
-static INLINE void precalc_cvmask_derivatives(void)
-{
-    int i = 0, k = 0;
-    uint16_t mask = 0, maskx = 0, masky = 0;
-    uint8_t offx = 0, offy = 0;
-    const uint8_t yarray[16] = {0, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0};
-    const uint8_t xarray[16] = {0, 3, 2, 2, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0};
-
-
-    for (; i < 0x100; i++)
-    {
-        mask = decompress_cvmask_frombyte(i);
-        cvarray[i].cvg = cvarray[i].cvbit = 0;
-        cvarray[i].cvbit = (i >> 7) & 1;
-        for (k = 0; k < 8; k++)
-            cvarray[i].cvg += ((i >> k) & 1);
-
-
-        masky = maskx = offx = offy = 0;
-        for (k = 0; k < 4; k++)
-            masky |= ((mask & (0xf000 >> (k << 2))) > 0) << k;
-
-        offy = yarray[masky];
-
-        maskx = (mask & (0xf000 >> (offy << 2))) >> ((offy ^ 3) << 2);
-
-
-        offx = xarray[maskx];
-
-        cvarray[i].xoff = offx;
-        cvarray[i].yoff = offy;
-    }
-}
-
-static STRICTINLINE uint16_t decompress_cvmask_frombyte(uint8_t x)
-{
-    uint16_t y = (x & 0x5) | ((x & 0x5a) << 4) | ((x & 0xa0) << 8);
-    return y;
-}
-
-static STRICTINLINE void lookup_cvmask_derivatives(uint32_t mask, uint8_t* offx, uint8_t* offy, uint32_t* curpixel_cvg, uint32_t* curpixel_cvbit)
-{
-    *curpixel_cvg = cvarray[mask].cvg;
-    *curpixel_cvbit = cvarray[mask].cvbit;
-    *offx = cvarray[mask].xoff;
-    *offy = cvarray[mask].yoff;
-}
-
 static STRICTINLINE void z_store(uint32_t zcurpixel, uint32_t z, int dzpixenc)
 {
     uint16_t zval = z_com_table[z & 0x3ffff]|(dzpixenc >> 2);
@@ -7165,48 +6954,6 @@ static STRICTINLINE uint32_t z_compare(uint32_t zcurpixel, uint32_t sz, uint16_t
 
         return 1;
     }
-}
-
-static STRICTINLINE int finalize_spanalpha(uint32_t blend_en, uint32_t curpixel_cvg, uint32_t curpixel_memcvg)
-{
-    int finalcvg;
-
-
-
-    switch(other_modes.cvg_dest)
-    {
-    case CVG_CLAMP:
-        if (!blend_en)
-        {
-            finalcvg = curpixel_cvg - 1;
-
-
-        }
-        else
-        {
-            finalcvg = curpixel_cvg + curpixel_memcvg;
-        }
-
-
-
-        if (!(finalcvg & 8))
-            finalcvg &= 7;
-        else
-            finalcvg = 7;
-
-        break;
-    case CVG_WRAP:
-        finalcvg = (curpixel_cvg + curpixel_memcvg) & 7;
-        break;
-    case CVG_ZAP:
-        finalcvg = 7;
-        break;
-    case CVG_SAVE:
-        finalcvg = curpixel_memcvg;
-        break;
-    }
-
-    return finalcvg;
 }
 
 static STRICTINLINE int32_t normalize_dzpix(int32_t sum)
