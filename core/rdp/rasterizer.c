@@ -1,7 +1,3 @@
-static TLS struct rectangle clip;
-static TLS int scfield;
-static TLS int sckeepodd;
-
 static void render_spans_1cycle_complete(int start, int end, int tilenum, int flip);
 static void render_spans_1cycle_notexel1(int start, int end, int tilenum, int flip);
 static void render_spans_1cycle_notex(int start, int end, int tilenum, int flip);
@@ -24,6 +20,10 @@ static void (*render_spans_2cycle_func[4])(int, int, int, int) =
 
 static TLS void (*render_spans_1cycle_ptr)(int, int, int, int);
 static TLS void (*render_spans_2cycle_ptr)(int, int, int, int);
+
+static TLS struct rectangle clip;
+static TLS int scfield;
+static TLS int sckeepodd;
 
 static void replicate_for_copy(uint32_t* outbyte, uint32_t inshort, uint32_t nybbleoffset, uint32_t tilenum, uint32_t tformat, uint32_t tsize)
 {
