@@ -268,11 +268,8 @@ static TLS int32_t noise = 0;
 static TLS int32_t primitive_lod_frac = 0;
 static int32_t one_color = 0x100;
 static int32_t zero_color = 0x00;
-static int32_t blenderone   = 0xff;
 
 static TLS struct color pixel_color;
-static TLS struct color inv_pixel_color;
-static TLS struct color blended_pixel_color;
 static TLS struct color memory_color;
 static TLS struct color pre_memory_color;
 

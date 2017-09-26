@@ -12,6 +12,10 @@ static TLS struct
 
 static TLS struct color blend_color;
 static TLS struct color fog_color;
+static TLS struct color inv_pixel_color;
+static TLS struct color blended_pixel_color;
+
+static int32_t blenderone = 0xff;
 
 static uint8_t bldiv_hwaccurate_table[0x8000];
 
