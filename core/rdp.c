@@ -345,34 +345,17 @@ static STRICTINLINE void get_texel1_1cycle(int32_t* s1, int32_t* t1, int32_t s, 
 static STRICTINLINE void get_nexttexel0_2cycle(int32_t* s1, int32_t* t1, int32_t s, int32_t t, int32_t w, int32_t dsinc, int32_t dtinc, int32_t dwinc);
 static INLINE void calculate_clamp_diffs(uint32_t tile);
 static INLINE void calculate_tile_derivs(uint32_t tile);
-static void rgb_dither_complete(int* r, int* g, int* b, int dith);
-static void rgb_dither_nothing(int* r, int* g, int* b, int dith);
-static void get_dither_noise_complete(int x, int y, int* cdith, int* adith);
-static void get_dither_only(int x, int y, int* cdith, int* adith);
-static void get_dither_nothing(int x, int y, int* cdith, int* adith);
 static void deduce_derivatives(void);
 
 static TLS int32_t k0_tf = 0, k1_tf = 0, k2_tf = 0, k3_tf = 0;
 static TLS int32_t k4 = 0, k5 = 0;
 static TLS int32_t lod_frac = 0;
 
-static void (*get_dither_noise_func[3])(int, int, int*, int*) =
-{
-    get_dither_noise_complete, get_dither_only, get_dither_nothing
-};
-
-static void (*rgb_dither_func[2])(int*, int*, int*, int) =
-{
-    rgb_dither_complete, rgb_dither_nothing
-};
-
 static void (*tcdiv_func[2])(int32_t, int32_t, int32_t, int32_t*, int32_t*) =
 {
     tcdiv_nopersp, tcdiv_persp
 };
 
-static TLS void (*get_dither_noise_ptr)(int, int, int*, int*);
-static TLS void (*rgb_dither_ptr)(int*, int*, int*, int);
 static TLS void (*tcdiv_ptr)(int32_t, int32_t, int32_t, int32_t*, int32_t*);
 
 static uint8_t replicated_rgba[32];
@@ -393,6 +376,7 @@ static TLS int32_t min_level = 0;
 static int rdp_pipeline_crashed = 0;
 
 #include "rdp/cmd.c"
+#include "rdp/dither.c"
 #include "rdp/blender.c"
 #include "rdp/combiner.c"
 #include "rdp/coverage.c"
@@ -705,8 +689,6 @@ int rdp_init(struct core_config* _config)
 {
     config = _config;
 
-    get_dither_noise_ptr = get_dither_noise_func[0];
-    rgb_dither_ptr = rgb_dither_func[0];
     tcdiv_ptr = tcdiv_func[0];
 
     uint32_t tmp[2] = {0};
@@ -778,16 +760,6 @@ static INLINE void precalculate_everything(void)
     for (i = 1; i < 16; i++)
         maskbits_table[i] = ((uint16_t)(0xffff) >> (16 - i)) & 0x3ff;
 
-
-
-    combiner_init();
-
-
-
-
-
-
-
     int temppoint, tempslope;
     int normout;
     int wnorm;
@@ -816,29 +788,12 @@ static INLINE void precalculate_everything(void)
 
 
     z_init();
+    dither_init();
     fb_init();
     blender_init();
+    combiner_init();
     rasterizer_init();
 }
-
-
-static const uint8_t bayer_matrix[16] =
-{
-     0,  4,  1, 5,
-     4,  0,  5, 1,
-     3,  7,  2, 6,
-     7,  3,  6, 2
-};
-
-
-static const uint8_t magic_matrix[16] =
-{
-     0,  6,  1, 7,
-     4,  2,  5, 3,
-     3,  5,  2, 4,
-     7,  1,  6, 0
-};
-
 
 static INLINE void fetch_texel(struct color *color, int s, int t, uint32_t tilenum)
 {
@@ -4020,241 +3975,6 @@ static INLINE void calculate_tile_derivs(uint32_t i)
         tile[i].f.tlutswitch = (tile[i].size << 2) | 2;
     }
 }
-
-static void rgb_dither_complete(int* r, int* g, int* b, int dith)
-{
-
-    int32_t newr = *r, newg = *g, newb = *b;
-    int32_t rcomp, gcomp, bcomp;
-
-
-    if (newr > 247)
-        newr = 255;
-    else
-        newr = (newr & 0xf8) + 8;
-    if (newg > 247)
-        newg = 255;
-    else
-        newg = (newg & 0xf8) + 8;
-    if (newb > 247)
-        newb = 255;
-    else
-        newb = (newb & 0xf8) + 8;
-
-    if (other_modes.rgb_dither_sel != 2)
-        rcomp = gcomp = bcomp = dith;
-    else
-    {
-        rcomp = dith & 7;
-        gcomp = (dith >> 3) & 7;
-        bcomp = (dith >> 6) & 7;
-    }
-
-
-
-
-
-    int32_t replacesign = (rcomp - (*r & 7)) >> 31;
-
-    int32_t ditherdiff = newr - *r;
-    *r = *r + (ditherdiff & replacesign);
-
-    replacesign = (gcomp - (*g & 7)) >> 31;
-    ditherdiff = newg - *g;
-    *g = *g + (ditherdiff & replacesign);
-
-    replacesign = (bcomp - (*b & 7)) >> 31;
-    ditherdiff = newb - *b;
-    *b = *b + (ditherdiff & replacesign);
-
-}
-
-static void rgb_dither_nothing(int* r, int* g, int* b, int dith)
-{
-}
-
-
-static void get_dither_noise_complete(int x, int y, int* cdith, int* adith)
-{
-
-
-    noise = ((irand() & 7) << 6) | 0x20;
-
-
-    int dithindex;
-    switch(other_modes.f.rgb_alpha_dither)
-    {
-    case 0:
-        dithindex = ((y & 3) << 2) | (x & 3);
-        *adith = *cdith = magic_matrix[dithindex];
-        break;
-    case 1:
-        dithindex = ((y & 3) << 2) | (x & 3);
-        *cdith = magic_matrix[dithindex];
-        *adith = (~(*cdith)) & 7;
-        break;
-    case 2:
-        dithindex = ((y & 3) << 2) | (x & 3);
-        *cdith = magic_matrix[dithindex];
-        *adith = (noise >> 6) & 7;
-        break;
-    case 3:
-        dithindex = ((y & 3) << 2) | (x & 3);
-        *cdith = magic_matrix[dithindex];
-        *adith = 0;
-        break;
-    case 4:
-        dithindex = ((y & 3) << 2) | (x & 3);
-        *adith = *cdith = bayer_matrix[dithindex];
-        break;
-    case 5:
-        dithindex = ((y & 3) << 2) | (x & 3);
-        *cdith = bayer_matrix[dithindex];
-        *adith = (~(*cdith)) & 7;
-        break;
-    case 6:
-        dithindex = ((y & 3) << 2) | (x & 3);
-        *cdith = bayer_matrix[dithindex];
-        *adith = (noise >> 6) & 7;
-        break;
-    case 7:
-        dithindex = ((y & 3) << 2) | (x & 3);
-        *cdith = bayer_matrix[dithindex];
-        *adith = 0;
-        break;
-    case 8:
-        dithindex = ((y & 3) << 2) | (x & 3);
-        *cdith = irand();
-        *adith = magic_matrix[dithindex];
-        break;
-    case 9:
-        dithindex = ((y & 3) << 2) | (x & 3);
-        *cdith = irand();
-        *adith = (~magic_matrix[dithindex]) & 7;
-        break;
-    case 10:
-        *cdith = irand();
-        *adith = (noise >> 6) & 7;
-        break;
-    case 11:
-        *cdith = irand();
-        *adith = 0;
-        break;
-    case 12:
-        dithindex = ((y & 3) << 2) | (x & 3);
-        *cdith = 7;
-        *adith = bayer_matrix[dithindex];
-        break;
-    case 13:
-        dithindex = ((y & 3) << 2) | (x & 3);
-        *cdith = 7;
-        *adith = (~bayer_matrix[dithindex]) & 7;
-        break;
-    case 14:
-        *cdith = 7;
-        *adith = (noise >> 6) & 7;
-        break;
-    case 15:
-        *cdith = 7;
-        *adith = 0;
-        break;
-    }
-}
-
-
-static void get_dither_only(int x, int y, int* cdith, int* adith)
-{
-    int dithindex;
-    switch(other_modes.f.rgb_alpha_dither)
-    {
-    case 0:
-        dithindex = ((y & 3) << 2) | (x & 3);
-        *adith = *cdith = magic_matrix[dithindex];
-        break;
-    case 1:
-        dithindex = ((y & 3) << 2) | (x & 3);
-        *cdith = magic_matrix[dithindex];
-        *adith = (~(*cdith)) & 7;
-        break;
-    case 2:
-        dithindex = ((y & 3) << 2) | (x & 3);
-        *cdith = magic_matrix[dithindex];
-        *adith = (noise >> 6) & 7;
-        break;
-    case 3:
-        dithindex = ((y & 3) << 2) | (x & 3);
-        *cdith = magic_matrix[dithindex];
-        *adith = 0;
-        break;
-    case 4:
-        dithindex = ((y & 3) << 2) | (x & 3);
-        *adith = *cdith = bayer_matrix[dithindex];
-        break;
-    case 5:
-        dithindex = ((y & 3) << 2) | (x & 3);
-        *cdith = bayer_matrix[dithindex];
-        *adith = (~(*cdith)) & 7;
-        break;
-    case 6:
-        dithindex = ((y & 3) << 2) | (x & 3);
-        *cdith = bayer_matrix[dithindex];
-        *adith = (noise >> 6) & 7;
-        break;
-    case 7:
-        dithindex = ((y & 3) << 2) | (x & 3);
-        *cdith = bayer_matrix[dithindex];
-        *adith = 0;
-        break;
-    case 8:
-        dithindex = ((y & 3) << 2) | (x & 3);
-        *cdith = irand();
-        *adith = magic_matrix[dithindex];
-        break;
-    case 9:
-        dithindex = ((y & 3) << 2) | (x & 3);
-        *cdith = irand();
-        *adith = (~magic_matrix[dithindex]) & 7;
-        break;
-    case 10:
-        *cdith = irand();
-        *adith = (noise >> 6) & 7;
-        break;
-    case 11:
-        *cdith = irand();
-        *adith = 0;
-        break;
-    case 12:
-        dithindex = ((y & 3) << 2) | (x & 3);
-        *cdith = 7;
-        *adith = bayer_matrix[dithindex];
-        break;
-    case 13:
-        dithindex = ((y & 3) << 2) | (x & 3);
-        *cdith = 7;
-        *adith = (~bayer_matrix[dithindex]) & 7;
-        break;
-    case 14:
-        *cdith = 7;
-        *adith = (noise >> 6) & 7;
-        break;
-    case 15:
-        *cdith = 7;
-        *adith = 0;
-        break;
-    }
-}
-
-static void get_dither_nothing(int x, int y, int* cdith, int* adith)
-{
-}
-
-
-
-
-
-
-
-
 
 static void tcdiv_nopersp(int32_t ss, int32_t st, int32_t sw, int32_t* sss, int32_t* sst)
 {
