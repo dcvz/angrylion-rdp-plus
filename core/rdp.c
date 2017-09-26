@@ -42,7 +42,7 @@ static struct plugin_api* plugin;
 
 static TLS int blshifta = 0, blshiftb = 0, pastblshifta = 0, pastblshiftb = 0;
 
-struct span
+static TLS struct
 {
     int lx, rx;
     int unscrx;
@@ -51,9 +51,7 @@ struct span
     int32_t majorx[4];
     int32_t minorx[4];
     int32_t invalyscan[4];
-};
-
-static TLS struct span span[1024];
+} span[1024];
 
 // span states
 static TLS struct
@@ -110,40 +108,6 @@ struct tex_rectangle
     uint32_t flip;
 };
 
-struct tile
-{
-    int format;
-    int size;
-    int line;
-    int tmem;
-    int palette;
-    int ct, mt, cs, ms;
-    int mask_t, shift_t, mask_s, shift_s;
-
-    uint16_t sl, tl, sh, th;
-
-    struct
-    {
-        int clampdiffs, clampdifft;
-        int clampens, clampent;
-        int masksclamped, masktclamped;
-        int notlutswitch, tlutswitch;
-    } f;
-};
-
-struct modederivs
-{
-    int stalederivs;
-    int dolod;
-    int partialreject_1cycle;
-    int partialreject_2cycle;
-    int special_bsel0;
-    int special_bsel1;
-    int rgb_alpha_dither;
-    int realblendershiftersneeded;
-    int interpixelblendershiftersneeded;
-};
-
 struct other_modes
 {
     int cycle_type;
@@ -182,7 +146,17 @@ struct other_modes
     int z_source_sel;
     int dither_alpha_en;
     int alpha_compare_en;
-    struct modederivs f;
+    struct {
+        int stalederivs;
+        int dolod;
+        int partialreject_1cycle;
+        int partialreject_2cycle;
+        int special_bsel0;
+        int special_bsel1;
+        int rgb_alpha_dither;
+        int realblendershiftersneeded;
+        int interpixelblendershiftersneeded;
+    } f;
 };
 
 
@@ -244,7 +218,26 @@ static TLS struct color pixel_color;
 static TLS struct color memory_color;
 static TLS struct color pre_memory_color;
 
-static TLS struct tile tile[8];
+static TLS struct tile
+{
+    int format;
+    int size;
+    int line;
+    int tmem;
+    int palette;
+    int ct, mt, cs, ms;
+    int mask_t, shift_t, mask_s, shift_s;
+
+    uint16_t sl, tl, sh, th;
+
+    struct
+    {
+        int clampdiffs, clampdifft;
+        int clampens, clampent;
+        int masksclamped, masktclamped;
+        int notlutswitch, tlutswitch;
+    } f;
+} tile[8];
 
 #define PIXELS_TO_BYTES(pix, siz) (((pix) << (siz)) >> 1)
 
