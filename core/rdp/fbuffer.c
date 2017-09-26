@@ -44,6 +44,7 @@ static TLS int fb_format = FORMAT_RGBA;
 static TLS int fb_size = PIXEL_SIZE_4BIT;
 static TLS int fb_width = 0;
 static TLS uint32_t fb_address = 0;
+static TLS uint32_t fill_color;
 
 static void fbwrite_4(uint32_t curpixel, uint32_t r, uint32_t g, uint32_t b, uint32_t blend_en, uint32_t curpixel_cvg, uint32_t curpixel_memcvg)
 {
@@ -313,6 +314,11 @@ static void rdp_set_color_image(const uint32_t* args)
     fbread2_ptr = fbread2_func[fb_size];
     fbwrite_ptr = fbwrite_func[fb_size];
     fbfill_ptr = fbfill_func[fb_size];
+}
+
+static void rdp_set_fill_color(const uint32_t* args)
+{
+    fill_color = args[1];
 }
 
 static void fb_init()

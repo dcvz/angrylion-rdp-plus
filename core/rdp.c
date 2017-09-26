@@ -273,8 +273,6 @@ static TLS struct color pixel_color;
 static TLS struct color memory_color;
 static TLS struct color pre_memory_color;
 
-static TLS uint32_t fill_color;
-
 static TLS uint32_t primitive_z;
 static TLS uint16_t primitive_delta_z;
 
@@ -3898,11 +3896,6 @@ static void rdp_fill_rect(const uint32_t* args)
     memset(&ewdata[8], 0, 36 * sizeof(int32_t));
 
     edgewalker_for_prims(ewdata);
-}
-
-static void rdp_set_fill_color(const uint32_t* args)
-{
-    fill_color = args[1];
 }
 
 static void rdp_set_texture_image(const uint32_t* args)
