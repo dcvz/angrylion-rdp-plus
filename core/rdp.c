@@ -271,9 +271,6 @@ static void tile_tlut_common_cs_decoder(const uint32_t* args);
 static void loading_pipeline(int start, int end, int tilenum, int coord_quad, int ltlut);
 static STRICTINLINE void texture_pipeline_cycle(struct color* TEX, struct color* prev, int32_t SSS, int32_t SST, uint32_t tilenum, uint32_t cycle);
 static INLINE void precalculate_everything(void);
-static STRICTINLINE int alpha_compare(int32_t comb_alpha);
-static STRICTINLINE int finalize_spanalpha(uint32_t blend_en, uint32_t curpixel_cvg, uint32_t curpixel_memcvg);
-static STRICTINLINE int32_t normalize_dzpix(int32_t sum);
 static STRICTINLINE int32_t clamp(int32_t value,int32_t min,int32_t max);
 static STRICTINLINE void get_texel1_1cycle(int32_t* s1, int32_t* t1, int32_t s, int32_t t, int32_t w, int32_t dsinc, int32_t dtinc, int32_t dwinc, int32_t scanline, struct spansigs* sigs);
 static STRICTINLINE void get_nexttexel0_2cycle(int32_t* s1, int32_t* t1, int32_t s, int32_t t, int32_t w, int32_t dsinc, int32_t dtinc, int32_t dwinc);
@@ -1493,25 +1490,6 @@ static void rdp_set_texture_image(const uint32_t* args)
 
 
 
-}
-
-static STRICTINLINE int32_t normalize_dzpix(int32_t sum)
-{
-    if (sum & 0xc000)
-        return 0x8000;
-    if (!(sum & 0xffff))
-        return 1;
-
-    if (sum == 1)
-        return 3;
-
-    for(int count = 0x2000; count > 0; count >>= 1)
-    {
-        if (sum & count)
-            return(count << 1);
-    }
-    msg_error("normalize_dzpix: invalid codepath taken");
-    return 0;
 }
 
 static STRICTINLINE int32_t clamp(int32_t value,int32_t min,int32_t max)
