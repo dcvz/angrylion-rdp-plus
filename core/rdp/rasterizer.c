@@ -25,6 +25,9 @@ static TLS struct rectangle clip;
 static TLS int scfield;
 static TLS int sckeepodd;
 
+static TLS uint32_t primitive_z;
+static TLS uint16_t primitive_delta_z;
+
 static STRICTINLINE int32_t normalize_dzpix(int32_t sum)
 {
     if (sum & 0xc000)
@@ -2301,6 +2304,41 @@ static void rdp_tex_rect_flip(const uint32_t* args)
     memset(&ewdata[40], 0, 4 * sizeof(int32_t));
 
     edgewalker_for_prims(ewdata);
+}
+
+static void rdp_fill_rect(const uint32_t* args)
+{
+    uint32_t xl = (args[0] >> 12) & 0xfff;
+    uint32_t yl = (args[0] >>  0) & 0xfff;
+    uint32_t xh = (args[1] >> 12) & 0xfff;
+    uint32_t yh = (args[1] >>  0) & 0xfff;
+
+    if (other_modes.cycle_type == CYCLE_TYPE_FILL || other_modes.cycle_type == CYCLE_TYPE_COPY)
+        yl |= 3;
+
+    uint32_t xlint = (xl >> 2) & 0x3ff;
+    uint32_t xhint = (xh >> 2) & 0x3ff;
+
+    int32_t ewdata[CMD_MAX_INTS];
+    ewdata[0] = (0x3680 << 16) | yl;
+    ewdata[1] = (yl << 16) | yh;
+    ewdata[2] = (xlint << 16) | ((xl & 3) << 14);
+    ewdata[3] = 0;
+    ewdata[4] = (xhint << 16) | ((xh & 3) << 14);
+    ewdata[5] = 0;
+    ewdata[6] = (xlint << 16) | ((xl & 3) << 14);
+    ewdata[7] = 0;
+    memset(&ewdata[8], 0, 36 * sizeof(int32_t));
+
+    edgewalker_for_prims(ewdata);
+}
+
+static void rdp_set_prim_depth(const uint32_t* args)
+{
+    primitive_z = args[1] & (0x7fff << 16);
+
+
+    primitive_delta_z = (uint16_t)(args[1]);
 }
 
 static void rdp_set_scissor(const uint32_t* args)

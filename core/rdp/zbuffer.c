@@ -19,6 +19,7 @@ static struct {uint32_t shift; uint32_t add;} z_dec_table[8] = {
 };
 
 static TLS uint32_t zb_address = 0;
+static TLS int32_t pastrawdzmem = 0;
 
 static STRICTINLINE uint32_t z_decompress(uint32_t zb)
 {

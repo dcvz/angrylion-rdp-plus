@@ -1143,6 +1143,8 @@ static void tcdiv_persp(int32_t ss, int32_t st, int32_t sw, int32_t* sss, int32_
 
 static void tcoord_init(void)
 {
+    tcdiv_ptr = tcdiv_func[0];
+
     int i, k;
 
     log2table[0] = log2table[1] = 0;
