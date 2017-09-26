@@ -25,6 +25,108 @@ static void (*render_spans_2cycle_func[4])(int, int, int, int) =
 static TLS void (*render_spans_1cycle_ptr)(int, int, int, int);
 static TLS void (*render_spans_2cycle_ptr)(int, int, int, int);
 
+static void replicate_for_copy(uint32_t* outbyte, uint32_t inshort, uint32_t nybbleoffset, uint32_t tilenum, uint32_t tformat, uint32_t tsize)
+{
+    uint32_t lownib, hinib;
+    switch(tsize)
+    {
+    case PIXEL_SIZE_4BIT:
+        lownib = (nybbleoffset ^ 3) << 2;
+        lownib = hinib = (inshort >> lownib) & 0xf;
+        if (tformat == FORMAT_CI)
+        {
+            *outbyte = (tile[tilenum].palette << 4) | lownib;
+        }
+        else if (tformat == FORMAT_IA)
+        {
+            lownib = (lownib << 4) | lownib;
+            *outbyte = (lownib & 0xe0) | ((lownib & 0xe0) >> 3) | ((lownib & 0xc0) >> 6);
+        }
+        else
+            *outbyte = (lownib << 4) | lownib;
+        break;
+    case PIXEL_SIZE_8BIT:
+        hinib = ((nybbleoffset ^ 3) | 1) << 2;
+        if (tformat == FORMAT_IA)
+        {
+            lownib = (inshort >> hinib) & 0xf;
+            *outbyte = (lownib << 4) | lownib;
+        }
+        else
+        {
+            lownib = (inshort >> (hinib & ~4)) & 0xf;
+            hinib = (inshort >> hinib) & 0xf;
+            *outbyte = (hinib << 4) | lownib;
+        }
+        break;
+    default:
+        *outbyte = (inshort >> 8) & 0xff;
+        break;
+    }
+}
+
+static void fetch_qword_copy(uint32_t* hidword, uint32_t* lowdword, int32_t ssss, int32_t ssst, uint32_t tilenum)
+{
+    uint32_t shorta, shortb, shortc, shortd;
+    uint32_t sortshort[8];
+    int hibits[6];
+    int lowbits[6];
+    int32_t sss = ssss, sst = ssst, sss1 = 0, sss2 = 0, sss3 = 0;
+    int largetex = 0;
+
+    uint32_t tformat, tsize;
+    if (other_modes.en_tlut)
+    {
+        tsize = PIXEL_SIZE_16BIT;
+        tformat = other_modes.tlut_type ? FORMAT_IA : FORMAT_RGBA;
+    }
+    else
+    {
+        tsize = tile[tilenum].size;
+        tformat = tile[tilenum].format;
+    }
+
+    tc_pipeline_copy(&sss, &sss1, &sss2, &sss3, &sst, tilenum);
+    read_tmem_copy(sss, sss1, sss2, sss3, sst, tilenum, sortshort, hibits, lowbits);
+    largetex = (tformat == FORMAT_YUV || (tformat == FORMAT_RGBA && tsize == PIXEL_SIZE_32BIT));
+
+
+    if (other_modes.en_tlut)
+    {
+        shorta = sortshort[4];
+        shortb = sortshort[5];
+        shortc = sortshort[6];
+        shortd = sortshort[7];
+    }
+    else if (largetex)
+    {
+        shorta = sortshort[0];
+        shortb = sortshort[1];
+        shortc = sortshort[2];
+        shortd = sortshort[3];
+    }
+    else
+    {
+        shorta = hibits[0] ? sortshort[4] : sortshort[0];
+        shortb = hibits[1] ? sortshort[5] : sortshort[1];
+        shortc = hibits[3] ? sortshort[6] : sortshort[2];
+        shortd = hibits[4] ? sortshort[7] : sortshort[3];
+    }
+
+    *lowdword = (shortc << 16) | shortd;
+
+    if (tsize == PIXEL_SIZE_16BIT)
+        *hidword = (shorta << 16) | shortb;
+    else
+    {
+        replicate_for_copy(&shorta, shorta, lowbits[0] & 3, tilenum, tformat, tsize);
+        replicate_for_copy(&shortb, shortb, lowbits[1] & 3, tilenum, tformat, tsize);
+        replicate_for_copy(&shortc, shortc, lowbits[3] & 3, tilenum, tformat, tsize);
+        replicate_for_copy(&shortd, shortd, lowbits[4] & 3, tilenum, tformat, tsize);
+        *hidword = (shorta << 24) | (shortb << 16) | (shortc << 8) | shortd;
+    }
+}
+
 static STRICTINLINE void rgbaz_correct_clip(int offx, int offy, int r, int g, int b, int a, int* z, uint32_t curpixel_cvg)
 {
     int summand_r, summand_b, summand_g, summand_a;
