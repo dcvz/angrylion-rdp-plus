@@ -1832,14 +1832,14 @@ static void get_tmem_idx(int s, int t, uint32_t tilenum, uint32_t* idx0, uint32_
         sshorts = s >> 2;
     sshorts &= 0x7ff;
 
-    *bit3flipped = ((sshorts & 2) ? 1 : 0) ^ (t & 1);
+    *bit3flipped = ((sshorts & 2) != 0) ^ (t & 1);
 
     int tidx_a = ((tbase << 2) + sshorts) & 0x7fd;
     int tidx_b = (tidx_a + 1) & 0x7ff;
     int tidx_c = (tidx_a + 2) & 0x7ff;
     int tidx_d = (tidx_a + 3) & 0x7ff;
 
-    *hibit = (tidx_a & 0x400) ? 1 : 0;
+    *hibit = (tidx_a & 0x400) != 0;
 
     if (t & 1)
     {
@@ -1924,12 +1924,12 @@ static void read_tmem_copy(int s, int s1, int s2, int s3, int t, uint32_t tilenu
         tidx_dhi ^= 8;
     }
 
-    hibits[0] = (tidx_a & 0x1000) ? 1 : 0;
-    hibits[1] = (tidx_blow & 0x1000) ? 1 : 0;
-    hibits[2] = (tidx_bhi & 0x1000) ? 1 : 0;
-    hibits[3] = (tidx_c & 0x1000) ? 1 : 0;
-    hibits[4] = (tidx_dlow & 0x1000) ? 1 : 0;
-    hibits[5] = (tidx_dhi & 0x1000) ? 1 : 0;
+    hibits[0] = (tidx_a & 0x1000) != 0;
+    hibits[1] = (tidx_blow & 0x1000) != 0;
+    hibits[2] = (tidx_bhi & 0x1000) != 0;
+    hibits[3] = (tidx_c & 0x1000) != 0;
+    hibits[4] = (tidx_dlow & 0x1000) != 0;
+    hibits[5] = (tidx_dhi & 0x1000) != 0;
     lowbits[0] = tidx_a & 0xf;
     lowbits[1] = tidx_blow & 0xf;
     lowbits[2] = tidx_bhi & 0xf;

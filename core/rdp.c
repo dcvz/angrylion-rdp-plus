@@ -354,18 +354,18 @@ static void rdp_sync_full(const uint32_t* args)
 static void rdp_set_other_modes(const uint32_t* args)
 {
     other_modes.cycle_type          = (args[0] >> 20) & 0x3;
-    other_modes.persp_tex_en        = (args[0] & 0x80000) ? 1 : 0;
-    other_modes.detail_tex_en       = (args[0] & 0x40000) ? 1 : 0;
-    other_modes.sharpen_tex_en      = (args[0] & 0x20000) ? 1 : 0;
-    other_modes.tex_lod_en          = (args[0] & 0x10000) ? 1 : 0;
-    other_modes.en_tlut             = (args[0] & 0x08000) ? 1 : 0;
-    other_modes.tlut_type           = (args[0] & 0x04000) ? 1 : 0;
-    other_modes.sample_type         = (args[0] & 0x02000) ? 1 : 0;
-    other_modes.mid_texel           = (args[0] & 0x01000) ? 1 : 0;
-    other_modes.bi_lerp0            = (args[0] & 0x00800) ? 1 : 0;
-    other_modes.bi_lerp1            = (args[0] & 0x00400) ? 1 : 0;
-    other_modes.convert_one         = (args[0] & 0x00200) ? 1 : 0;
-    other_modes.key_en              = (args[0] & 0x00100) ? 1 : 0;
+    other_modes.persp_tex_en        = (args[0] & 0x80000) != 0;
+    other_modes.detail_tex_en       = (args[0] & 0x40000) != 0;
+    other_modes.sharpen_tex_en      = (args[0] & 0x20000) != 0;
+    other_modes.tex_lod_en          = (args[0] & 0x10000) != 0;
+    other_modes.en_tlut             = (args[0] & 0x08000) != 0;
+    other_modes.tlut_type           = (args[0] & 0x04000) != 0;
+    other_modes.sample_type         = (args[0] & 0x02000) != 0;
+    other_modes.mid_texel           = (args[0] & 0x01000) != 0;
+    other_modes.bi_lerp0            = (args[0] & 0x00800) != 0;
+    other_modes.bi_lerp1            = (args[0] & 0x00400) != 0;
+    other_modes.convert_one         = (args[0] & 0x00200) != 0;
+    other_modes.key_en              = (args[0] & 0x00100) != 0;
     other_modes.rgb_dither_sel      = (args[0] >> 6) & 0x3;
     other_modes.alpha_dither_sel    = (args[0] >> 4) & 0x3;
     other_modes.blend_m1a_0         = (args[1] >> 30) & 0x3;

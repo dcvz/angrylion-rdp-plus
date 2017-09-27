@@ -1646,7 +1646,7 @@ static void edgewalker_for_prims(int32_t* ewdata)
     }
 
 
-    flip = (ewdata[0] & 0x800000) ? 1 : 0;
+    flip = (ewdata[0] & 0x800000) != 0;
     max_level = (ewdata[0] >> 19) & 7;
     tilenum = (ewdata[0] >> 16) & 7;
 
@@ -1766,7 +1766,7 @@ static void edgewalker_for_prims(int32_t* ewdata)
     int k = 0;
 
     int dsdiff, dtdiff, dwdiff, drdiff, dgdiff, dbdiff, dadiff, dzdiff;
-    int sign_dxhdy = (ewdata[5] & 0x80000000) ? 1 : 0;
+    int sign_dxhdy = (ewdata[5] & 0x80000000) != 0;
 
     int dsdeh, dtdeh, dwdeh, drdeh, dgdeh, dbdeh, dadeh, dzdeh, dsdyh, dtdyh, dwdyh, drdyh, dgdyh, dbdyh, dadyh, dzdyh;
     int do_offset = !(sign_dxhdy ^ flip);

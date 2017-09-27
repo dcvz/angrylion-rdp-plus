@@ -327,7 +327,7 @@ static STRICTINLINE void lodfrac_lodtile_signals(int lodclamp, int32_t lod, uint
 
         mag = 1;
         ltil = 0;
-        dis = max_level ? 0 : 1;
+        dis = max_level == 0;
 
         if(!other_modes.sharpen_tex_en && !other_modes.detail_tex_en)
         {
@@ -347,7 +347,7 @@ static STRICTINLINE void lodfrac_lodtile_signals(int lodclamp, int32_t lod, uint
     {
         mag = 1;
         ltil = 0;
-        dis = max_level ? 0 : 1;
+        dis = max_level == 0;
 
         if(!other_modes.sharpen_tex_en && !other_modes.detail_tex_en)
         {
@@ -369,7 +369,7 @@ static STRICTINLINE void lodfrac_lodtile_signals(int lodclamp, int32_t lod, uint
         ltil =  log2table[(lod >> 5) & 0xff];
 
         if (max_level)
-            dis = ((lod & 0x6000) || (ltil >= max_level)) ? 1 : 0;
+            dis = ((lod & 0x6000) || (ltil >= max_level)) != 0;
         else
             dis = 1;
 
@@ -985,7 +985,7 @@ static STRICTINLINE void tclod_copy(int32_t* sss, int32_t* sst, int32_t s, int32
             l_tile =  log2table[(lod >> 5) & 0xff];
 
             if (max_level)
-                distant = ((lod & 0x6000) || (l_tile >= max_level)) ? 1 : 0;
+                distant = ((lod & 0x6000) || (l_tile >= max_level)) != 0;
             else
                 distant = 1;
 
