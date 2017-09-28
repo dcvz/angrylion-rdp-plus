@@ -169,7 +169,7 @@ EXPORT int CALL RomOpen (void)
 
     config.num_workers = ConfigGetParamInt(configVideoAngrylionPlus, "NumWorkers");
     config.vi.mode = ConfigGetParamInt(configVideoAngrylionPlus, "ViMode");
-    config.vi.widescreen = ConfigGetParamBool(configVideoGeneral, "AnamorphicWidescreen");
+    config.vi.widescreen = ConfigGetParamBool(configVideoAngrylionPlus, "AnamorphicWidescreen");
 
     core_init(&config);
     return 1;
