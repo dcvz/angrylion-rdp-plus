@@ -24,7 +24,7 @@ static HGLRC glrc_core;
 static bool fullscreen;
 
 // Win32 helpers
-void win32_client_resize(HWND hWnd, int32_t nWidth, int32_t nHeight)
+void win32_client_resize(HWND hWnd, HWND hStatus, int32_t nWidth, int32_t nHeight)
 {
     RECT rclient;
     GetClientRect(hWnd, &rclient);
@@ -32,37 +32,18 @@ void win32_client_resize(HWND hWnd, int32_t nWidth, int32_t nHeight)
     RECT rwin;
     GetWindowRect(hWnd, &rwin);
 
+    if (hStatus) {
+        RECT rstatus;
+        GetClientRect(hStatus, &rstatus);
+
+        rclient.bottom -= rstatus.bottom;
+    }
+
     POINT pdiff;
     pdiff.x = (rwin.right - rwin.left) - rclient.right;
     pdiff.y = (rwin.bottom - rwin.top) - rclient.bottom;
 
     MoveWindow(hWnd, rwin.left, rwin.top, nWidth + pdiff.x, nHeight + pdiff.y, TRUE);
-}
-
-void screen_update_size(int32_t width, int32_t height)
-{
-    BOOL zoomed = IsZoomed(gfx.hWnd);
-
-    if (zoomed) {
-        ShowWindow(gfx.hWnd, SW_RESTORE);
-    }
-
-    if (!fullscreen) {
-        // reserve some pixels for the status bar
-        RECT statusrect;
-        SetRectEmpty(&statusrect);
-
-        if (gfx.hStatusBar) {
-            GetClientRect(gfx.hStatusBar, &statusrect);
-        }
-
-        // resize window
-        win32_client_resize(gfx.hWnd, width, height + statusrect.bottom);
-    }
-
-    if (zoomed) {
-        ShowWindow(gfx.hWnd, SW_MAXIMIZE);
-    }
 }
 
 void screen_init(void)
@@ -72,9 +53,25 @@ void screen_init(void)
         LONG style = GetWindowLong(gfx.hWnd, GWL_STYLE);
         style |= WS_SIZEBOX | WS_MAXIMIZEBOX;
         SetWindowLong(gfx.hWnd, GWL_STYLE, style);
-    }
 
-    screen_update_size(WINDOW_DEFAULT_WIDTH, WINDOW_DEFAULT_HEIGHT);
+        BOOL zoomed = IsZoomed(gfx.hWnd);
+
+        if (zoomed) {
+            ShowWindow(gfx.hWnd, SW_RESTORE);
+        }
+
+        // Fix client size after changing the window style, otherwise the PJ64
+        // menu will be displayed incorrectly.
+        // For some reason, this needs to be called twice, probably because the
+        // style set above isn't applied immediately.
+        for (int i = 0; i < 2; i++) {
+            win32_client_resize(gfx.hWnd, gfx.hStatusBar, WINDOW_DEFAULT_WIDTH, WINDOW_DEFAULT_HEIGHT);
+        }
+
+        if (zoomed) {
+            ShowWindow(gfx.hWnd, SW_MAXIMIZE);
+        }
+    }
 
     PIXELFORMATDESCRIPTOR win_pfd = {
         sizeof(PIXELFORMATDESCRIPTOR), 1,
@@ -127,9 +124,7 @@ void screen_init(void)
 void screen_upload(int32_t* buffer, int32_t width, int32_t height, int32_t output_width, int32_t output_height)
 {
     // check if the framebuffer size has changed
-    if (gl_screen_upload(buffer, width, height, output_width, output_height)) {
-        screen_update_size(output_width, output_height);
-    }
+    gl_screen_upload(buffer, width, height, output_width, output_height);
 }
 
 void screen_swap(void)

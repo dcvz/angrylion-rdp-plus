@@ -1598,7 +1598,8 @@ static void vi_process_fast(void)
 
 static void vi_process_end_fast(void)
 {
-    screen_upload(prescale, hres_raw, vres_raw, hres_raw << 1, vres_raw << 1);
+    screen_upload(prescale, hres_raw, vres_raw, hres_raw, vres_raw);
+
     if (screenshot_path[0]) {
         vi_screenshot_write(screenshot_path, prescale, hres_raw, vres_raw, hres_raw, vres_raw);
         screenshot_path[0] = 0;
