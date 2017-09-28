@@ -16,6 +16,7 @@
 #include <stdio.h>
 #include <memory.h>
 #include <math.h>
+#include <assert.h>
 
 #define PRESCALE_WIDTH 640
 #define PRESCALE_HEIGHT 625
@@ -831,7 +832,7 @@ static int vi_process_start(void)
 
     // check for unexpected VI type bits set
     if (vitype & ~3) {
-        msg_warning("Unknown framebuffer format %d", vitype);
+        msg_error("Unknown framebuffer format %d", vitype);
     }
 
     serration_pulses = (vi_control >> 6) & 1;
@@ -1515,7 +1516,7 @@ static int vi_process_start_fast(void)
 
     // check for unexpected VI type bits set
     if (vitype & ~3) {
-        msg_warning("Unknown framebuffer format %d", vitype);
+        msg_error("Unknown framebuffer format %d", vitype);
     }
 
     gamma_value = (vi_control >> 3) & 1;
@@ -1566,7 +1567,7 @@ static void vi_process_fast(void)
                         }
 
                         default:
-                            msg_warning("Invalid framebuffer format %d", vitype);
+                            assert(false);
                     }
                     break;
 
@@ -1585,7 +1586,7 @@ static void vi_process_fast(void)
                 }
 
                 default:
-                    msg_warning("Unknown VI mode %d", config->vi.mode);
+                    assert(false);
             }
 
             gamma_filters(&r, &g, &b, gamma_and_dither);
@@ -1621,6 +1622,11 @@ void vi_update(void)
     int (*vi_process_start_ptr)(void);
     void (*vi_process_ptr)(void);
     void (*vi_process_end_ptr)(void);
+
+    // check for configuration errors
+    if (config->vi.mode >= VI_MODE_NUM) {
+        msg_error("Invalid VI mode: %d", config->vi.mode);
+    }
 
     if (config->vi.mode == VI_MODE_NORMAL) {
         vi_process_start_ptr = vi_process_start;
