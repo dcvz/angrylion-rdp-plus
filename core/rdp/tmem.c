@@ -1,6 +1,8 @@
 static TLS uint8_t tmem[0x1000];
 
-#define tlut ((uint16_t*)(&tmem[0x800]))
+#define tmem16 ((uint16_t*)tmem)
+#define tc16   ((uint16_t*)tmem)
+#define tlut   ((uint16_t*)(&tmem[0x800]))
 
 static uint8_t replicated_rgba[32];
 
@@ -73,7 +75,6 @@ static INLINE void fetch_texel(struct color *color, int s, int t, uint32_t tilen
 
 
 
-    uint16_t *tc16 = (uint16_t*)tmem;
     uint32_t taddr = 0;
 
 
@@ -416,7 +417,6 @@ static INLINE void fetch_texel_quadro(struct color *color0, struct color *color1
 
 
 
-    uint16_t *tc16 = (uint16_t*)tmem;
     uint32_t taddr0, taddr1, taddr2, taddr3;
     uint32_t taddrlow0, taddrlow1, taddrlow2, taddrlow3;
 
@@ -1322,7 +1322,6 @@ static INLINE void fetch_texel_entlut_quadro(struct color *color0, struct color 
     uint32_t tpal = tile[tilenum].palette << 4;
     uint32_t xort, ands;
 
-    uint16_t *tc16 = (uint16_t*)tmem;
     uint32_t taddr0, taddr1, taddr2, taddr3;
     uint16_t c0, c1, c2, c3;
 
@@ -1633,7 +1632,6 @@ static INLINE void fetch_texel_entlut_quadro_nearest(struct color *color0, struc
     uint32_t tpal = tile[tilenum].palette << 4;
     uint32_t xort, ands;
 
-    uint16_t *tc16 = (uint16_t*)tmem;
     uint32_t taddr0 = 0;
     uint16_t c0, c1, c2, c3;
 
@@ -1937,7 +1935,6 @@ static void read_tmem_copy(int s, int s1, int s2, int s3, int t, uint32_t tilenu
     lowbits[4] = tidx_dlow & 0xf;
     lowbits[5] = tidx_dhi & 0xf;
 
-    uint16_t* tmem16 = (uint16_t*)tmem;
     uint32_t short0, short1, short2, short3;
 
 

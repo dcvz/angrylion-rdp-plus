@@ -484,7 +484,6 @@ static void loading_pipeline(int start, int end, int tilenum, int coord_quad, in
 
     uint32_t tmemidx0 = 0, tmemidx1 = 0, tmemidx2 = 0, tmemidx3 = 0;
     int dswap = 0;
-    uint16_t* tmem16 = (uint16_t*)tmem;
     uint32_t readval0, readval1, readval2, readval3;
     uint32_t readidx32;
     uint64_t loadqword;
