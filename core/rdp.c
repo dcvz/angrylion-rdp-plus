@@ -321,6 +321,7 @@ int rdp_init(struct core_config* _config)
     combiner_init();
     tmem_init();
     tcoord_init();
+    tex_init();
     rasterizer_init();
 
     return 0;

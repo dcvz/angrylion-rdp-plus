@@ -1,7 +1,7 @@
-static TLS int ti_format = FORMAT_RGBA;
-static TLS int ti_size = PIXEL_SIZE_4BIT;
-static TLS int ti_width = 0;
-static TLS uint32_t ti_address = 0;
+static TLS int ti_format;
+static TLS int ti_size;
+static TLS int ti_width;
+static TLS uint32_t ti_address;
 
 static STRICTINLINE void tcmask(int32_t* S, int32_t* T, int32_t num)
 {
@@ -1005,4 +1005,12 @@ static void rdp_set_convert(const uint32_t* args)
     k3_tf = (SIGN(k3, 9) << 1) + 1;
     k4 = (args[1] >> 9) & 0x1ff;
     k5 = args[1] & 0x1ff;
+}
+
+static void tex_init(void)
+{
+    ti_format = FORMAT_RGBA;
+    ti_size = PIXEL_SIZE_4BIT;
+    ti_width = 0;
+    ti_address = 0;
 }

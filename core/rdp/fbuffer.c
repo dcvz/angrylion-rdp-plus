@@ -40,10 +40,10 @@ static TLS void (*fbread2_ptr)(uint32_t, uint32_t*);
 static TLS void (*fbwrite_ptr)(uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t);
 static TLS void (*fbfill_ptr)(uint32_t);
 
-static TLS int fb_format = FORMAT_RGBA;
-static TLS int fb_size = PIXEL_SIZE_4BIT;
-static TLS int fb_width = 0;
-static TLS uint32_t fb_address = 0;
+static TLS int fb_format;
+static TLS int fb_size;
+static TLS int fb_width;
+static TLS uint32_t fb_address;
 static TLS uint32_t fill_color;
 
 static void fbwrite_4(uint32_t curpixel, uint32_t r, uint32_t g, uint32_t b, uint32_t blend_en, uint32_t curpixel_cvg, uint32_t curpixel_memcvg)
@@ -323,8 +323,14 @@ static void rdp_set_fill_color(const uint32_t* args)
 
 static void fb_init()
 {
-    fbread1_ptr = fbread_func[0];
-    fbread2_ptr = fbread2_func[0];
-    fbwrite_ptr = fbwrite_func[0];
-    fbfill_ptr = fbfill_func[0];
+    fb_format = FORMAT_RGBA;
+    fb_size = PIXEL_SIZE_4BIT;
+    fb_width = 0;
+    fb_address = 0;
+
+
+    fbread1_ptr = fbread_func[fb_size];
+    fbread2_ptr = fbread2_func[fb_size];
+    fbwrite_ptr = fbwrite_func[fb_size];
+    fbfill_ptr = fbfill_func[fb_size];
 }
