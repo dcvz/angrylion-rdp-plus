@@ -1,3 +1,6 @@
+#include "tmem.c"
+#include "tcoord.c"
+
 static TLS int ti_format;
 static TLS int ti_size;
 static TLS int ti_width;
@@ -1012,4 +1015,7 @@ static void tex_init(void)
     ti_size = PIXEL_SIZE_4BIT;
     ti_width = 0;
     ti_address = 0;
+
+    tmem_init();
+    tcoord_init();
 }

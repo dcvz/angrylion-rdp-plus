@@ -283,8 +283,6 @@ static STRICTINLINE int32_t clamp(int32_t value,int32_t min,int32_t max)
 #include "rdp/coverage.c"
 #include "rdp/zbuffer.c"
 #include "rdp/fbuffer.c"
-#include "rdp/tmem.c"
-#include "rdp/tcoord.c"
 #include "rdp/tex.c"
 #include "rdp/rasterizer.c"
 
@@ -319,8 +317,6 @@ int rdp_init(struct core_config* _config)
     fb_init();
     blender_init();
     combiner_init();
-    tmem_init();
-    tcoord_init();
     tex_init();
     rasterizer_init();
 
