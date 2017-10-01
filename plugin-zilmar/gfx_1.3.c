@@ -2,6 +2,7 @@
 #include "resource.h"
 
 #include "core/core.h"
+#include "core/screen.h"
 #include "core/version.h"
 #include "core/parallel_c.hpp"
 #include "core/msg.h"
@@ -154,7 +155,7 @@ EXPORT void CALL CaptureScreen(char* directory)
 
 EXPORT void CALL ChangeWindow(void)
 {
-    core_toggle_fullscreen();
+    screen_toggle_fullscreen();
 }
 
 EXPORT void CALL CloseDLL(void)

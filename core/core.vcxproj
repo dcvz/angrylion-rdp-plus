@@ -267,6 +267,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="rdram.c" />
+    <ClCompile Include="screen.c" />
     <ClCompile Include="trace_read.c" />
     <ClCompile Include="trace_write.c" />
     <ClCompile Include="vi.c" />

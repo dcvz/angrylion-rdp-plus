@@ -77,7 +77,7 @@ void retrace_frames(void)
                         // toggle fullscreen mode
                         case SDLK_RETURN: {
                             if (SDL_GetModState() & KMOD_ALT) {
-                                core_toggle_fullscreen();
+                                screen_toggle_fullscreen();
                                 break;
                             }
                         }

@@ -176,11 +176,6 @@ void core_screenshot(char* directory)
     }
 }
 
-void core_toggle_fullscreen(void)
-{
-    screen_set_fullscreen(!screen_get_fullscreen());
-}
-
 void core_close(void)
 {
     parallel_close();

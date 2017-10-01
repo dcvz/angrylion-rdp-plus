@@ -199,7 +199,7 @@ EXPORT void CALL ViWidthChanged (void)
 
 EXPORT void CALL ChangeWindow(void)
 {
-    core_toggle_fullscreen();
+    screen_toggle_fullscreen();
 }
 
 EXPORT void CALL ReadScreen2(void *dest, int *width, int *height, int front)
