@@ -115,7 +115,7 @@ static STRICTINLINE void blender_equation_cycle0(int* r, int* g, int* b)
 
 
 
-    if (other_modes.f.special_bsel0)
+    if (blender.i2b_a[0] == &memory_color.a)
     {
         blend1a = (blend1a >> blshifta) & 0x3C;
         blend2a = (blend2a >> blshiftb) | 3;
@@ -156,7 +156,7 @@ static STRICTINLINE void blender_equation_cycle0_2(int* r, int* g, int* b)
     blend1a = *blender.i1b_a[0] >> 3;
     blend2a = *blender.i2b_a[0] >> 3;
 
-    if (other_modes.f.special_bsel0)
+    if (blender.i2b_a[0] == &memory_color.a)
     {
         blend1a = (blend1a >> pastblshifta) & 0x3C;
         blend2a = (blend2a >> pastblshiftb) | 3;
@@ -176,7 +176,7 @@ static STRICTINLINE void blender_equation_cycle1(int* r, int* g, int* b)
     blend2a = *blender.i2b_a[1] >> 3;
 
     int mulb;
-    if (other_modes.f.special_bsel1)
+    if (blender.i2b_a[1] == &memory_color.a)
     {
         blend1a = (blend1a >> blshifta) & 0x3C;
         blend2a = (blend2a >> blshiftb) | 3;
@@ -215,7 +215,7 @@ static STRICTINLINE int blender_1cycle(uint32_t* fr, uint32_t* fg, uint32_t* fb,
 
 
 
-        if (other_modes.antialias_en ? (curpixel_cvg) : (curpixel_cvbit))
+        if (other_modes.antialias_en ? curpixel_cvg : curpixel_cvbit)
         {
 
             if (!other_modes.color_on_cvg || prewrap)
@@ -245,7 +245,9 @@ static STRICTINLINE int blender_1cycle(uint32_t* fr, uint32_t* fg, uint32_t* fb,
                 b = *blender.i2a_b[0];
             }
 
-            rgb_dither_ptr(&r, &g, &b, dith);
+            if (other_modes.rgb_dither_sel != 3)
+                rgb_dither(&r, &g, &b, dith);
+
             *fr = r;
             *fg = g;
             *fb = b;
@@ -302,7 +304,8 @@ static STRICTINLINE int blender_2cycle(uint32_t* fr, uint32_t* fg, uint32_t* fb,
             }
 
 
-            rgb_dither_ptr(&r, &g, &b, dith);
+            if (other_modes.rgb_dither_sel != 3)
+                rgb_dither(&r, &g, &b, dith);
             *fr = r;
             *fg = g;
             *fb = b;

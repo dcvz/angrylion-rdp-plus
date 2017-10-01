@@ -187,7 +187,6 @@ static INLINE void fetch_texel(struct color *color, int s, int t, uint32_t tilen
         }
         break;
     case TEXEL_YUV16:
-    case TEXEL_YUV32:
         {
             taddr = (tbase << 3) + s;
             int taddrlow = taddr >> 1;
@@ -214,6 +213,48 @@ static INLINE void fetch_texel(struct color *color, int s, int t, uint32_t tilen
             color->g = v;
             color->b = y;
             color->a = y;
+        }
+        break;
+    case TEXEL_YUV32:
+        {
+            int taddrlow;
+            uint16_t c;
+            int32_t y, u, v;
+
+            taddr = (tbase << 3) + s;
+            taddrlow = taddr >> 1;
+
+            taddrlow ^= ((t & 1) ? WORD_XOR_DWORD_SWAP : WORD_ADDR_XOR);
+
+            taddrlow &= 0x3ff;
+
+            c = tc16[taddrlow];
+
+            u = c >> 8;
+            v = c & 0xff;
+
+            u = u - 0x80;
+            v = v - 0x80;
+
+            color->r = u;
+            color->g = v;
+
+            if (s & 1)
+            {
+                taddr ^= ((t & 1) ? BYTE_XOR_DWORD_SWAP : BYTE_ADDR_XOR);
+                taddr &= 0x7ff;
+                y = tmem[taddr | 0x800];
+
+                color->b = y;
+                color->a = y;
+            }
+            else
+            {
+                y = tc16[taddrlow | 0x400];
+
+                color->b = y >> 8;
+                color->a = ((y >> 8) & 0xf) | (y & 0xf0);
+            }
         }
         break;
     case TEXEL_CI4:
@@ -247,19 +288,6 @@ static INLINE void fetch_texel(struct color *color, int s, int t, uint32_t tilen
         }
         break;
     case TEXEL_CI16:
-        {
-            taddr = (tbase << 2) + s;
-            taddr ^= ((t & 1) ? WORD_XOR_DWORD_SWAP : WORD_ADDR_XOR);
-
-            uint16_t c;
-
-            c = tc16[taddr & 0x7ff];
-            color->r = c >> 8;
-            color->g = c & 0xff;
-            color->b = color->r;
-            color->a = (c & 1) ? 0xff : 0;
-        }
-        break;
     case TEXEL_CI32:
         {
             taddr = (tbase << 2) + s;
@@ -271,8 +299,7 @@ static INLINE void fetch_texel(struct color *color, int s, int t, uint32_t tilen
             color->r = c >> 8;
             color->g = c & 0xff;
             color->b = color->r;
-            color->a = (c & 1) ? 0xff : 0;
-
+            color->a = color->g;
         }
         break;
     case TEXEL_IA4:
@@ -335,7 +362,7 @@ static INLINE void fetch_texel(struct color *color, int s, int t, uint32_t tilen
             color->r = c >> 8;
             color->g = c & 0xff;
             color->b = color->r;
-            color->a = (c & 1) ? 0xff : 0;
+            color->a = color->g;
         }
         break;
     case TEXEL_I4:
@@ -369,20 +396,8 @@ static INLINE void fetch_texel(struct color *color, int s, int t, uint32_t tilen
         }
         break;
     case TEXEL_I16:
-        {
-            taddr = (tbase << 2) + s;
-            taddr ^= ((t & 1) ? WORD_XOR_DWORD_SWAP : WORD_ADDR_XOR);
-
-            uint16_t c;
-
-            c = tc16[taddr & 0x7ff];
-            color->r = c >> 8;
-            color->g = c & 0xff;
-            color->b = color->r;
-            color->a = (c & 1) ? 0xff : 0;
-        }
-        break;
     case TEXEL_I32:
+    default:
         {
             taddr = (tbase << 2) + s;
             taddr ^= ((t & 1) ? WORD_XOR_DWORD_SWAP : WORD_ADDR_XOR);
@@ -393,7 +408,7 @@ static INLINE void fetch_texel(struct color *color, int s, int t, uint32_t tilen
             color->r = c >> 8;
             color->g = c & 0xff;
             color->b = color->r;
-            color->a = (c & 1) ? 0xff : 0;
+            color->a = color->g;
         }
         break;
     }
@@ -714,7 +729,6 @@ static INLINE void fetch_texel_quadro(struct color *color0, struct color *color1
         }
         break;
     case TEXEL_YUV16:
-    case TEXEL_YUV32:
         {
             taddr0 = (tbase0 << 3) + s0;
             taddr1 = (tbase0 << 3) + s1;
@@ -792,6 +806,126 @@ static INLINE void fetch_texel_quadro(struct color *color0, struct color *color1
             color1->b = color1->a = y1;
             color2->b = color2->a = y2;
             color3->b = color3->a = y3;
+        }
+        break;
+    case TEXEL_YUV32:
+        {
+            uint16_t c0, c1, c2, c3;
+            int32_t y0, y1, y2, y3, u0, u1, u2, u3, v0, v1, v2, v3;
+            uint32_t xort0, xort1;
+
+            taddr0 = (tbase0 << 3) + s0;
+            taddr1 = (tbase0 << 3) + s1;
+            taddr2 = (tbase2 << 3) + s0;
+            taddr3 = (tbase2 << 3) + s1;
+
+            taddrlow0 = (taddr0) >> 1;
+            taddrlow1 = (taddr1 + sdiff) >> 1;
+            taddrlow2 = (taddr2) >> 1;
+            taddrlow3 = (taddr3 + sdiff) >> 1;
+
+            xort = (t0 & 1) ? WORD_XOR_DWORD_SWAP : WORD_ADDR_XOR;
+            taddrlow0 ^= xort;
+            taddrlow1 ^= xort;
+            xort = (t1 & 1) ? WORD_XOR_DWORD_SWAP : WORD_ADDR_XOR;
+            taddrlow2 ^= xort;
+            taddrlow3 ^= xort;
+
+            taddrlow0 &= 0x3ff;
+            taddrlow1 &= 0x3ff;
+            taddrlow2 &= 0x3ff;
+            taddrlow3 &= 0x3ff;
+
+            c0 = tc16[taddrlow0];
+            c1 = tc16[taddrlow1];
+            c2 = tc16[taddrlow2];
+            c3 = tc16[taddrlow3];
+
+            u0 = c0 >> 8;
+            v0 = c0 & 0xff;
+            u1 = c1 >> 8;
+            v1 = c1 & 0xff;
+            u2 = c2 >> 8;
+            v2 = c2 & 0xff;
+            u3 = c3 >> 8;
+            v3 = c3 & 0xff;
+
+            u0 = u0 - 0x80;
+            v0 = v0 - 0x80;
+            u1 = u1 - 0x80;
+            v1 = v1 - 0x80;
+            u2 = u2 - 0x80;
+            v2 = v2 - 0x80;
+            u3 = u3 - 0x80;
+            v3 = v3 - 0x80;
+
+            color0->r = u0;
+            color0->g = v0;
+            color1->r = u1;
+            color1->g = v1;
+            color2->r = u2;
+            color2->g = v2;
+            color3->r = u3;
+            color3->g = v3;
+
+            xort0 = (t0 & 1) ? BYTE_XOR_DWORD_SWAP : BYTE_ADDR_XOR;
+            xort1 = (t1 & 1) ? BYTE_XOR_DWORD_SWAP : BYTE_ADDR_XOR;
+
+            if (s0 & 1)
+            {
+                taddr0 ^= xort0;
+                taddr2 ^= xort1;
+
+                taddr0 &= 0x7ff;
+                taddr2 &= 0x7ff;
+
+                y0 = tmem[taddr0 | 0x800];
+                y2 = tmem[taddr2 | 0x800];
+
+                color0->b = color0->a = y0;
+                color2->b = color2->a = y2;
+            }
+            else
+            {
+                y0 = tc16[taddrlow0 | 0x400];
+                y2 = tc16[taddrlow2 | 0x400];
+
+                color0->b = y0 >> 8;
+                color0->a = ((y0 >> 8) & 0xf) | (y0 & 0xf0);
+                color2->b = y2 >> 8;
+                color2->a = ((y2 >> 8) & 0xf) | (y2 & 0xf0);
+            }
+
+            if (s1 & 1)
+            {
+                taddr1 ^= xort0;
+                taddr3 ^= xort1;
+
+                taddr1 &= 0x7ff;
+                taddr3 &= 0x7ff;
+
+                y1 = tmem[taddr1 | 0x800];
+                y3 = tmem[taddr3 | 0x800];
+
+                color1->b = color1->a = y1;
+                color3->b = color3->a = y3;
+            }
+            else
+            {
+                taddr1 ^= xort0;
+                taddr3 ^= xort1;
+
+                taddr1 = (taddr1 >> 1) & 0x3ff;
+                taddr3 = (taddr3 >> 1) & 0x3ff;
+
+                y1 = tc16[taddr1 | 0x400];
+                y3 = tc16[taddr3 | 0x400];
+
+                color1->b = y1 >> 8;
+                color1->a = ((y1 >> 8) & 0xf) | (y1 & 0xf0);
+                color3->b = y3 >> 8;
+                color3->a = ((y3 >> 8) & 0xf) | (y3 & 0xf0);
+            }
         }
         break;
     case TEXEL_CI4:
@@ -876,47 +1010,6 @@ static INLINE void fetch_texel_quadro(struct color *color0, struct color *color1
         }
         break;
     case TEXEL_CI16:
-        {
-            taddr0 = (tbase0 << 2) + s0;
-            taddr1 = (tbase0 << 2) + s1;
-            taddr2 = (tbase2 << 2) + s0;
-            taddr3 = (tbase2 << 2) + s1;
-            xort = (t0 & 1) ? WORD_XOR_DWORD_SWAP : WORD_ADDR_XOR;
-            taddr0 ^= xort;
-            taddr1 ^= xort;
-            xort = (t1 & 1) ? WORD_XOR_DWORD_SWAP : WORD_ADDR_XOR;
-            taddr2 ^= xort;
-            taddr3 ^= xort;
-
-            uint16_t c0, c1, c2, c3;
-
-            taddr0 &= 0x7ff;
-            taddr1 &= 0x7ff;
-            taddr2 &= 0x7ff;
-            taddr3 &= 0x7ff;
-            c0 = tc16[taddr0];
-            color0->r = c0 >> 8;
-            color0->g = c0 & 0xff;
-            color0->b = c0 >> 8;
-            color0->a = (c0 & 1) ? 0xff : 0;
-            c1 = tc16[taddr1];
-            color1->r = c1 >> 8;
-            color1->g = c1 & 0xff;
-            color1->b = c1 >> 8;
-            color1->a = (c1 & 1) ? 0xff : 0;
-            c2 = tc16[taddr2];
-            color2->r = c2 >> 8;
-            color2->g = c2 & 0xff;
-            color2->b = c2 >> 8;
-            color2->a = (c2 & 1) ? 0xff : 0;
-            c3 = tc16[taddr3];
-            color3->r = c3 >> 8;
-            color3->g = c3 & 0xff;
-            color3->b = c3 >> 8;
-            color3->a = (c3 & 1) ? 0xff : 0;
-
-        }
-        break;
     case TEXEL_CI32:
         {
             taddr0 = (tbase0 << 2) + s0;
@@ -940,23 +1033,22 @@ static INLINE void fetch_texel_quadro(struct color *color0, struct color *color1
             color0->r = c0 >> 8;
             color0->g = c0 & 0xff;
             color0->b = c0 >> 8;
-            color0->a = (c0 & 1) ? 0xff : 0;
+            color0->a = c0 & 0xff;
             c1 = tc16[taddr1];
             color1->r = c1 >> 8;
             color1->g = c1 & 0xff;
             color1->b = c1 >> 8;
-            color1->a = (c1 & 1) ? 0xff : 0;
+            color1->a = c1 & 0xff;
             c2 = tc16[taddr2];
             color2->r = c2 >> 8;
             color2->g = c2 & 0xff;
             color2->b = c2 >> 8;
-            color2->a = (c2 & 1) ? 0xff : 0;
+            color2->a = c2 & 0xff;
             c3 = tc16[taddr3];
             color3->r = c3 >> 8;
             color3->g = c3 & 0xff;
             color3->b = c3 >> 8;
-            color3->a = (c3 & 1) ? 0xff : 0;
-
+            color3->a = c3 & 0xff;
         }
         break;
     case TEXEL_IA4:
@@ -1013,7 +1105,6 @@ static INLINE void fetch_texel_quadro(struct color *color0, struct color *color1
             color3->g = i;
             color3->b = i;
             color3->a = (p & 0x1) ? 0xff : 0;
-
         }
         break;
     case TEXEL_IA8:
@@ -1063,8 +1154,6 @@ static INLINE void fetch_texel_quadro(struct color *color0, struct color *color1
             color3->g = i;
             color3->b = i;
             color3->a = ((p & 0xf) << 4) | (p & 0xf);
-
-
         }
         break;
     case TEXEL_IA16:
@@ -1124,22 +1213,22 @@ static INLINE void fetch_texel_quadro(struct color *color0, struct color *color1
             color0->r = c0 >> 8;
             color0->g = c0 & 0xff;
             color0->b = c0 >> 8;
-            color0->a = (c0 & 1) ? 0xff : 0;
+            color0->a = c0 & 0xff;
             c1 = tc16[taddr1];
             color1->r = c1 >> 8;
             color1->g = c1 & 0xff;
             color1->b = c1 >> 8;
-            color1->a = (c1 & 1) ? 0xff : 0;
+            color1->a = c1 & 0xff;
             c2 = tc16[taddr2];
             color2->r = c2 >> 8;
             color2->g = c2 & 0xff;
             color2->b = c2 >> 8;
-            color2->a = (c2 & 1) ? 0xff : 0;
+            color2->a = c2 & 0xff;
             c3 = tc16[taddr3];
             color3->r = c3 >> 8;
             color3->g = c3 & 0xff;
             color3->b = c3 >> 8;
-            color3->a = (c3 & 1) ? 0xff : 0;
+            color3->a = c3 & 0xff;
 
         }
         break;
@@ -1227,46 +1316,6 @@ static INLINE void fetch_texel_quadro(struct color *color0, struct color *color1
         }
         break;
     case TEXEL_I16:
-        {
-            taddr0 = (tbase0 << 2) + s0;
-            taddr1 = (tbase0 << 2) + s1;
-            taddr2 = (tbase2 << 2) + s0;
-            taddr3 = (tbase2 << 2) + s1;
-            xort = (t0 & 1) ? WORD_XOR_DWORD_SWAP : WORD_ADDR_XOR;
-            taddr0 ^= xort;
-            taddr1 ^= xort;
-            xort = (t1 & 1) ? WORD_XOR_DWORD_SWAP : WORD_ADDR_XOR;
-            taddr2 ^= xort;
-            taddr3 ^= xort;
-
-            uint16_t c0, c1, c2, c3;
-
-            taddr0 &= 0x7ff;
-            taddr1 &= 0x7ff;
-            taddr2 &= 0x7ff;
-            taddr3 &= 0x7ff;
-            c0 = tc16[taddr0];
-            color0->r = c0 >> 8;
-            color0->g = c0 & 0xff;
-            color0->b = c0 >> 8;
-            color0->a = (c0 & 1) ? 0xff : 0;
-            c1 = tc16[taddr1];
-            color1->r = c1 >> 8;
-            color1->g = c1 & 0xff;
-            color1->b = c1 >> 8;
-            color1->a = (c1 & 1) ? 0xff : 0;
-            c2 = tc16[taddr2];
-            color2->r = c2 >> 8;
-            color2->g = c2 & 0xff;
-            color2->b = c2 >> 8;
-            color2->a = (c2 & 1) ? 0xff : 0;
-            c3 = tc16[taddr3];
-            color3->r = c3 >> 8;
-            color3->g = c3 & 0xff;
-            color3->b = c3 >> 8;
-            color3->a = (c3 & 1) ? 0xff : 0;
-        }
-        break;
     case TEXEL_I32:
     default:
         {
@@ -1291,22 +1340,22 @@ static INLINE void fetch_texel_quadro(struct color *color0, struct color *color1
             color0->r = c0 >> 8;
             color0->g = c0 & 0xff;
             color0->b = c0 >> 8;
-            color0->a = (c0 & 1) ? 0xff : 0;
+            color0->a = c0 & 0xff;
             c1 = tc16[taddr1];
             color1->r = c1 >> 8;
             color1->g = c1 & 0xff;
             color1->b = c1 >> 8;
-            color1->a = (c1 & 1) ? 0xff : 0;
+            color1->a = c1 & 0xff;
             c2 = tc16[taddr2];
             color2->r = c2 >> 8;
             color2->g = c2 & 0xff;
             color2->b = c2 >> 8;
-            color2->a = (c2 & 1) ? 0xff : 0;
+            color2->a = c2 & 0xff;
             c3 = tc16[taddr3];
             color3->r = c3 >> 8;
             color3->g = c3 & 0xff;
             color3->b = c3 >> 8;
-            color3->a = (c3 & 1) ? 0xff : 0;
+            color3->a = c3 & 0xff;
         }
         break;
     }

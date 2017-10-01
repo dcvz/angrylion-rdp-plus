@@ -2,10 +2,6 @@ static void fbwrite_4(uint32_t curpixel, uint32_t r, uint32_t g, uint32_t b, uin
 static void fbwrite_8(uint32_t curpixel, uint32_t r, uint32_t g, uint32_t b, uint32_t blend_en, uint32_t curpixel_cvg, uint32_t curpixel_memcvg);
 static void fbwrite_16(uint32_t curpixel, uint32_t r, uint32_t g, uint32_t b, uint32_t blend_en, uint32_t curpixel_cvg, uint32_t curpixel_memcvg);
 static void fbwrite_32(uint32_t curpixel, uint32_t r, uint32_t g, uint32_t b, uint32_t blend_en, uint32_t curpixel_cvg, uint32_t curpixel_memcvg);
-static void fbfill_4(uint32_t curpixel);
-static void fbfill_8(uint32_t curpixel);
-static void fbfill_16(uint32_t curpixel);
-static void fbfill_32(uint32_t curpixel);
 static void fbread_4(uint32_t num, uint32_t* curpixel_memcvg);
 static void fbread_8(uint32_t num, uint32_t* curpixel_memcvg);
 static void fbread_16(uint32_t num, uint32_t* curpixel_memcvg);
@@ -30,15 +26,9 @@ static void (*fbwrite_func[4])(uint32_t, uint32_t, uint32_t, uint32_t, uint32_t,
     fbwrite_4, fbwrite_8, fbwrite_16, fbwrite_32
 };
 
-static void (*fbfill_func[4])(uint32_t) =
-{
-    fbfill_4, fbfill_8, fbfill_16, fbfill_32
-};
-
 static TLS void (*fbread1_ptr)(uint32_t, uint32_t*);
 static TLS void (*fbread2_ptr)(uint32_t, uint32_t*);
 static TLS void (*fbwrite_ptr)(uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t);
-static TLS void (*fbfill_ptr)(uint32_t);
 
 static TLS int fb_format;
 static TLS int fb_size;
@@ -274,7 +264,7 @@ static void fbread_32(uint32_t curpixel, uint32_t* curpixel_memcvg)
     if (other_modes.image_read_en)
     {
         *curpixel_memcvg = (mem >> 5) & 7;
-        memory_color.a = (mem) & 0xe0;
+        memory_color.a = mem & 0xe0;
     }
     else
     {
@@ -293,7 +283,7 @@ static INLINE void fbread2_32(uint32_t curpixel, uint32_t* curpixel_memcvg)
     if (other_modes.image_read_en)
     {
         *curpixel_memcvg = (mem >> 5) & 7;
-        pre_memory_color.a = (mem) & 0xe0;
+        pre_memory_color.a = mem & 0xe0;
     }
     else
     {
@@ -313,7 +303,6 @@ static void rdp_set_color_image(const uint32_t* args)
     fbread1_ptr = fbread_func[fb_size];
     fbread2_ptr = fbread2_func[fb_size];
     fbwrite_ptr = fbwrite_func[fb_size];
-    fbfill_ptr = fbfill_func[fb_size];
 }
 
 static void rdp_set_fill_color(const uint32_t* args)
@@ -332,5 +321,4 @@ static void fb_init()
     fbread1_ptr = fbread_func[fb_size];
     fbread2_ptr = fbread2_func[fb_size];
     fbwrite_ptr = fbwrite_func[fb_size];
-    fbfill_ptr = fbfill_func[fb_size];
 }

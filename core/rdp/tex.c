@@ -274,11 +274,11 @@ static STRICTINLINE void texture_pipeline_cycle(struct color* TEX, struct color*
                 centerrg = (sfracrg == 0x10 && tfrac == 0x10);
             }
 
-            invtf = 0x20 - tfrac;
-
-            if (!centerrg)
+            if (!convert)
             {
-                if (!convert)
+                invtf = 0x20 - tfrac;
+
+                if (!centerrg)
                 {
 
 
@@ -298,39 +298,16 @@ static STRICTINLINE void texture_pipeline_cycle(struct color* TEX, struct color*
                 }
                 else
                 {
-                    if (upperrg)
-                    {
-                        TEX->r = prev->b + ((prev->r * (t2.r - t3.r) + prev->g * (t1.r - t3.r) + 0x80) >> 8);
-                        TEX->g = prev->b + ((prev->r * (t2.g - t3.g) + prev->g * (t1.g - t3.g) + 0x80) >> 8);
-                    }
-                    else
-                    {
-                        TEX->r = prev->b + ((prev->r * (t1.r - t0.r) + prev->g * (t2.r - t0.r) + 0x80) >> 8);
-                        TEX->g = prev->b + ((prev->r * (t1.g - t0.g) + prev->g * (t2.g - t0.g) + 0x80) >> 8);
-                    }
-                }
-            }
-            else
-            {
-                invt3r  = ~t3.r;
-                invt3g = ~t3.g;
 
-                if (!convert)
-                {
+                    invt3r  = ~t3.r;
+                    invt3g = ~t3.g;
+
 
                     TEX->r = t3.r + ((((t1.r + t2.r) << 6) - (t3.r << 7) + ((invt3r + t0.r) << 6) + 0xc0) >> 8);
                     TEX->g = t3.g + ((((t1.g + t2.g) << 6) - (t3.g << 7) + ((invt3g + t0.g) << 6) + 0xc0) >> 8);
                 }
-                else
-                {
-                    TEX->r = prev->b + ((prev->r * (t2.r - t3.r) + prev->g * (t1.r - t3.r) + ((invt3r + t0.r) << 6) + 0xc0) >> 8);
-                    TEX->g = prev->b + ((prev->r * (t2.g - t3.g) + prev->g * (t1.g - t3.g) + ((invt3g + t0.g) << 6) + 0xc0) >> 8);
-                }
-            }
 
-            if (!center)
-            {
-                if (!convert)
+                if (!center)
                 {
                     if (upper)
                     {
@@ -347,6 +324,39 @@ static STRICTINLINE void texture_pipeline_cycle(struct color* TEX, struct color*
                 }
                 else
                 {
+                    invt3b = ~t3.b;
+                    invt3a = ~t3.a;
+
+                    TEX->b = t3.b + ((((t1.b + t2.b) << 6) - (t3.b << 7) + ((invt3b + t0.b) << 6) + 0xc0) >> 8);
+                    TEX->a = t3.a + ((((t1.a + t2.a) << 6) - (t3.a << 7) + ((invt3a + t0.a) << 6) + 0xc0) >> 8);
+                }
+            }
+            else
+            {
+                if (!centerrg)
+                {
+                    if (upperrg)
+                    {
+                        TEX->r = prev->b + ((prev->r * (t2.r - t3.r) + prev->g * (t1.r - t3.r) + 0x80) >> 8);
+                        TEX->g = prev->b + ((prev->r * (t2.g - t3.g) + prev->g * (t1.g - t3.g) + 0x80) >> 8);
+                    }
+                    else
+                    {
+                        TEX->r = prev->b + ((prev->r * (t1.r - t0.r) + prev->g * (t2.r - t0.r) + 0x80) >> 8);
+                        TEX->g = prev->b + ((prev->r * (t1.g - t0.g) + prev->g * (t2.g - t0.g) + 0x80) >> 8);
+                    }
+                }
+                else
+                {
+                    invt3r = ~t3.r;
+                    invt3g = ~t3.g;
+
+                    TEX->r = prev->b + ((prev->r * (t2.r - t3.r) + prev->g * (t1.r - t3.r) + ((invt3r + t0.r) << 6) + 0xc0) >> 8);
+                    TEX->g = prev->b + ((prev->r * (t2.g - t3.g) + prev->g * (t1.g - t3.g) + ((invt3g + t0.g) << 6) + 0xc0) >> 8);
+                }
+
+                if (!center)
+                {
                     if (upper)
                     {
                         TEX->b = prev->b + ((prev->r * (t2.b - t3.b) + prev->g * (t1.b - t3.b) + 0x80) >> 8);
@@ -358,19 +368,11 @@ static STRICTINLINE void texture_pipeline_cycle(struct color* TEX, struct color*
                         TEX->a = prev->b + ((prev->r * (t1.a - t0.a) + prev->g * (t2.a - t0.a) + 0x80) >> 8);
                     }
                 }
-            }
-            else
-            {
-                invt3b = ~t3.b;
-                invt3a = ~t3.a;
-
-                if (!convert)
-                {
-                    TEX->b = t3.b + ((((t1.b + t2.b) << 6) - (t3.b << 7) + ((invt3b + t0.b) << 6) + 0xc0) >> 8);
-                    TEX->a = t3.a + ((((t1.a + t2.a) << 6) - (t3.a << 7) + ((invt3a + t0.a) << 6) + 0xc0) >> 8);
-                }
                 else
                 {
+                    invt3b = ~t3.b;
+                    invt3a = ~t3.a;
+
                     TEX->b = prev->b + ((prev->r * (t2.b - t3.b) + prev->g * (t1.b - t3.b) + ((invt3b + t0.b) << 6) + 0xc0) >> 8);
                     TEX->a = prev->b + ((prev->r * (t2.a - t3.a) + prev->g * (t1.a - t3.a) + ((invt3a + t0.a) << 6) + 0xc0) >> 8);
                 }

@@ -187,10 +187,41 @@ static STRICTINLINE int32_t alpha_combiner_equation(int32_t a, int32_t b, int32_
     return (a & 0x1ff);
 }
 
+static STRICTINLINE int32_t chroma_key_min(struct color* col)
+{
+    int32_t redkey, greenkey, bluekey, keyalpha;
+
+
+
+
+    redkey = SIGN(col->r, 17);
+    if (redkey > 0)
+        redkey = ((redkey & 0xf) == 8) ? (-redkey + 0x10) : (-redkey);
+
+    redkey = (key_width.r << 4) + redkey;
+
+    greenkey = SIGN(col->g, 17);
+    if (greenkey > 0)
+        greenkey = ((greenkey & 0xf) == 8) ? (-greenkey + 0x10) : (-greenkey);
+
+    greenkey = (key_width.g << 4) + greenkey;
+
+    bluekey = SIGN(col->b, 17);
+    if (bluekey > 0)
+        bluekey = ((bluekey & 0xf) == 8) ? (-bluekey + 0x10) : (-bluekey);
+
+    bluekey = (key_width.b << 4) + bluekey;
+
+    keyalpha = (redkey < greenkey) ? redkey : greenkey;
+    keyalpha = (bluekey < keyalpha) ? bluekey : keyalpha;
+    keyalpha = clamp(keyalpha, 0, 0xff);
+    return keyalpha;
+}
+
 static STRICTINLINE void combiner_1cycle(int adseed, uint32_t* curpixel_cvg)
 {
 
-    int32_t redkey, greenkey, bluekey, temp;
+    int32_t keyalpha, temp;
     struct color chromabypass;
 
     if (other_modes.key_en)
@@ -255,24 +286,7 @@ static STRICTINLINE void combiner_1cycle(int adseed, uint32_t* curpixel_cvg)
     }
     else
     {
-        redkey = SIGN(combined_color.r, 17);
-        if (redkey >= 0)
-            redkey = (key_width.r << 4) - redkey;
-        else
-            redkey = (key_width.r << 4) + redkey;
-        greenkey = SIGN(combined_color.g, 17);
-        if (greenkey >= 0)
-            greenkey = (key_width.g << 4) - greenkey;
-        else
-            greenkey = (key_width.g << 4) + greenkey;
-        bluekey = SIGN(combined_color.b, 17);
-        if (bluekey >= 0)
-            bluekey = (key_width.b << 4) - bluekey;
-        else
-            bluekey = (key_width.b << 4) + bluekey;
-        keyalpha = (redkey < greenkey) ? redkey : greenkey;
-        keyalpha = (bluekey < keyalpha) ? bluekey : keyalpha;
-        keyalpha = clamp(keyalpha, 0, 0xff);
+        keyalpha = chroma_key_min(&combined_color);
 
 
 
@@ -321,7 +335,7 @@ static STRICTINLINE void combiner_1cycle(int adseed, uint32_t* curpixel_cvg)
 
 static STRICTINLINE void combiner_2cycle(int adseed, uint32_t* curpixel_cvg, int32_t* acalpha)
 {
-    int32_t redkey, greenkey, bluekey, temp;
+    int32_t keyalpha, temp;
     struct color chromabypass;
 
     if (combiner.rgbmul_r[0] != &zero_color)
@@ -347,26 +361,7 @@ static STRICTINLINE void combiner_2cycle(int adseed, uint32_t* curpixel_cvg, int
     if (other_modes.alpha_compare_en)
     {
         if (other_modes.key_en)
-        {
-            redkey = SIGN(combined_color.r, 17);
-            if (redkey >= 0)
-                redkey = (key_width.r << 4) - redkey;
-            else
-                redkey = (key_width.r << 4) + redkey;
-            greenkey = SIGN(combined_color.g, 17);
-            if (greenkey >= 0)
-                greenkey = (key_width.g << 4) - greenkey;
-            else
-                greenkey = (key_width.g << 4) + greenkey;
-            bluekey = SIGN(combined_color.b, 17);
-            if (bluekey >= 0)
-                bluekey = (key_width.b << 4) - bluekey;
-            else
-                bluekey = (key_width.b << 4) + bluekey;
-            keyalpha = (redkey < greenkey) ? redkey : greenkey;
-            keyalpha = (bluekey < keyalpha) ? bluekey : keyalpha;
-            keyalpha = clamp(keyalpha, 0, 0xff);
-        }
+            keyalpha = chroma_key_min(&combined_color);
 
         int32_t preacalpha = special_9bit_clamptable[combined_color.a];
         if (preacalpha == 0xff)
@@ -457,24 +452,7 @@ static STRICTINLINE void combiner_2cycle(int adseed, uint32_t* curpixel_cvg, int
     }
     else
     {
-        redkey = SIGN(combined_color.r, 17);
-        if (redkey >= 0)
-            redkey = (key_width.r << 4) - redkey;
-        else
-            redkey = (key_width.r << 4) + redkey;
-        greenkey = SIGN(combined_color.g, 17);
-        if (greenkey >= 0)
-            greenkey = (key_width.g << 4) - greenkey;
-        else
-            greenkey = (key_width.g << 4) + greenkey;
-        bluekey = SIGN(combined_color.b, 17);
-        if (bluekey >= 0)
-            bluekey = (key_width.b << 4) - bluekey;
-        else
-            bluekey = (key_width.b << 4) + bluekey;
-        keyalpha = (redkey < greenkey) ? redkey : greenkey;
-        keyalpha = (bluekey < keyalpha) ? bluekey : keyalpha;
-        keyalpha = clamp(keyalpha, 0, 0xff);
+        keyalpha = chroma_key_min(&combined_color);
 
 
 

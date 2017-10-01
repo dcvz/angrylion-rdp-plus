@@ -1,26 +1,3 @@
-static void render_spans_1cycle_complete(int start, int end, int tilenum, int flip);
-static void render_spans_1cycle_notexel1(int start, int end, int tilenum, int flip);
-static void render_spans_1cycle_notex(int start, int end, int tilenum, int flip);
-static void render_spans_2cycle_complete(int start, int end, int tilenum, int flip);
-static void render_spans_2cycle_notexelnext(int start, int end, int tilenum, int flip);
-static void render_spans_2cycle_notexel1(int start, int end, int tilenum, int flip);
-static void render_spans_2cycle_notex(int start, int end, int tilenum, int flip);
-static void render_spans_fill(int start, int end, int flip);
-static void render_spans_copy(int start, int end, int tilenum, int flip);
-
-static void (*render_spans_1cycle_func[3])(int, int, int, int) =
-{
-    render_spans_1cycle_notex, render_spans_1cycle_notexel1, render_spans_1cycle_complete
-};
-
-static void (*render_spans_2cycle_func[4])(int, int, int, int) =
-{
-    render_spans_2cycle_notex, render_spans_2cycle_notexel1, render_spans_2cycle_notexelnext, render_spans_2cycle_complete
-};
-
-static TLS void (*render_spans_1cycle_ptr)(int, int, int, int);
-static TLS void (*render_spans_2cycle_ptr)(int, int, int, int);
-
 static TLS struct rectangle clip;
 static TLS int scfield;
 static TLS int sckeepodd;
@@ -383,7 +360,9 @@ static void render_spans_1cycle_complete(int start, int end, int tilenum, int fl
 
             rgbaz_correct_clip(offx, offy, sr, sg, sb, sa, &sz, curpixel_cvg);
 
-            get_dither_noise_ptr(x, i, &cdith, &adith);
+            if (other_modes.f.getditherlevel < 2)
+                get_dither_noise(x, i, &cdith, &adith);
+
             combiner_1cycle(adith, &curpixel_cvg);
 
             fbread1_ptr(curpixel, &curpixel_memcvg);
@@ -552,7 +531,9 @@ static void render_spans_1cycle_notexel1(int start, int end, int tilenum, int fl
 
             rgbaz_correct_clip(offx, offy, sr, sg, sb, sa, &sz, curpixel_cvg);
 
-            get_dither_noise_ptr(x, i, &cdith, &adith);
+            if (other_modes.f.getditherlevel < 2)
+                get_dither_noise(x, i, &cdith, &adith);
+
             combiner_1cycle(adith, &curpixel_cvg);
 
             fbread1_ptr(curpixel, &curpixel_memcvg);
@@ -688,7 +669,9 @@ static void render_spans_1cycle_notex(int start, int end, int tilenum, int flip)
 
             rgbaz_correct_clip(offx, offy, sr, sg, sb, sa, &sz, curpixel_cvg);
 
-            get_dither_noise_ptr(x, i, &cdith, &adith);
+            if (other_modes.f.getditherlevel < 2)
+                get_dither_noise(x, i, &cdith, &adith);
+
             combiner_1cycle(adith, &curpixel_cvg);
 
             fbread1_ptr(curpixel, &curpixel_memcvg);
@@ -889,7 +872,9 @@ static void render_spans_2cycle_complete(int start, int end, int tilenum, int fl
 
             rgbaz_correct_clip(offx, offy, sr, sg, sb, sa, &sz, curpixel_cvg);
 
-            get_dither_noise_ptr(x, i, &cdith, &adith);
+            if (other_modes.f.getditherlevel < 2)
+                get_dither_noise(x, i, &cdith, &adith);
+
             combiner_2cycle(adith, &curpixel_cvg, &acalpha);
 
             fbread2_ptr(curpixel, &curpixel_memcvg);
@@ -905,6 +890,7 @@ static void render_spans_2cycle_complete(int start, int end, int tilenum, int fl
             }
             else
                 memory_color = pre_memory_color;
+
 
 
 
@@ -1062,7 +1048,9 @@ static void render_spans_2cycle_notexelnext(int start, int end, int tilenum, int
 
             rgbaz_correct_clip(offx, offy, sr, sg, sb, sa, &sz, curpixel_cvg);
 
-            get_dither_noise_ptr(x, i, &cdith, &adith);
+            if (other_modes.f.getditherlevel < 2)
+                get_dither_noise(x, i, &cdith, &adith);
+
             combiner_2cycle(adith, &curpixel_cvg, &acalpha);
 
             fbread2_ptr(curpixel, &curpixel_memcvg);
@@ -1231,7 +1219,9 @@ static void render_spans_2cycle_notexel1(int start, int end, int tilenum, int fl
 
             rgbaz_correct_clip(offx, offy, sr, sg, sb, sa, &sz, curpixel_cvg);
 
-            get_dither_noise_ptr(x, i, &cdith, &adith);
+            if (other_modes.f.getditherlevel < 2)
+                get_dither_noise(x, i, &cdith, &adith);
+
             combiner_2cycle(adith, &curpixel_cvg, &acalpha);
 
             fbread2_ptr(curpixel, &curpixel_memcvg);
@@ -1371,7 +1361,9 @@ static void render_spans_2cycle_notex(int start, int end, int tilenum, int flip)
 
             rgbaz_correct_clip(offx, offy, sr, sg, sb, sa, &sz, curpixel_cvg);
 
-            get_dither_noise_ptr(x, i, &cdith, &adith);
+            if (other_modes.f.getditherlevel < 2)
+                get_dither_noise(x, i, &cdith, &adith);
+
             combiner_2cycle(adith, &curpixel_cvg, &acalpha);
 
             fbread2_ptr(curpixel, &curpixel_memcvg);
@@ -1452,7 +1444,23 @@ static void render_spans_fill(int start, int end, int flip)
 
             for (j = 0; j <= length; j++)
             {
-                fbfill_ptr(curpixel);
+
+                switch(fb_size)
+                {
+                case 0:
+                    fbfill_4(curpixel);
+                    break;
+                case 1:
+                    fbfill_8(curpixel);
+                    break;
+                case 2:
+                    fbfill_16(curpixel);
+                    break;
+                case 3:
+                default:
+                    fbfill_32(curpixel);
+                    break;
+                }
 
                 x += xinc;
                 curpixel += xinc;
@@ -2089,8 +2097,23 @@ static void edgewalker_for_prims(int32_t* ewdata)
 
     switch(other_modes.cycle_type)
     {
-        case CYCLE_TYPE_1: render_spans_1cycle_ptr(yhlimit >> 2, yllimit >> 2, tilenum, flip); break;
-        case CYCLE_TYPE_2: render_spans_2cycle_ptr(yhlimit >> 2, yllimit >> 2, tilenum, flip); break;
+        case CYCLE_TYPE_1:
+            switch (other_modes.f.textureuselevel0)
+            {
+                case 0: render_spans_1cycle_complete(yhlimit >> 2, yllimit >> 2, tilenum, flip); break;
+                case 1: render_spans_1cycle_notexel1(yhlimit >> 2, yllimit >> 2, tilenum, flip); break;
+                case 2: default: render_spans_1cycle_notex(yhlimit >> 2, yllimit >> 2, tilenum, flip); break;
+            }
+            break;
+        case CYCLE_TYPE_2:
+            switch (other_modes.f.textureuselevel1)
+            {
+                case 0: render_spans_2cycle_complete(yhlimit >> 2, yllimit >> 2, tilenum, flip); break;
+                case 1: render_spans_2cycle_notexelnext(yhlimit >> 2, yllimit >> 2, tilenum, flip); break;
+                case 2: render_spans_2cycle_notexel1(yhlimit >> 2, yllimit >> 2, tilenum, flip); break;
+                case 3: default: render_spans_2cycle_notex(yhlimit >> 2, yllimit >> 2, tilenum, flip); break;
+            }
+            break;
         case CYCLE_TYPE_COPY: render_spans_copy(yhlimit >> 2, yllimit >> 2, tilenum, flip); break;
         case CYCLE_TYPE_FILL: render_spans_fill(yhlimit >> 2, yllimit >> 2, flip); break;
         default: msg_error("cycle_type %d", other_modes.cycle_type); break;
@@ -2101,9 +2124,6 @@ static void edgewalker_for_prims(int32_t* ewdata)
 
 static void rasterizer_init(void)
 {
-    render_spans_1cycle_ptr = render_spans_1cycle_func[2];
-    render_spans_2cycle_ptr = render_spans_2cycle_func[1];
-
     clip.xl = 0;
     clip.yl = 0;
     clip.xh = 0x2000;

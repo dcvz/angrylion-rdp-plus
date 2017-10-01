@@ -151,11 +151,12 @@ struct other_modes
         int dolod;
         int partialreject_1cycle;
         int partialreject_2cycle;
-        int special_bsel0;
-        int special_bsel1;
         int rgb_alpha_dither;
         int realblendershiftersneeded;
         int interpixelblendershiftersneeded;
+        int getditherlevel;
+        int textureuselevel0;
+        int textureuselevel1;
     } f;
 };
 
@@ -401,24 +402,21 @@ static void rdp_set_other_modes(const uint32_t* args)
 
 static void deduce_derivatives()
 {
+    int special_bsel0, special_bsel1;
+
 
     other_modes.f.partialreject_1cycle = (blender.i2b_a[0] == &inv_pixel_color.a && blender.i1b_a[0] == &pixel_color.a);
     other_modes.f.partialreject_2cycle = (blender.i2b_a[1] == &inv_pixel_color.a && blender.i1b_a[1] == &pixel_color.a);
 
 
-    other_modes.f.special_bsel0 = (blender.i2b_a[0] == &memory_color.a);
-    other_modes.f.special_bsel1 = (blender.i2b_a[1] == &memory_color.a);
+    special_bsel0 = (blender.i2b_a[0] == &memory_color.a);
+    special_bsel1 = (blender.i2b_a[1] == &memory_color.a);
 
 
-    other_modes.f.realblendershiftersneeded = (other_modes.f.special_bsel0 && other_modes.cycle_type == CYCLE_TYPE_1) || (other_modes.f.special_bsel1 && other_modes.cycle_type == CYCLE_TYPE_2);
-    other_modes.f.interpixelblendershiftersneeded = (other_modes.f.special_bsel0 && other_modes.cycle_type == CYCLE_TYPE_2);
+    other_modes.f.realblendershiftersneeded = (special_bsel0 && other_modes.cycle_type == CYCLE_TYPE_1) || (special_bsel1 && other_modes.cycle_type == CYCLE_TYPE_2);
+    other_modes.f.interpixelblendershiftersneeded = (special_bsel0 && other_modes.cycle_type == CYCLE_TYPE_2);
 
     other_modes.f.rgb_alpha_dither = (other_modes.rgb_dither_sel << 2) | other_modes.alpha_dither_sel;
-
-    if (other_modes.rgb_dither_sel == 3)
-        rgb_dither_ptr = rgb_dither_func[1];
-    else
-        rgb_dither_ptr = rgb_dither_func[0];
 
     tcdiv_ptr = tcdiv_func[other_modes.persp_tex_en];
 
@@ -453,20 +451,20 @@ static void deduce_derivatives()
 
 
     if (texel1_used_in_cc1)
-        render_spans_1cycle_ptr = render_spans_1cycle_func[2];
+        other_modes.f.textureuselevel0 = 0;
     else if (texel0_used_in_cc1 || lod_frac_used_in_cc1)
-        render_spans_1cycle_ptr = render_spans_1cycle_func[1];
+        other_modes.f.textureuselevel0 = 1;
     else
-        render_spans_1cycle_ptr = render_spans_1cycle_func[0];
+        other_modes.f.textureuselevel0 = 2;
 
     if (texel1_used_in_cc1)
-        render_spans_2cycle_ptr = render_spans_2cycle_func[3];
+        other_modes.f.textureuselevel1 = 0;
     else if (texel1_used_in_cc0 || texel0_used_in_cc1)
-        render_spans_2cycle_ptr = render_spans_2cycle_func[2];
+        other_modes.f.textureuselevel1 = 1;
     else if (texel0_used_in_cc0 || lod_frac_used_in_cc0 || lod_frac_used_in_cc1)
-        render_spans_2cycle_ptr = render_spans_2cycle_func[1];
+        other_modes.f.textureuselevel1 = 2;
     else
-        render_spans_2cycle_ptr = render_spans_2cycle_func[0];
+        other_modes.f.textureuselevel1 = 3;
 
 
     int lodfracused = 0;
@@ -478,11 +476,11 @@ static void deduce_derivatives()
     if ((other_modes.cycle_type == CYCLE_TYPE_1 && combiner.rgbsub_a_r[1] == &noise) || \
         (other_modes.cycle_type == CYCLE_TYPE_2 && (combiner.rgbsub_a_r[0] == &noise || combiner.rgbsub_a_r[1] == &noise)) || \
         other_modes.alpha_dither_sel == 2)
-        get_dither_noise_ptr = get_dither_noise_func[0];
+        other_modes.f.getditherlevel = 0;
     else if (other_modes.f.rgb_alpha_dither != 0xf)
-        get_dither_noise_ptr = get_dither_noise_func[1];
+        other_modes.f.getditherlevel = 1;
     else
-        get_dither_noise_ptr = get_dither_noise_func[2];
+        other_modes.f.getditherlevel = 2;
 
     other_modes.f.dolod = other_modes.tex_lod_en || lodfracused;
 }
