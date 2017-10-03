@@ -1598,10 +1598,17 @@ static void vi_process_fast(void)
 
 static void vi_process_end_fast(void)
 {
-    screen_upload(prescale, hres_raw, vres_raw, hres_raw, vres_raw);
+    int output_height;
+    if (config->vi.widescreen) {
+        output_height = hres_raw * 9 / 16;
+    } else {
+        output_height = hres_raw * 3 / 4;
+    }
+
+    screen_upload(prescale, hres_raw, vres_raw, hres_raw, output_height);
 
     if (screenshot_path[0]) {
-        vi_screenshot_write(screenshot_path, prescale, hres_raw, vres_raw, hres_raw, vres_raw);
+        vi_screenshot_write(screenshot_path, prescale, hres_raw, vres_raw, hres_raw, output_height);
         screenshot_path[0] = 0;
     }
 }
