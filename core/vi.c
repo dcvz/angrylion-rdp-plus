@@ -48,8 +48,6 @@ struct ccvg
 // config
 static struct core_config* config;
 
-static uint32_t** vi_reg_ptr;
-
 // states
 static uint32_t prevvicurrent;
 static int emucontrolsvicurrent;
@@ -153,8 +151,6 @@ void vi_init(struct core_config* _config)
 {
     config = _config;
 
-    vi_reg_ptr = plugin_get_vi_registers();
-
     vi_gamma_init();
     vi_restore_init();
 
@@ -172,6 +168,8 @@ void vi_init(struct core_config* _config)
 static int vi_process_start(void)
 {
     uint32_t final = 0;
+
+    uint32_t** vi_reg_ptr = plugin_get_vi_registers();
 
     v_start = (*vi_reg_ptr[VI_V_START] >> 16) & 0x3ff;
     h_start = (*vi_reg_ptr[VI_H_START] >> 16) & 0x3ff;
@@ -666,6 +664,8 @@ static int vi_process_start_fast(void)
 {
     // note: this is probably a very, very crude method to get the frame size,
     // but should hopefully work most of the time
+    uint32_t** vi_reg_ptr = plugin_get_vi_registers();
+
     int32_t v_start = (*vi_reg_ptr[VI_V_START] >> 16) & 0x3ff;
     int32_t h_start = (*vi_reg_ptr[VI_H_START] >> 16) & 0x3ff;
 
@@ -697,6 +697,13 @@ static int vi_process_start_fast(void)
         return 0;
     }
 
+    vi_width_low = *vi_reg_ptr[VI_WIDTH] & 0xfff;
+    frame_buffer = *vi_reg_ptr[VI_ORIGIN] & 0xffffff;
+
+    if (!frame_buffer) {
+        return 0;
+    }
+
     uint32_t vi_control = *vi_reg_ptr[VI_STATUS];
     vitype = vi_control & 3;
 
@@ -714,9 +721,6 @@ static int vi_process_start_fast(void)
 
 static void vi_process_fast(void)
 {
-    int32_t width = *vi_reg_ptr[VI_WIDTH] & 0xfff;
-    uint32_t origin = *vi_reg_ptr[VI_ORIGIN] & 0xffffff;
-
     int32_t y_start = 0;
     int32_t y_end = vres_raw;
     int32_t y_add = 1;
@@ -727,7 +731,7 @@ static void vi_process_fast(void)
     }
 
     for (int32_t y = y_start; y < y_end; y += y_add) {
-        int32_t line = y * width;
+        int32_t line = y * vi_width_low;
         uint32_t* dst = prescale + y * hres_raw;
 
         for (int32_t x = 0; x < hres_raw; x++) {
@@ -737,7 +741,7 @@ static void vi_process_fast(void)
                 case VI_MODE_COLOR:
                     switch (vitype) {
                         case VI_TYPE_RGBA5551: {
-                            uint16_t pix = rdram_read_idx16((origin >> 1) + line + x);
+                            uint16_t pix = rdram_read_idx16((frame_buffer >> 1) + line + x);
                             r = ((pix >> 11) & 0x1f) << 3;
                             g = ((pix >>  6) & 0x1f) << 3;
                             b = ((pix >>  1) & 0x1f) << 3;
@@ -745,7 +749,7 @@ static void vi_process_fast(void)
                         }
 
                         case VI_TYPE_RGBA8888: {
-                            uint32_t pix = rdram_read_idx32((origin >> 2) + line + x);
+                            uint32_t pix = rdram_read_idx32((frame_buffer >> 2) + line + x);
                             r = (pix >> 24) & 0xff;
                             g = (pix >> 16) & 0xff;
                             b = (pix >>  8) & 0xff;
@@ -766,7 +770,7 @@ static void vi_process_fast(void)
                     // TODO: incorrect for RGBA8888?
                     uint8_t hval;
                     uint16_t pix;
-                    rdram_read_pair16(&pix, &hval, (origin >> 1) + line + x);
+                    rdram_read_pair16(&pix, &hval, (frame_buffer >> 1) + line + x);
                     r = g = b = (((pix & 1) << 2) | hval) << 5;
                     break;
                 }
@@ -809,7 +813,7 @@ void vi_update(void)
     }
 
     if (trace_write_is_open()) {
-        trace_write_vi(vi_reg_ptr);
+        trace_write_vi(plugin_get_vi_registers());
     }
 
     // select filter functions based on config
