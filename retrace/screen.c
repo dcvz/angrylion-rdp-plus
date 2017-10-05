@@ -55,9 +55,9 @@ void screen_swap(void)
     SDL_RenderPresent(renderer);
 }
 
-void screen_upload(int32_t* buffer, int32_t width, int32_t height, int32_t output_width, int32_t output_height)
+void screen_upload(int32_t* buffer, int32_t width, int32_t height, int32_t pitch, int32_t output_height)
 {
-    SDL_RenderSetLogicalSize(renderer, output_width, output_height);
+    SDL_RenderSetLogicalSize(renderer, width, output_height);
 
     if (texture_width != width || texture_height != height) {
         texture_width = width;
@@ -67,7 +67,7 @@ void screen_upload(int32_t* buffer, int32_t width, int32_t height, int32_t outpu
         SDL_GetDisplayMode(0, 0, &mode);
 
         // update window size and position
-        SDL_SetWindowSize(window, output_width, output_height);
+        SDL_SetWindowSize(window, width, output_height);
         SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
 
         // (re)create frame buffer texture
@@ -88,7 +88,7 @@ void screen_upload(int32_t* buffer, int32_t width, int32_t height, int32_t outpu
         }
     }
 
-    SDL_UpdateTexture(texture, NULL, buffer, width * 4);
+    SDL_UpdateTexture(texture, NULL, buffer, pitch * sizeof(*buffer));
 }
 
 void screen_set_fullscreen(bool _fullscreen)

@@ -67,9 +67,9 @@ void screen_swap(void)
     CoreVideo_GL_SwapBuffers();
 }
 
-void screen_upload(int32_t* buffer, int32_t width, int32_t height, int32_t output_width, int32_t output_height)
+void screen_upload(int32_t* buffer, int32_t width, int32_t height, int32_t pitch, int32_t output_height)
 {
-    gl_screen_upload(buffer, width, height, output_width, output_height);
+    gl_screen_upload(buffer, width, height, pitch, output_height);
 }
 
 void screen_set_fullscreen(bool _fullscreen)

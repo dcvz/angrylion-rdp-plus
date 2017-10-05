@@ -18,8 +18,12 @@
 #include <math.h>
 #include <assert.h>
 
+// typical VI_V_SYNC values for NTSC and PAL
+#define V_SYNC_NTSC 525
+#define V_SYNC_PAL 625
+
 #define PRESCALE_WIDTH 640
-#define PRESCALE_HEIGHT 625
+#define PRESCALE_HEIGHT V_SYNC_PAL
 
 enum vi_type
 {
@@ -46,7 +50,7 @@ static int prevserrate;
 static int oldlowerfield;
 static int32_t oldvstart;
 static uint32_t prevwasblank;
-static uint32_t tvfadeoutstate[625];
+static uint32_t tvfadeoutstate[PRESCALE_HEIGHT];
 static int vactivelines;
 static int ispal;
 static int lineshifter;
@@ -56,6 +60,7 @@ static uint32_t x_add;
 static uint32_t x_start_init;
 static uint32_t y_add;
 static uint32_t y_start;
+static int32_t v_sync;
 static char screenshot_path[FILE_MAX_PATH];
 static enum vi_mode vi_mode;
 
@@ -101,18 +106,18 @@ static uint32_t gamma_table[0x100];
 static uint32_t gamma_dither_table[0x4000];
 static int vi_restore_table[0x400];
 
-static void vi_screenshot_write(char* path, int32_t* buffer, int width, int height, int output_width, int output_height)
+static void vi_screenshot_write(char* path, int32_t* buffer, int width, int height, int pitch, int output_height)
 {
     msg_debug("screen: writing screenshot to '%s'", path);
 
     // prepare bitmap headers
     struct bitmap_info_header ihdr = {0};
     ihdr.size = sizeof(ihdr);
-    ihdr.width = output_width;
+    ihdr.width = width;
     ihdr.height = output_height;
     ihdr.planes = 1;
     ihdr.bit_count = 32;
-    ihdr.size_image = output_width * output_height * sizeof(int32_t);
+    ihdr.size_image = width * output_height * sizeof(int32_t);
 
     struct bitmap_file_header fhdr = {0};
     fhdr.type = 'B' | ('M' << 8);
@@ -133,20 +138,17 @@ static void vi_screenshot_write(char* path, int32_t* buffer, int width, int heig
     // write bitmap contents
     fseek(fp, fhdr.off_bits, SEEK_SET);
 
-    // check if interpolation is required
-    if (width != output_width || height != output_height) {
-        // nearest-neighbor mode, copy pixel by pixel
+    // check if interpolation is required and copy lines to bitmap
+    if (height != output_height) {
+        // nearest-neighbor mode
         for (int32_t y = output_height - 1; y >= 0; y--) {
-            for (int32_t x = 0; x < output_width; x++) {
-                int ix = (int)roundf((float)x * width / output_width);
-                int iy = (int)roundf((float)y * height / output_height);
-                fwrite(buffer + width * iy + ix, sizeof(int32_t), 1, fp);
-            }
+            int iy = (int)roundf((float)y * height / output_height);
+            fwrite(buffer + pitch * iy, width * sizeof(int32_t), 1, fp);
         }
     } else {
-        // direct mode, copy line by line in reverse order
+        // direct mode
         for (int32_t y = height - 1; y >= 0; y--) {
-            fwrite(buffer + width * y, width * sizeof(int32_t), 1, fp);
+            fwrite(buffer + pitch * y, width * sizeof(int32_t), 1, fp);
         }
     }
 
@@ -921,7 +923,7 @@ static int vi_process_start(void)
 
 
     int32_t v_end = *vi_reg_ptr[VI_V_START] & 0x3ff;
-    int32_t v_sync = *vi_reg_ptr[VI_V_SYNC] & 0x3ff;
+    v_sync = *vi_reg_ptr[VI_V_SYNC] & 0x3ff;
 
 
 
@@ -1460,18 +1462,18 @@ static void vi_process(void)
 
 static void vi_process_end(void)
 {
-    int32_t output_width = ispal ? 768 : 640;
-    int32_t output_height = ispal ? 576 : 480;
-    int32_t height = output_height >> lineshifter;
+    int32_t pitch = PRESCALE_WIDTH;
+    int32_t height = vres << serration_pulses;
+    int32_t output_height = (vres << 1) * V_SYNC_NTSC / v_sync;
 
     if (config->vi.widescreen) {
-         output_height = ispal ? 432 : 360;
+         output_height = output_height * 9 / 16;
     }
 
-    screen_upload(prescale, PRESCALE_WIDTH, height, output_width, output_height);
+    screen_upload(prescale, PRESCALE_WIDTH, height, pitch, output_height);
 
     if (screenshot_path[0]) {
-        vi_screenshot_write(screenshot_path, prescale, PRESCALE_WIDTH, height, output_width, output_height);
+        vi_screenshot_write(screenshot_path, prescale, PRESCALE_WIDTH, height, pitch, output_height);
         screenshot_path[0] = 0;
     }
 }

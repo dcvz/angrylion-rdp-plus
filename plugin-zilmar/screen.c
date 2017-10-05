@@ -121,10 +121,9 @@ void screen_init(void)
     gl_screen_init();
 }
 
-void screen_upload(int32_t* buffer, int32_t width, int32_t height, int32_t output_width, int32_t output_height)
+void screen_upload(int32_t* buffer, int32_t width, int32_t height, int32_t pitch, int32_t output_height)
 {
-    // check if the framebuffer size has changed
-    gl_screen_upload(buffer, width, height, output_width, output_height);
+    gl_screen_upload(buffer, width, height, pitch, output_height);
 }
 
 void screen_swap(void)

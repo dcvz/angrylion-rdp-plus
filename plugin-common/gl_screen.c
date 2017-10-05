@@ -127,7 +127,7 @@ void gl_screen_init(void)
     gl_check_errors();
 }
 
-bool gl_screen_upload(int32_t* buffer, int32_t width, int32_t height, int32_t output_width, int32_t output_height)
+bool gl_screen_upload(int32_t* buffer, int32_t width, int32_t height, int32_t pitch, int32_t output_height)
 {
     bool buffer_size_changed = tex_width != width || tex_height != height;
 
@@ -135,6 +135,9 @@ bool gl_screen_upload(int32_t* buffer, int32_t width, int32_t height, int32_t ou
     if (buffer_size_changed) {
         tex_width = width;
         tex_height = height;
+
+        // set pitch for all unpacking operations
+        glPixelStorei(GL_UNPACK_ROW_LENGTH, pitch);
 
         // reallocate texture buffer on GPU
         glTexImage2D(GL_TEXTURE_2D, 0, TEX_INTERNAL_FORMAT, tex_width,
@@ -148,7 +151,7 @@ bool gl_screen_upload(int32_t* buffer, int32_t width, int32_t height, int32_t ou
     }
 
     // update output size
-    tex_display_width = output_width;
+    tex_display_width = width;
     tex_display_height = output_height;
 
     return buffer_size_changed;
