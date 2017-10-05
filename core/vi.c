@@ -15,7 +15,6 @@
 #include <string.h>
 #include <stdio.h>
 #include <memory.h>
-#include <math.h>
 #include <assert.h>
 
 // typical VI_V_SYNC values for NTSC and PAL
@@ -134,7 +133,7 @@ static void vi_screenshot_write(char* path, int32_t* buffer, int width, int heig
     if (height != output_height) {
         // nearest-neighbor mode
         for (int32_t y = output_height - 1; y >= 0; y--) {
-            int iy = (int)roundf((float)y * height / output_height);
+            int iy = y * height / output_height;
             fwrite(buffer + pitch * iy, width * sizeof(int32_t), 1, fp);
         }
     } else {
