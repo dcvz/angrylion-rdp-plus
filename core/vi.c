@@ -171,36 +171,12 @@ void vi_init(struct core_config* _config)
 
 static int vi_process_start(void)
 {
-
-
-
-
-
     uint32_t final = 0;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     hres = (*vi_reg_ptr[VI_H_START] & 0x3ff) - ((*vi_reg_ptr[VI_H_START] >> 16) & 0x3ff);
 
     vres = (*vi_reg_ptr[VI_V_START] & 0x3ff) - ((*vi_reg_ptr[VI_V_START] >> 16) & 0x3ff);
     vres >>= 1;
-
-
-
 
     uint32_t vi_control = *vi_reg_ptr[VI_STATUS];
     dither_filter = (vi_control >> 16) & 1;
@@ -227,56 +203,14 @@ static int vi_process_start(void)
         onetimewarnings.vbusclock = 1;
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     vi_fetch_filter_ptr = vi_fetch_filter_func[vitype & 1];
 
     ispal = (*vi_reg_ptr[VI_V_SYNC] & 0x3ff) > 550;
-
-
-
-
-
-
-
-
-
 
     v_start = (*vi_reg_ptr[VI_V_START] >> 16) & 0x3ff;
     h_start = (*vi_reg_ptr[VI_H_START] >> 16) & 0x3ff;
 
     x_add = *vi_reg_ptr[VI_X_SCALE] & 0xfff;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     if (!lerp_en && vitype == VI_TYPE_RGBA5551 && !onetimewarnings.nolerp && h_start < 0x80 && x_add <= 0x200)
     {
@@ -299,35 +233,8 @@ static int vi_process_start(void)
         h_start_clamped = 1;
     }
 
-
-
-
-
     int32_t v_end = *vi_reg_ptr[VI_V_START] & 0x3ff;
     v_sync = *vi_reg_ptr[VI_V_SYNC] & 0x3ff;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     int validinterlace = (vitype & 2) && serration_pulses;
     if (validinterlace && prevserrate && emucontrolsvicurrent < 0)
@@ -349,7 +256,6 @@ static int vi_process_start(void)
 
     oldlowerfield = lowerfield;
 
-
     if (validinterlace)
     {
         prevserrate = 1;
@@ -359,27 +265,10 @@ static int vi_process_start(void)
     else
         prevserrate = 0;
 
-
-
-
-
-
-
-
-
-
-
-
-
     lineshifter = !serration_pulses;
 
     int32_t vstartoffset = ispal ? 44 : 34;
     v_start = (v_start - vstartoffset) / 2;
-
-
-
-
-
 
     y_start = (*vi_reg_ptr[VI_Y_SCALE] >> 16) & 0xfff;
     y_add = *vi_reg_ptr[VI_Y_SCALE] & 0xfff;
@@ -397,9 +286,6 @@ static int vi_process_start(void)
         hres = PRESCALE_WIDTH - h_start;
         hres_clamped = 1;
     }
-
-
-
 
     if ((vres + v_start) > PRESCALE_HEIGHT)
     {
@@ -419,32 +305,10 @@ static int vi_process_start(void)
 
     int validh = (hres > 0 && h_start < PRESCALE_WIDTH);
 
-
-
     uint32_t pix = 0;
     uint8_t cur_cvg = 0;
 
-
     int32_t *d = 0;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     minhpass = h_start_clamped ? 0 : 8;
     maxhpass =  hres_clamped ? hres : (hres - 7);
@@ -630,12 +494,10 @@ static void vi_process(void)
             next_x = pixels + next_line_x;
             far_x = pixels + far_line_x;
 
-
             scan_x = nextpixels + line_x;
             prev_scan_x = nextpixels + prev_line_x;
             next_scan_x = nextpixels + next_line_x;
             far_scan_x = nextpixels + far_line_x;
-
 
             line_x++;
             prev_line_x++;
@@ -645,7 +507,6 @@ static void vi_process(void)
             xfrac = (x_start >> 5) & 0x1f;
 
             int lerping = lerp_en && (xfrac || yfrac);
-
 
             if (prev_line_x > cache_marker)
             {
@@ -684,7 +545,6 @@ static void vi_process(void)
                 vi_fetch_filter_ptr(&viaa_cache_next[next_line_x], frame_buffer, next_scan_x, fsaa, dither_filter, vi_width_low, fetchbugstate);
                 cache_next_marker = next_line_x;
             }
-
 
             if (divot)
             {
@@ -725,7 +585,6 @@ static void vi_process(void)
                 }
 
                 color = divot_cache[line_x];
-
             }
             else
             {
@@ -746,8 +605,6 @@ static void vi_process(void)
                     scancolor = viaa_cache_next[line_x];
                     scannextcolor = viaa_cache_next[next_line_x];
                 }
-
-
 
                 vi_vl_lerp(&color, scancolor, yfrac);
                 vi_vl_lerp(&nextcolor, scannextcolor, yfrac);
