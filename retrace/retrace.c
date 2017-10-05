@@ -11,13 +11,13 @@
 #include <inttypes.h>
 #include <string.h>
 
-#ifdef WIN32
+#ifdef _WIN32
 #include <SDL.h>
 #else
 #include <SDL2/SDL.h>
 #endif
 
-#ifdef WIN32
+#ifdef _WIN32
 #include <windows.h>
 #endif
 
@@ -115,7 +115,7 @@ void retrace_frames(void)
 
 void retrace_frames_verbose(void)
 {
-#ifdef WIN32
+#ifdef _WIN32
     // set maximum process priority for most accurate results
     SetPriorityClass(GetCurrentProcess(), REALTIME_PRIORITY_CLASS);
 #endif
