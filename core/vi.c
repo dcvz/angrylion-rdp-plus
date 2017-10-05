@@ -68,6 +68,9 @@ static uint32_t x_start_init;
 static uint32_t y_add;
 static uint32_t y_start;
 static int32_t v_sync;
+static int vi_width_low;
+static uint32_t frame_buffer;
+
 static char screenshot_path[FILE_MAX_PATH];
 static enum vi_mode vi_mode;
 
@@ -454,14 +457,12 @@ static int vi_process_start(void)
     linecount = serration_pulses ? (PRESCALE_WIDTH << 1) : PRESCALE_WIDTH;
     prescale_ptr = v_start * linecount + h_start + (lowerfield ? PRESCALE_WIDTH : 0);
 
+    vi_width_low = *vi_reg_ptr[VI_WIDTH] & 0xfff;
+    frame_buffer = *vi_reg_ptr[VI_ORIGIN] & 0xffffff;
 
-
-
-
-
-
-
-
+    if (!frame_buffer) {
+        return 0;
+    }
 
     int i;
     if (!(vitype & 2))
@@ -579,7 +580,6 @@ static void vi_process(void)
 
     int r = 0, g = 0, b = 0;
     int xfrac = 0, yfrac = 0;
-    int vi_width_low = *vi_reg_ptr[VI_WIDTH] & 0xfff;
     int line_x = 0, next_line_x = 0, prev_line_x = 0, far_line_x = 0;
     int prev_scan_x = 0, scan_x = 0, next_scan_x = 0, far_scan_x = 0;
     int prev_x = 0, cur_x = 0, next_x = 0, far_x = 0;
@@ -587,11 +587,6 @@ static void vi_process(void)
     bool cache_init = false;
 
     pixels = 0;
-    uint32_t frame_buffer = *vi_reg_ptr[VI_ORIGIN] & 0xffffff;
-
-    if (!frame_buffer) {
-        return;
-    }
 
     int32_t j_start = 0;
     int32_t j_end = vres;
