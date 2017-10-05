@@ -24,6 +24,12 @@
 #define PRESCALE_WIDTH 640
 #define PRESCALE_HEIGHT V_SYNC_PAL
 
+// enable output of the normally not visible overscan area (adds black borders)
+#define ENABLE_OVERSCAN 0
+
+// enable TV fading emulation
+#define ENABLE_TVFADEOUT 0
+
 enum vi_type
 {
     VI_TYPE_BLANK,
@@ -54,7 +60,9 @@ static int prevserrate;
 static int oldlowerfield;
 static int32_t oldvstart;
 static uint32_t prevwasblank;
+#if ENABLE_TVFADEOUT
 static uint32_t tvfadeoutstate[PRESCALE_HEIGHT];
+#endif
 static int vactivelines;
 static int ispal;
 static int lineshifter;
@@ -325,6 +333,7 @@ static int vi_process_start(void)
         return 0;
     }
 
+#if ENABLE_TVFADEOUT
     int i;
     if (!(vitype & 2))
     {
@@ -418,6 +427,7 @@ static int vi_process_start(void)
                     memset(&prescale[i * PRESCALE_WIDTH], 0, PRESCALE_WIDTH * sizeof(uint32_t));
         }
     }
+#endif
 
     return 1;
 }
@@ -651,10 +661,22 @@ static void vi_process_end(void)
          output_height = output_height * 9 / 16;
     }
 
-    screen_upload(prescale, PRESCALE_WIDTH, height, pitch, output_height);
+#if ENABLE_OVERSCAN
+    // use entire prescale buffer
+    int32_t width = PRESCALE_WIDTH;
+    int32_t* buffer = prescale;
+#else
+    // crop away overscan area from prescale
+    int32_t width = maxhpass - minhpass;
+    int32_t x = h_start + minhpass;
+    int32_t y = (v_start + oldlowerfield) << serration_pulses;
+    int32_t* buffer = prescale + x + y * pitch;
+#endif
+
+    screen_upload(buffer, width, height, pitch, output_height);
 
     if (screenshot_path[0]) {
-        vi_screenshot_write(screenshot_path, prescale, PRESCALE_WIDTH, height, pitch, output_height);
+        vi_screenshot_write(screenshot_path, buffer, width, height, pitch, output_height);
         screenshot_path[0] = 0;
     }
 }
