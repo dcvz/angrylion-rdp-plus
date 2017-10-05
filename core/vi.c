@@ -173,10 +173,14 @@ static int vi_process_start(void)
 {
     uint32_t final = 0;
 
-    hres = (*vi_reg_ptr[VI_H_START] & 0x3ff) - ((*vi_reg_ptr[VI_H_START] >> 16) & 0x3ff);
+    v_start = (*vi_reg_ptr[VI_V_START] >> 16) & 0x3ff;
+    h_start = (*vi_reg_ptr[VI_H_START] >> 16) & 0x3ff;
 
-    vres = (*vi_reg_ptr[VI_V_START] & 0x3ff) - ((*vi_reg_ptr[VI_V_START] >> 16) & 0x3ff);
-    vres >>= 1;
+    int32_t v_end = *vi_reg_ptr[VI_V_START] & 0x3ff;
+    int32_t h_end = *vi_reg_ptr[VI_H_START] & 0x3ff;
+
+    hres =  h_end - h_start;
+    vres = (v_end - v_start) >> 1; // vertical is measured in half-lines
 
     uint32_t vi_control = *vi_reg_ptr[VI_STATUS];
     dither_filter = (vi_control >> 16) & 1;
@@ -207,9 +211,6 @@ static int vi_process_start(void)
 
     ispal = (*vi_reg_ptr[VI_V_SYNC] & 0x3ff) > 550;
 
-    v_start = (*vi_reg_ptr[VI_V_START] >> 16) & 0x3ff;
-    h_start = (*vi_reg_ptr[VI_H_START] >> 16) & 0x3ff;
-
     x_add = *vi_reg_ptr[VI_X_SCALE] & 0xfff;
 
     if (!lerp_en && vitype == VI_TYPE_RGBA5551 && !onetimewarnings.nolerp && h_start < 0x80 && x_add <= 0x200)
@@ -233,7 +234,6 @@ static int vi_process_start(void)
         h_start_clamped = 1;
     }
 
-    int32_t v_end = *vi_reg_ptr[VI_V_START] & 0x3ff;
     v_sync = *vi_reg_ptr[VI_V_SYNC] & 0x3ff;
 
     int validinterlace = (vitype & 2) && serration_pulses;
@@ -293,7 +293,7 @@ static int vi_process_start(void)
         msg_warning("vres = %d v_start = %d v_video_start = %d", vres, v_start, (*vi_reg_ptr[VI_V_START] >> 16) & 0x3ff);
     }
 
-    int32_t h_end = hres + h_start;
+    h_end = hres + h_start; // note: the result appears to be different to VI_H_START
     int32_t hrightblank = PRESCALE_WIDTH - h_end;
 
     vactivelines = (*vi_reg_ptr[VI_V_SYNC] & 0x3ff) - vstartoffset;
