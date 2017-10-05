@@ -588,20 +588,7 @@ static void vi_process(void)
 
     if (vitype & 2) {
         pixels = 0;
-//#undef RENDER_CVG_BITS16
-//#undef RENDER_CVG_BITS32
-//#undef RENDER_MIN_CVG_ONLY
-//#undef RENDER_MAX_CVG_ONLY
-//
-//#undef MONITOR_Z
-//#undef BW_ZBUFFER
-//#undef ZBUFF_AS_16B_IATEXTURE
-//
-//#ifdef MONITOR_Z
-//        uint32_t frame_buffer = zb_address;
-//#else
         uint32_t frame_buffer = *vi_reg_ptr[VI_ORIGIN] & 0xffffff;
-//#endif
 
         if (frame_buffer)
         {
@@ -776,38 +763,6 @@ static void vi_process(void)
                     b = color.b;
 
                     gamma_filters(&r, &g, &b, gamma_and_dither);
-
-
-//#ifdef BW_ZBUFFER
-//                    uint32_t tempz = RREADIDX16((frame_buffer >> 1) + cur_x);
-//                    pix = tempz;
-//
-//                    r = g = b = pix >> 8;
-//
-//#endif
-//#ifdef ZBUFF_AS_16B_IATEXTURE
-//                    r = g = b = (((pix >> 8) & 0xff) * (pix & 0xff)) >> 8;
-//#endif
-//#ifdef RENDER_CVG_BITS16
-//
-//                    r = g = b = cur_cvg << 5;
-//#endif
-//#ifdef RENDER_CVG_BITS32
-//
-//                    r = g = b = cur_cvg << 5;
-//#endif
-//#ifdef RENDER_MIN_CVG_ONLY
-//                    if (!cur_cvg)
-//                        r = g = b = 0;
-//                    else
-//                        r = g =  b = 0xff;
-//#endif
-//#ifdef RENDER_MAX_CVG_ONLY
-//                    if (cur_cvg != 7)
-//                        r = g = b = 0;
-//                    else
-//                        r = g = b = 0xff;
-//#endif
 
                     if (i >= minhpass && i < maxhpass)
                         d[i] = (r << 16) | (g << 8) | b;
