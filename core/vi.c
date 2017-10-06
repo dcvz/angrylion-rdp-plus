@@ -432,7 +432,7 @@ static int vi_process_start(void)
     }
 #endif
 
-    return 1;
+    return validh;
 }
 
 static void vi_process(void)
