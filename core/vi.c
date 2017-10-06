@@ -58,7 +58,7 @@ struct vi_reg_ctrl
     uint32_t aa_mode : 2;
     uint32_t reserved : 1;
     uint32_t kill_we : 1;
-    uint32_t pixel_advance : 3;
+    uint32_t pixel_advance : 4;
     uint32_t dither_filter_enable : 1;
 };
 
