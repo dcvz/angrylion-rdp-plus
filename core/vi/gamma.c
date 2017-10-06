@@ -21,18 +21,15 @@ static uint32_t vi_integer_sqrt(uint32_t a)
     return res;
 }
 
-static STRICTINLINE void gamma_filters(int* r, int* g, int* b, int gamma_and_dither)
+static STRICTINLINE void gamma_filters(int* r, int* g, int* b, struct vi_reg_ctrl* ctrl)
 {
     int cdith, dith;
 
-
-
-    switch(gamma_and_dither)
+    switch((ctrl->gamma_enable << 1) | ctrl->gamma_dither_enable)
     {
-    case 0:
+    case 0: // no gamma, no dithering
         return;
-        break;
-    case 1:
+    case 1: // no gamma, dithering enabled
         cdith = irand();
         dith = cdith & 1;
         if (*r < 255)
@@ -44,12 +41,12 @@ static STRICTINLINE void gamma_filters(int* r, int* g, int* b, int gamma_and_dit
         if (*b < 255)
             *b += dith;
         break;
-    case 2:
+    case 2: // gamma enabled, no dithering
         *r = gamma_table[*r];
         *g = gamma_table[*g];
         *b = gamma_table[*b];
         break;
-    case 3:
+    case 3: // gamma and dithering enabled
         cdith = irand();
         dith = cdith & 0x3f;
         *r = gamma_dither_table[((*r) << 6)|dith];
