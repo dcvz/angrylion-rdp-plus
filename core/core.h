@@ -18,17 +18,17 @@ enum dp_register
 
 enum vi_register
 {
-    VI_STATUS,
-    VI_ORIGIN,
+    VI_STATUS,  // aka VI_CONTROL
+    VI_ORIGIN,  // aka VI_DRAM_ADDR
     VI_WIDTH,
     VI_INTR,
     VI_V_CURRENT_LINE,
     VI_TIMING,
     VI_V_SYNC,
     VI_H_SYNC,
-    VI_LEAP,
-    VI_H_START,
-    VI_V_START,
+    VI_LEAP,    // aka VI_H_SYNC_LEAP
+    VI_H_START, // aka VI_H_VIDEO
+    VI_V_START, // aka VI_V_VIDEO
     VI_V_BURST,
     VI_X_SCALE,
     VI_Y_SCALE,
