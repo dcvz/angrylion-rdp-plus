@@ -46,20 +46,23 @@ enum vi_aa
     VI_AA_REPLICATE             // replicate pixels, no interpolation
 };
 
-struct vi_reg_ctrl
+union vi_reg_ctrl
 {
-    uint32_t type : 2;
-    uint32_t gamma_dither_enable : 1;
-    uint32_t gamma_enable : 1;
-    uint32_t divot_enable : 1;
-    uint32_t vbus_clock_enable : 1;
-    uint32_t serrate : 1;
-    uint32_t test_mode : 1;
-    uint32_t aa_mode : 2;
-    uint32_t reserved : 1;
-    uint32_t kill_we : 1;
-    uint32_t pixel_advance : 4;
-    uint32_t dither_filter_enable : 1;
+    struct {
+        uint32_t type : 2;
+        uint32_t gamma_dither_enable : 1;
+        uint32_t gamma_enable : 1;
+        uint32_t divot_enable : 1;
+        uint32_t vbus_clock_enable : 1;
+        uint32_t serrate : 1;
+        uint32_t test_mode : 1;
+        uint32_t aa_mode : 2;
+        uint32_t reserved : 1;
+        uint32_t kill_we : 1;
+        uint32_t pixel_advance : 4;
+        uint32_t dither_filter_enable : 1;
+    };
+    uint32_t raw;
 };
 
 struct ccvg
@@ -108,7 +111,7 @@ static uint32_t prescale_ptr;
 static int linecount;
 
 // parsed VI registers
-static struct vi_reg_ctrl ctrl;
+static union vi_reg_ctrl ctrl;
 static int32_t hres, vres;
 static int32_t hres_raw, vres_raw;
 static int32_t v_start;
@@ -201,7 +204,7 @@ static int vi_process_start(void)
     hres =  h_end - h_start;
     vres = (v_end - v_start) >> 1; // vertical is measured in half-lines
 
-    ctrl = *((struct vi_reg_ctrl*) vi_reg_ptr[VI_STATUS]);
+    ctrl.raw = *vi_reg_ptr[VI_STATUS];
 
     // check for unexpected VI type bits set
     if (ctrl.type & ~3) {
@@ -520,39 +523,39 @@ static void vi_process(void)
 
             if (prev_line_x > cache_marker)
             {
-                vi_fetch_filter_ptr(&viaa_cache[prev_line_x], frame_buffer, prev_x, &ctrl, vi_width_low, 0);
-                vi_fetch_filter_ptr(&viaa_cache[line_x], frame_buffer, cur_x, &ctrl, vi_width_low, 0);
-                vi_fetch_filter_ptr(&viaa_cache[next_line_x], frame_buffer, next_x, &ctrl, vi_width_low, 0);
+                vi_fetch_filter_ptr(&viaa_cache[prev_line_x], frame_buffer, prev_x, ctrl, vi_width_low, 0);
+                vi_fetch_filter_ptr(&viaa_cache[line_x], frame_buffer, cur_x, ctrl, vi_width_low, 0);
+                vi_fetch_filter_ptr(&viaa_cache[next_line_x], frame_buffer, next_x, ctrl, vi_width_low, 0);
                 cache_marker = next_line_x;
             }
             else if (line_x > cache_marker)
             {
-                vi_fetch_filter_ptr(&viaa_cache[line_x], frame_buffer, cur_x, &ctrl, vi_width_low, 0);
-                vi_fetch_filter_ptr(&viaa_cache[next_line_x], frame_buffer, next_x, &ctrl, vi_width_low, 0);
+                vi_fetch_filter_ptr(&viaa_cache[line_x], frame_buffer, cur_x, ctrl, vi_width_low, 0);
+                vi_fetch_filter_ptr(&viaa_cache[next_line_x], frame_buffer, next_x, ctrl, vi_width_low, 0);
                 cache_marker = next_line_x;
             }
             else if (next_line_x > cache_marker)
             {
-                vi_fetch_filter_ptr(&viaa_cache[next_line_x], frame_buffer, next_x, &ctrl, vi_width_low, 0);
+                vi_fetch_filter_ptr(&viaa_cache[next_line_x], frame_buffer, next_x, ctrl, vi_width_low, 0);
                 cache_marker = next_line_x;
             }
 
             if (prev_line_x > cache_next_marker)
             {
-                vi_fetch_filter_ptr(&viaa_cache_next[prev_line_x], frame_buffer, prev_scan_x, &ctrl, vi_width_low, fetchbugstate);
-                vi_fetch_filter_ptr(&viaa_cache_next[line_x], frame_buffer, scan_x, &ctrl, vi_width_low, fetchbugstate);
-                vi_fetch_filter_ptr(&viaa_cache_next[next_line_x], frame_buffer, next_scan_x, &ctrl, vi_width_low, fetchbugstate);
+                vi_fetch_filter_ptr(&viaa_cache_next[prev_line_x], frame_buffer, prev_scan_x, ctrl, vi_width_low, fetchbugstate);
+                vi_fetch_filter_ptr(&viaa_cache_next[line_x], frame_buffer, scan_x, ctrl, vi_width_low, fetchbugstate);
+                vi_fetch_filter_ptr(&viaa_cache_next[next_line_x], frame_buffer, next_scan_x, ctrl, vi_width_low, fetchbugstate);
                 cache_next_marker = next_line_x;
             }
             else if (line_x > cache_next_marker)
             {
-                vi_fetch_filter_ptr(&viaa_cache_next[line_x], frame_buffer, scan_x, &ctrl, vi_width_low, fetchbugstate);
-                vi_fetch_filter_ptr(&viaa_cache_next[next_line_x], frame_buffer, next_scan_x, &ctrl, vi_width_low, fetchbugstate);
+                vi_fetch_filter_ptr(&viaa_cache_next[line_x], frame_buffer, scan_x, ctrl, vi_width_low, fetchbugstate);
+                vi_fetch_filter_ptr(&viaa_cache_next[next_line_x], frame_buffer, next_scan_x, ctrl, vi_width_low, fetchbugstate);
                 cache_next_marker = next_line_x;
             }
             else if (next_line_x > cache_next_marker)
             {
-                vi_fetch_filter_ptr(&viaa_cache_next[next_line_x], frame_buffer, next_scan_x, &ctrl, vi_width_low, fetchbugstate);
+                vi_fetch_filter_ptr(&viaa_cache_next[next_line_x], frame_buffer, next_scan_x, ctrl, vi_width_low, fetchbugstate);
                 cache_next_marker = next_line_x;
             }
 
@@ -560,13 +563,13 @@ static void vi_process(void)
             {
                 if (far_line_x > cache_marker)
                 {
-                    vi_fetch_filter_ptr(&viaa_cache[far_line_x], frame_buffer, far_x, &ctrl, vi_width_low, 0);
+                    vi_fetch_filter_ptr(&viaa_cache[far_line_x], frame_buffer, far_x, ctrl, vi_width_low, 0);
                     cache_marker = far_line_x;
                 }
 
                 if (far_line_x > cache_next_marker)
                 {
-                    vi_fetch_filter_ptr(&viaa_cache_next[far_line_x], frame_buffer, far_scan_x, &ctrl, vi_width_low, fetchbugstate);
+                    vi_fetch_filter_ptr(&viaa_cache_next[far_line_x], frame_buffer, far_scan_x, ctrl, vi_width_low, fetchbugstate);
                     cache_next_marker = far_line_x;
                 }
 
@@ -625,7 +628,7 @@ static void vi_process(void)
             g = color.g;
             b = color.b;
 
-            gamma_filters(&r, &g, &b, &ctrl);
+            gamma_filters(&r, &g, &b, ctrl);
 
             if (i >= minhpass && i < maxhpass)
                 d[i] = (r << 16) | (g << 8) | b;
@@ -728,7 +731,7 @@ static int vi_process_start_fast(void)
         return 0;
     }
 
-    ctrl = *((struct vi_reg_ctrl*) vi_reg_ptr[VI_STATUS]);
+    ctrl.raw = *vi_reg_ptr[VI_STATUS];
 
     // skip blank/invalid modes
     if (!(ctrl.type & 2)) {
@@ -803,7 +806,7 @@ static void vi_process_fast(void)
                     assert(false);
             }
 
-            gamma_filters(&r, &g, &b, &ctrl);
+            gamma_filters(&r, &g, &b, ctrl);
 
             dst[x] = (r << 16) | (g << 8) | b;
         }
