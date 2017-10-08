@@ -10,12 +10,20 @@
 
 static uint32_t rdram_size;
 static uint8_t* rdram_hidden_bits;
+static ptr_PluginGetVersion CoreGetVersion = NULL;
 
 void plugin_init(void)
 {
-    rdram_size = 0x800000;
+    CoreGetVersion = (ptr_PluginGetVersion) DLSYM(CoreLibHandle, "PluginGetVersion");
 
-    // Zilmar plugins also can't access the hidden bits, so allocate it on our own
+    int core_version;
+    CoreGetVersion(NULL, &core_version, NULL, NULL, NULL);
+    if (core_version >= 0x020501)
+        rdram_size = *gfx.RDRAM_SIZE;
+    else
+        rdram_size = 0x800000;
+
+    // mupen64plus plugins can't access the hidden bits, so allocate it on our own
     rdram_hidden_bits = malloc(rdram_size);
     memset(rdram_hidden_bits, 3, rdram_size);
 }

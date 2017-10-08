@@ -2,6 +2,7 @@
 
 #include "core/core.h"
 #include "api/m64p_plugin.h"
+#include "api/m64p_common.h"
 
 #ifdef _WIN32
 #define DLSYM(a, b) GetProcAddress(a, b)
