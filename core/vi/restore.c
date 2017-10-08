@@ -48,8 +48,6 @@ static int vi_restore_table[0x400];
 
 static STRICTINLINE void restore_filter16(int* r, int* g, int* b, uint32_t fboffset, uint32_t num, uint32_t hres, uint32_t fetchbugstate)
 {
-
-
     uint32_t idx = (fboffset >> 1) + num;
 
     uint32_t toleftpix = idx - 1;

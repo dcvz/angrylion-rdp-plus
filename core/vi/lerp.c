@@ -11,5 +11,4 @@ static STRICTINLINE void vi_vl_lerp(struct ccvg* up, struct ccvg down, uint32_t 
     up->r = ((((down.r - r0) * frac + 16) >> 5) + r0) & 0xff;
     up->g = ((((down.g - g0) * frac + 16) >> 5) + g0) & 0xff;
     up->b = ((((down.b - b0) * frac + 16) >> 5) + b0) & 0xff;
-
 }

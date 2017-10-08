@@ -23,9 +23,6 @@
 
 static STRICTINLINE void video_max_optimized(uint32_t* pixels, uint32_t* penumin, uint32_t* penumax, int numofels)
 {
-
-
-
     int i;
     int posmax = 0, posmin = 0;
     uint32_t curpenmax = pixels[0], curpenmin = pixels[0];
@@ -69,12 +66,6 @@ static STRICTINLINE void video_max_optimized(uint32_t* pixels, uint32_t* penumin
 
 static STRICTINLINE void video_filter16(int* endr, int* endg, int* endb, uint32_t fboffset, uint32_t num, uint32_t hres, uint32_t centercvg, uint32_t fetchbugstate)
 {
-
-
-
-
-
-
     uint32_t penumaxr, penumaxg, penumaxb, penuminr, penuming, penuminb;
     uint16_t pix;
     uint32_t numoffull = 1;
@@ -90,10 +81,6 @@ static STRICTINLINE void video_filter16(int* endr, int* endg, int* endb, uint32_
     backg[0] = g;
     backb[0] = b;
 
-
-
-
-
     uint32_t idx = (fboffset >> 1) + num;
 
     uint32_t toleft = idx - 2;
@@ -103,15 +90,6 @@ static STRICTINLINE void video_filter16(int* endr, int* endg, int* endb, uint32_
 
     leftup = idx - hres - 1;
     rightup = idx - hres + 1;
-
-
-
-
-
-
-
-
-
 
     if (fetchbugstate != 1)
     {
@@ -133,16 +111,9 @@ static STRICTINLINE void video_filter16(int* endr, int* endg, int* endb, uint32_
 
     uint32_t colr, colg, colb;
 
-
-
-
     video_max_optimized(backr, &penuminr, &penumaxr, numoffull);
     video_max_optimized(backg, &penuming, &penumaxg, numoffull);
     video_max_optimized(backb, &penuminb, &penumaxb, numoffull);
-
-
-
-
 
     uint32_t coeff = 7 - centercvg;
     colr = penuminr + penumaxr - (r << 1);
@@ -156,14 +127,10 @@ static STRICTINLINE void video_filter16(int* endr, int* endg, int* endb, uint32_
     *endr = colr & 0xff;
     *endg = colg & 0xff;
     *endb = colb & 0xff;
-
-
-
 }
 
 static STRICTINLINE void video_filter32(int* endr, int* endg, int* endb, uint32_t fboffset, uint32_t num, uint32_t hres, uint32_t centercvg, uint32_t fetchbugstate)
 {
-
     uint32_t penumaxr, penumaxg, penumaxb, penuminr, penuming, penuminb;
     uint32_t numoffull = 1;
     uint32_t pix = 0, pixcvg = 0;

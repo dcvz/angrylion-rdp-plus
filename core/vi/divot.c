@@ -1,20 +1,10 @@
 static STRICTINLINE void divot_filter(struct ccvg* final, struct ccvg centercolor, struct ccvg leftcolor, struct ccvg rightcolor)
 {
-
-
-
-
-
-
-
     uint32_t leftr, leftg, leftb, rightr, rightg, rightb, centerr, centerg, centerb;
 
     *final = centercolor;
 
     if ((centercolor.cvg & leftcolor.cvg & rightcolor.cvg) == 7)
-
-
-
     {
         return;
     }
