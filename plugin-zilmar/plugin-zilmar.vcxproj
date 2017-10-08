@@ -19,11 +19,13 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="config.h" />
     <ClInclude Include="gfx_1.3.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="wgl_ext.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="config.c" />
     <ClCompile Include="gfx_1.3.c" />
     <ClCompile Include="msg.c" />
     <ClCompile Include="plugin.c" />
