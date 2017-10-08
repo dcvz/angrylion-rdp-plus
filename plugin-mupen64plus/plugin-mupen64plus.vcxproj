@@ -25,6 +25,7 @@
     <ClCompile Include="screen.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="api\m64p_common.h" />
     <ClInclude Include="api\m64p_config.h" />
     <ClInclude Include="api\m64p_plugin.h" />
     <ClInclude Include="api\m64p_types.h" />

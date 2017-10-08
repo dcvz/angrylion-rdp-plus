@@ -43,5 +43,8 @@
     <ClInclude Include="screen.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="api\m64p_common.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
