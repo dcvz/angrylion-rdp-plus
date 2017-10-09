@@ -17,11 +17,20 @@
 #include <memory.h>
 #include <assert.h>
 
+// anamorphic NTSC resolution
+#define H_RES_NTSC 640
+#define V_RES_NTSC 480
+
+// anamorphic PAL resolution
+#define H_RES_PAL 768
+#define V_RES_PAL 576
+
 // typical VI_V_SYNC values for NTSC and PAL
 #define V_SYNC_NTSC 525
 #define V_SYNC_PAL 625
 
-#define PRESCALE_WIDTH 640
+// maximum possible size of the prescale area
+#define PRESCALE_WIDTH H_RES_NTSC
 #define PRESCALE_HEIGHT V_SYNC_PAL
 
 // enable output of the normally not visible overscan area (adds black borders)
@@ -658,24 +667,26 @@ static void vi_process(void)
 static void vi_process_end(void)
 {
     int32_t pitch = PRESCALE_WIDTH;
-    int32_t height = vres << ctrl.serrate;
-    int32_t output_height = (vres << 1) * V_SYNC_NTSC / v_sync;
-
-    if (config->vi.widescreen) {
-         output_height = output_height * 9 / 16;
-    }
 
 #if ENABLE_OVERSCAN
     // use entire prescale buffer
     int32_t width = PRESCALE_WIDTH;
+    int32_t height = (ispal ? V_RES_PAL : V_RES_NTSC) >> !ctrl.serrate;
+    int32_t output_height = V_RES_NTSC;
     int32_t* buffer = prescale;
 #else
     // crop away overscan area from prescale
     int32_t width = maxhpass - minhpass;
+    int32_t height = vres << ctrl.serrate;
+    int32_t output_height = (vres << 1) * V_SYNC_NTSC / v_sync;
     int32_t x = h_start + minhpass;
     int32_t y = (v_start + oldlowerfield) << ctrl.serrate;
     int32_t* buffer = prescale + x + y * pitch;
 #endif
+
+    if (config->vi.widescreen) {
+         output_height = output_height * 9 / 16;
+    }
 
     screen_upload(buffer, width, height, pitch, output_height);
 
