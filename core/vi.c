@@ -742,6 +742,8 @@ static int vi_process_start_fast(void)
 
     ctrl.raw = *vi_reg_ptr[VI_STATUS];
 
+    v_sync = *vi_reg_ptr[VI_V_SYNC] & 0x3ff;
+
     // skip blank/invalid modes
     if (!(ctrl.type & 2)) {
         return 0;
@@ -824,11 +826,11 @@ static void vi_process_fast(void)
 
 static void vi_process_end_fast(void)
 {
-    int output_height;
+    int32_t filtered_height = (vres << 1) * V_SYNC_NTSC / v_sync;
+    int32_t output_height = hres_raw * filtered_height / hres;
+
     if (config->vi.widescreen) {
-        output_height = hres_raw * 9 / 16;
-    } else {
-        output_height = hres_raw * 3 / 4;
+        output_height = output_height * 9 / 16;
     }
 
     screen_upload(prescale, hres_raw, vres_raw, hres_raw, output_height);
