@@ -220,8 +220,7 @@ static int vi_process_start(void)
 
     vi_fetch_filter_ptr = vi_fetch_filter_func[ctrl.type & 1];
 
-    ispal = (*vi_reg_ptr[VI_V_SYNC] & 0x3ff) > 550;
-
+    v_sync = *vi_reg_ptr[VI_V_SYNC] & 0x3ff;
     x_add = *vi_reg_ptr[VI_X_SCALE] & 0xfff;
 
     if (ctrl.aa_mode == VI_AA_REPLICATE && ctrl.type == VI_TYPE_RGBA5551 && !onetimewarnings.nolerp && h_start < 0x80 && x_add <= 0x200)
@@ -230,6 +229,7 @@ static int vi_process_start(void)
         onetimewarnings.nolerp = 1;
     }
 
+    ispal = v_sync > (V_SYNC_NTSC + 25);
     h_start -= (ispal ? 128 : 108);
 
     x_start_init = (*vi_reg_ptr[VI_X_SCALE] >> 16) & 0xfff;
@@ -244,8 +244,6 @@ static int vi_process_start(void)
         h_start = 0;
         h_start_clamped = 1;
     }
-
-    v_sync = *vi_reg_ptr[VI_V_SYNC] & 0x3ff;
 
     int validinterlace = (ctrl.type & 2) && ctrl.serrate;
     if (validinterlace && prevserrate && emucontrolsvicurrent < 0)
@@ -307,7 +305,7 @@ static int vi_process_start(void)
     h_end = hres + h_start; // note: the result appears to be different to VI_H_START
     int32_t hrightblank = PRESCALE_WIDTH - h_end;
 
-    vactivelines = (*vi_reg_ptr[VI_V_SYNC] & 0x3ff) - vstartoffset;
+    vactivelines = v_sync - vstartoffset;
     if (vactivelines > PRESCALE_HEIGHT)
         msg_error("VI_V_SYNC_REG too big");
     if (vactivelines < 0)
