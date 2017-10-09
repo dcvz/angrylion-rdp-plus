@@ -15,17 +15,29 @@
 #include <Shlwapi.h>
 #include <stdio.h>
 
+#define CONFIG_FILE_NAME CORE_SIMPLE_NAME "-config.ini"
+
 static bool warn_hle;
 static struct core_config config;
+static char config_path[MAX_PATH + 1];
 static HINSTANCE hinst;
 
 GFX_INFO gfx;
+
+static void get_config_path(void)
+{
+    config_path[0] = 0;
+    GetModuleFileName(hinst, config_path, sizeof(config_path));
+    PathRemoveFileSpec(config_path);
+    PathAppend(config_path, CONFIG_FILE_NAME);
+}
 
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
     switch (fdwReason) {
         case DLL_PROCESS_ATTACH:
             hinst = hinstDLL;
+            get_config_path();
             break;
     }
     return TRUE;
@@ -37,7 +49,7 @@ INT_PTR CALLBACK ConfigDialogProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARA
         case WM_INITDIALOG: {
             SetWindowText(hwnd, CORE_BASE_NAME " Config");
 
-            config_load(&config);
+            config_load(&config, config_path);
 
             TCHAR vi_mode_strings[VI_MODE_NUM][16] = {
                 TEXT("Filtered"),   // VI_MODE_NORMAL
@@ -81,7 +93,7 @@ INT_PTR CALLBACK ConfigDialogProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARA
 
                     core_update_config(&config);
 
-                    config_save(&config);
+                    config_save(&config, config_path);
                 }
                 case IDCANCEL:
                     EndDialog(hwnd, 0);
@@ -175,7 +187,7 @@ EXPORT void CALL RomClosed(void)
 
 EXPORT void CALL RomOpen(void)
 {
-    config_load(&config);
+    config_load(&config, config_path);
     core_init(&config);
 }
 

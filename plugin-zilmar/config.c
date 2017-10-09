@@ -1,58 +1,105 @@
 #include "config.h"
-#include "core/version.h"
 
-#include <Windows.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
 
-#define REG_PATH "SOFTWARE\\" CORE_SIMPLE_NAME
+#define SECTION_GENERAL "General"
+#define SECTION_VIDEO_INTERFACE "VideoInterface"
 
-static bool config_set_int(HKEY key, const char* name, int32_t value)
+#define KEY_GEN_NUM_WORKERS "num_workers"
+#define KEY_VI_MODE "mode"
+#define KEY_VI_WIDESCREEN "widescreen"
+
+static void config_handle(struct core_config* config, const char* key, const char* value, const char* section)
 {
-    LSTATUS res = RegSetValueEx(key, name, 0, REG_DWORD, (LPBYTE)&value, sizeof(DWORD));
-    return res == ERROR_SUCCESS;
-}
-
-static int32_t config_get_int(HKEY key, const char* name, int32_t value_default)
-{
-    DWORD value;
-    DWORD type;
-    DWORD size;
-    LSTATUS res = RegQueryValueEx(key, name, 0, &type, (LPBYTE)&value, &size);
-
-    if (res == ERROR_SUCCESS && type == REG_DWORD && size == sizeof(DWORD)) {
-        return value;
-    } else {
-        return value_default;
+    if (!_strcmpi(section, SECTION_GENERAL)) {
+        if (!_strcmpi(key, KEY_GEN_NUM_WORKERS)) {
+            config->num_workers = strtoul(value, NULL, 0);
+        }
+    } else if (!_strcmpi(section, SECTION_VIDEO_INTERFACE)) {
+        if (!_strcmpi(key, KEY_VI_MODE)) {
+            config->vi.mode = strtol(value, NULL, 0);
+        } else if (!_strcmpi(key, KEY_VI_WIDESCREEN)) {
+            config->vi.widescreen = strtol(value, NULL, 0) != 0;
+        }
     }
 }
 
-bool config_load(struct core_config* config)
+bool config_load(struct core_config* config, const char* path)
 {
-    HKEY key;
-    LSTATUS res = RegCreateKeyEx(HKEY_CURRENT_USER, REG_PATH, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_READ, NULL, &key, NULL);
-    if (res != ERROR_SUCCESS) {
+    FILE* fp = fopen(path, "r");
+    if (!fp) {
         return false;
     }
 
-    config->num_workers = config_get_int(key, "NumWorkers", 0);
-    config->vi.mode = config_get_int(key, "ViMode", VI_MODE_NORMAL);
-    config->vi.widescreen = config_get_int(key, "ViWidescreen", 0);
+    char line[128];
+    char section[128];
+    while (fgets(line, sizeof(line), fp) != NULL) {
+        // remove newline characters
+        size_t trim_pos = strcspn(line, "\r\n");
+        line[trim_pos] = 0;
 
-    RegCloseKey(key);
+        // ignore blank lines
+        size_t len = strlen(line);
+        if (!len) {
+            continue;
+        }
+
+        // key-values
+        char* eq_ptr = strchr(line, '=');
+        if (eq_ptr) {
+            *eq_ptr = 0;
+            char* key = line;
+            char* value = eq_ptr + 1;
+            config_handle(config, key, value, section);
+            continue;
+        }
+
+        // sections
+        if (line[0] == '[' && line[len - 1] == ']') {
+            section[0] = 0;
+            strncat(section, line + 1, len - 2);
+            continue;
+        }
+    }
+
+    fclose(fp);
+
     return true;
 }
 
-bool config_save(struct core_config* config)
+static void config_write_section(FILE* fp, const char* section)
 {
-    HKEY key;
-    LONG res = RegCreateKeyEx(HKEY_CURRENT_USER, REG_PATH, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &key, NULL);
-    if (res != ERROR_SUCCESS) {
+    fprintf(fp, "[%s]\n", section);
+}
+
+static void config_write_uint32(FILE* fp, const char* key, uint32_t value)
+{
+    fprintf(fp, "%s=%u\n", key, value);
+}
+
+static void config_write_int32(FILE* fp, const char* key, int32_t value)
+{
+    fprintf(fp, "%s=%d\n", key, value);
+}
+
+bool config_save(struct core_config* config, const char* path)
+{
+    FILE* fp = fopen(path, "w");
+    if (!fp) {
         return false;
     }
 
-    config_set_int(key, "NumWorkers", config->num_workers);
-    config_set_int(key, "ViMode", config->vi.mode);
-    config_set_int(key, "ViWidescreen", config->vi.widescreen);
+    config_write_section(fp, SECTION_GENERAL);
+    config_write_uint32(fp, KEY_GEN_NUM_WORKERS, config->num_workers);
+    fputs("\n", fp);
 
-    RegCloseKey(key);
+    config_write_section(fp, SECTION_VIDEO_INTERFACE);
+    config_write_int32(fp, KEY_VI_MODE, config->vi.mode);
+    config_write_int32(fp, KEY_VI_WIDESCREEN, config->vi.widescreen);
+
+    fclose(fp);
+
     return true;
 }
