@@ -96,20 +96,21 @@ static int prevserrate;
 static int oldlowerfield;
 static int32_t oldvstart;
 static uint32_t prevwasblank;
-#if ENABLE_TVFADEOUT
-static uint32_t tvfadeoutstate[PRESCALE_HEIGHT];
-#endif
 static int vactivelines;
 static int ispal;
 static int minhpass;
 static int maxhpass;
 static uint32_t x_add;
-static uint32_t x_start_init;
+static uint32_t x_start;
 static uint32_t y_add;
 static uint32_t y_start;
 static int32_t v_sync;
 static int vi_width_low;
 static uint32_t frame_buffer;
+
+#if ENABLE_TVFADEOUT
+static uint32_t tvfadeoutstate[PRESCALE_HEIGHT];
+#endif
 
 static char screenshot_path[FILE_MAX_PATH];
 static enum vi_mode vi_mode;
@@ -120,16 +121,13 @@ static uint32_t prescale_ptr;
 static int linecount;
 
 // parsed VI registers
+static uint32_t** vi_reg_ptr;
 static union vi_reg_ctrl ctrl;
 static int32_t hres, vres;
 static int32_t hres_raw, vres_raw;
 static int32_t v_start;
 static int32_t h_start;
-
-static struct
-{
-    int nolerp, vbusclock;
-} onetimewarnings;
+static int32_t v_current_line;
 
 static void vi_screenshot_write(char* path, int32_t* buffer, int width, int height, int pitch, int output_height)
 {
@@ -198,56 +196,20 @@ void vi_init(struct core_config* _config)
     prevwasblank = 0;
 }
 
-static int vi_process_start(void)
+static bool vi_process_start(void)
 {
     uint32_t final = 0;
 
-    uint32_t** vi_reg_ptr = plugin_get_vi_registers();
-
-    v_start = (*vi_reg_ptr[VI_V_START] >> 16) & 0x3ff;
-    h_start = (*vi_reg_ptr[VI_H_START] >> 16) & 0x3ff;
-
-    int32_t v_end = *vi_reg_ptr[VI_V_START] & 0x3ff;
-    int32_t h_end = *vi_reg_ptr[VI_H_START] & 0x3ff;
-
-    hres =  h_end - h_start;
-    vres = (v_end - v_start) >> 1; // vertical is measured in half-lines
-
-    ctrl.raw = *vi_reg_ptr[VI_STATUS];
-
-    // check for unexpected VI type bits set
-    if (ctrl.type & ~3) {
-        msg_error("Unknown framebuffer format %d", ctrl.type);
-    }
-
-    if (ctrl.vbus_clock_enable && !onetimewarnings.vbusclock)
-    {
-        msg_warning("rdp_update: vbus_clock_enable bit set in VI_CONTROL_REG register. Never run this code on your N64! It's rumored that turning this bit on\
-                    will result in permanent damage to the hardware! Emulation will now continue.");
-        onetimewarnings.vbusclock = 1;
-    }
-
     vi_fetch_filter_ptr = vi_fetch_filter_func[ctrl.type & 1];
-
-    v_sync = *vi_reg_ptr[VI_V_SYNC] & 0x3ff;
-    x_add = *vi_reg_ptr[VI_X_SCALE] & 0xfff;
-
-    if (ctrl.aa_mode == VI_AA_REPLICATE && ctrl.type == VI_TYPE_RGBA5551 && !onetimewarnings.nolerp && h_start < 0x80 && x_add <= 0x200)
-    {
-        msg_warning("Disabling VI interpolation in 16-bit color modes causes glitches on hardware if h_start is less than 128 pixels and x_scale is less or equal to 0x200.");
-        onetimewarnings.nolerp = 1;
-    }
 
     ispal = v_sync > (V_SYNC_NTSC + 25);
     h_start -= (ispal ? 128 : 108);
-
-    x_start_init = (*vi_reg_ptr[VI_X_SCALE] >> 16) & 0xfff;
 
     int h_start_clamped = 0;
 
     if (h_start < 0)
     {
-        x_start_init += (x_add * (-h_start));
+        x_start += (x_add * (-h_start));
         hres += h_start;
 
         h_start = 0;
@@ -256,13 +218,13 @@ static int vi_process_start(void)
 
     int validinterlace = (ctrl.type & 2) && ctrl.serrate;
     if (validinterlace && prevserrate && emucontrolsvicurrent < 0)
-        emucontrolsvicurrent = (*vi_reg_ptr[VI_V_CURRENT_LINE] & 1) != prevvicurrent;
+        emucontrolsvicurrent = v_current_line != prevvicurrent;
 
     int lowerfield = 0;
     if (validinterlace)
     {
         if (emucontrolsvicurrent == 1)
-            lowerfield = (*vi_reg_ptr[VI_V_CURRENT_LINE] & 1) ^ 1;
+            lowerfield = v_current_line ^ 1;
         else if (!emucontrolsvicurrent)
         {
             if (v_start == oldvstart)
@@ -277,7 +239,7 @@ static int vi_process_start(void)
     if (validinterlace)
     {
         prevserrate = 1;
-        prevvicurrent = *vi_reg_ptr[VI_V_CURRENT_LINE] & 1;
+        prevvicurrent = v_current_line;
         oldvstart = v_start;
     }
     else
@@ -287,9 +249,6 @@ static int vi_process_start(void)
 
     int32_t vstartoffset = ispal ? 44 : 34;
     v_start = (v_start - vstartoffset) / 2;
-
-    y_start = (*vi_reg_ptr[VI_Y_SCALE] >> 16) & 0xfff;
-    y_add = *vi_reg_ptr[VI_Y_SCALE] & 0xfff;
 
     if (v_start < 0)
     {
@@ -311,14 +270,14 @@ static int vi_process_start(void)
         msg_warning("vres = %d v_start = %d v_video_start = %d", vres, v_start, (*vi_reg_ptr[VI_V_START] >> 16) & 0x3ff);
     }
 
-    h_end = hres + h_start; // note: the result appears to be different to VI_H_START
+    int32_t h_end = hres + h_start; // note: the result appears to be different to VI_H_START
     int32_t hrightblank = PRESCALE_WIDTH - h_end;
 
     vactivelines = v_sync - vstartoffset;
     if (vactivelines > PRESCALE_HEIGHT)
         msg_error("VI_V_SYNC_REG too big");
     if (vactivelines < 0)
-        return 0;
+        return false;
     vactivelines >>= lineshifter;
 
     int validh = (hres > 0 && h_start < PRESCALE_WIDTH);
@@ -333,18 +292,11 @@ static int vi_process_start(void)
 
     if (!(ctrl.type & 2) && prevwasblank)
     {
-        return 0;
+        return false;
     }
 
     linecount = ctrl.serrate ? (PRESCALE_WIDTH << 1) : PRESCALE_WIDTH;
     prescale_ptr = v_start * linecount + h_start + (lowerfield ? PRESCALE_WIDTH : 0);
-
-    vi_width_low = *vi_reg_ptr[VI_WIDTH] & 0xfff;
-    frame_buffer = *vi_reg_ptr[VI_ORIGIN] & 0xffffff;
-
-    if (!frame_buffer) {
-        return 0;
-    }
 
 #if ENABLE_TVFADEOUT
     int i;
@@ -451,7 +403,7 @@ static void vi_process(void)
     struct ccvg divot_array[0xa10 << 1];
 
     int cache_marker = 0, cache_next_marker = 0, divot_cache_marker = 0, divot_cache_next_marker = 0;
-    int cache_marker_init = (x_start_init >> 10) - 1;
+    int cache_marker_init = (x_start >> 10) - 1;
 
     struct ccvg *viaa_cache = &viaa_array[0];
     struct ccvg *viaa_cache_next = &viaa_array[0xa10];
@@ -472,26 +424,26 @@ static void vi_process(void)
 
     pixels = 0;
 
-    int32_t j_start = 0;
-    int32_t j_end = vres;
-    int32_t j_add = 1;
+    int32_t y_begin = 0;
+    int32_t y_end = vres;
+    int32_t y_inc = 1;
 
     if (config->num_workers != 1) {
-        j_start = parallel_worker_id();
-        j_add = parallel_worker_num();
+        y_begin = parallel_worker_id();
+        y_inc = parallel_worker_num();
     }
 
-    for (int32_t j = j_start; j < j_end; j += j_add) {
-        uint32_t x_start = x_start_init;
-        uint32_t curry = y_start + j * y_add;
-        uint32_t nexty = y_start + (j + 1) * y_add;
+    for (int32_t y = y_begin; y < y_end; y += y_inc) {
+        uint32_t x_offs = x_start;
+        uint32_t curry = y_start + y * y_add;
+        uint32_t nexty = y_start + (y + 1) * y_add;
         uint32_t prevy = curry >> 10;
 
         cache_marker = cache_next_marker = cache_marker_init;
         if (ctrl.divot_enable)
             divot_cache_marker = divot_cache_next_marker = cache_marker_init;
 
-        int* d = prescale + prescale_ptr + linecount * j;
+        int* d = prescale + prescale_ptr + linecount * y;
 
         yfrac = (curry >> 5) & 0x1f;
         pixels = vi_width_low * prevy;
@@ -502,9 +454,9 @@ static void vi_process(void)
         else
             fetchbugstate >>= 1;
 
-        for (int i = 0; i < hres; i++, x_start += x_add)
+        for (int x = 0; x < hres; x++, x_offs += x_add)
         {
-            line_x = x_start >> 10;
+            line_x = x_offs >> 10;
             prev_line_x = line_x - 1;
             next_line_x = line_x + 1;
             far_line_x = line_x + 2;
@@ -524,7 +476,7 @@ static void vi_process(void)
             next_line_x++;
             far_line_x++;
 
-            xfrac = (x_start >> 5) & 0x1f;
+            xfrac = (x_offs >> 5) & 0x1f;
 
             int lerping = ctrl.aa_mode != VI_AA_REPLICATE && (xfrac || yfrac);
 
@@ -637,10 +589,10 @@ static void vi_process(void)
 
             gamma_filters(&r, &g, &b, ctrl);
 
-            if (i >= minhpass && i < maxhpass)
-                d[i] = (r << 16) | (g << 8) | b;
+            if (x >= minhpass && x < maxhpass)
+                d[x] = (r << 16) | (g << 8) | b;
             else
-                d[i] = 0;
+                d[x] = 0;
         }
 
         if (!cache_init && y_add == 0x400) {
@@ -696,79 +648,46 @@ static void vi_process_end(void)
     }
 }
 
-static int vi_process_start_fast(void)
+static bool vi_process_start_fast(void)
 {
     // note: this is probably a very, very crude method to get the frame size,
     // but should hopefully work most of the time
-    uint32_t** vi_reg_ptr = plugin_get_vi_registers();
-
-    int32_t v_start = (*vi_reg_ptr[VI_V_START] >> 16) & 0x3ff;
-    int32_t h_start = (*vi_reg_ptr[VI_H_START] >> 16) & 0x3ff;
-
-    int32_t v_end = *vi_reg_ptr[VI_V_START] & 0x3ff;
-    int32_t h_end = *vi_reg_ptr[VI_H_START] & 0x3ff;
-
-    hres =  h_end - h_start;
-    vres = (v_end - v_start) >> 1; // vertical is measured in half-lines
-
-    if (hres <= 0 || vres <= 0) {
-        return 0;
-    }
-
-    x_add = *vi_reg_ptr[VI_X_SCALE] & 0xfff;
-    y_add = *vi_reg_ptr[VI_Y_SCALE] & 0xfff;
-
     hres_raw = x_add * hres / 1024;
     vres_raw = y_add * vres / 1024;
 
+    // skip invalid frame sizes
     if (hres_raw <= 0 || vres_raw <= 0) {
-        return 0;
+        return false;
     }
 
     // drop every other interlaced frame to avoid "wobbly" output due to the
     // vertical offset
     // TODO: completely skip rendering these frames in unfiltered to improve
     // performance?
-    if (*vi_reg_ptr[VI_V_CURRENT_LINE] & 1) {
-        return 0;
+    if (v_current_line) {
+        return false;
     }
-
-    vi_width_low = *vi_reg_ptr[VI_WIDTH] & 0xfff;
-    frame_buffer = *vi_reg_ptr[VI_ORIGIN] & 0xffffff;
-
-    if (!frame_buffer) {
-        return 0;
-    }
-
-    ctrl.raw = *vi_reg_ptr[VI_STATUS];
-
-    v_sync = *vi_reg_ptr[VI_V_SYNC] & 0x3ff;
 
     // skip blank/invalid modes
     if (!(ctrl.type & 2)) {
-        return 0;
+        return false;
     }
 
-    // check for unexpected VI type bits set
-    if (ctrl.type & ~3) {
-        msg_error("Unknown framebuffer format %d", ctrl.type);
-    }
-
-    return 1;
+    return true;
 }
 
 static void vi_process_fast(void)
 {
-    int32_t y_start = 0;
+    int32_t y_begin = 0;
     int32_t y_end = vres_raw;
-    int32_t y_add = 1;
+    int32_t y_inc = 1;
 
     if (config->num_workers != 1) {
-        y_start = parallel_worker_id();
-        y_add = parallel_worker_num();
+        y_begin = parallel_worker_id();
+        y_inc = parallel_worker_num();
     }
 
-    for (int32_t y = y_start; y < y_end; y += y_add) {
+    for (int32_t y = y_begin; y < y_end; y += y_inc) {
         int32_t line = y * vi_width_low;
         uint32_t* dst = prescale + y * hres_raw;
 
@@ -850,19 +769,78 @@ void vi_update(void)
         vi_mode = config->vi.mode;
     }
 
+    // write changed VI registers to opened trace file
     if (trace_write_is_open()) {
         trace_write_vi(plugin_get_vi_registers());
     }
-
-    // select filter functions based on config
-    int (*vi_process_start_ptr)(void);
-    void (*vi_process_ptr)(void);
-    void (*vi_process_end_ptr)(void);
 
     // check for configuration errors
     if (config->vi.mode >= VI_MODE_NUM) {
         msg_error("Invalid VI mode: %d", config->vi.mode);
     }
+
+    // parse and check some common registers
+    vi_reg_ptr = plugin_get_vi_registers();
+
+    v_start = (*vi_reg_ptr[VI_V_START] >> 16) & 0x3ff;
+    h_start = (*vi_reg_ptr[VI_H_START] >> 16) & 0x3ff;
+
+    int32_t v_end = *vi_reg_ptr[VI_V_START] & 0x3ff;
+    int32_t h_end = *vi_reg_ptr[VI_H_START] & 0x3ff;
+
+    hres =  h_end - h_start;
+    vres = (v_end - v_start) >> 1; // vertical is measured in half-lines
+
+    x_add = *vi_reg_ptr[VI_X_SCALE] & 0xfff;
+    x_start = (*vi_reg_ptr[VI_X_SCALE] >> 16) & 0xfff;
+
+    y_add = *vi_reg_ptr[VI_Y_SCALE] & 0xfff;
+    y_start = (*vi_reg_ptr[VI_Y_SCALE] >> 16) & 0xfff;
+
+    v_sync = *vi_reg_ptr[VI_V_SYNC] & 0x3ff;
+    v_current_line = *vi_reg_ptr[VI_V_CURRENT_LINE] & 1;
+
+    vi_width_low = *vi_reg_ptr[VI_WIDTH] & 0xfff;
+    frame_buffer = *vi_reg_ptr[VI_ORIGIN] & 0xffffff;
+
+    // cancel if the frame buffer contains no valid address
+    if (!frame_buffer) {
+        return;
+    }
+
+    ctrl.raw = *vi_reg_ptr[VI_STATUS];
+
+    // check for unexpected VI type bits set
+    if (ctrl.type & ~3) {
+        msg_error("Unknown framebuffer format %d", ctrl.type);
+    }
+
+    // warn about AA glitches in certain cases
+    static bool nolerp;
+    if (ctrl.aa_mode == VI_AA_REPLICATE && ctrl.type == VI_TYPE_RGBA5551 &&
+        h_start < 0x80 && x_add <= 0x200 && !nolerp) {
+        msg_warning("vi_update: Disabling VI interpolation in 16-bit color "
+                    "modes causes glitches on hardware if h_start is less than "
+                    "128 pixels and x_scale is less or equal to 0x200.");
+        nolerp = true;
+    }
+
+    // check for the dangerous vbus_clock_enable flag. it was introduced to
+    // configure Ultra 64 prototypes and enabling it on final hardware will
+    // enable two output drivers on the same bus at the same time
+    static bool vbusclock;
+    if (ctrl.vbus_clock_enable && !vbusclock) {
+        msg_warning("vi_update: vbus_clock_enable bit set in VI_CONTROL_REG "
+                    "register. Never run this code on your N64! It's rumored "
+                    "that turning this bit on will result in permanent damage "
+                    "to the hardware! Emulation will now continue.");
+        vbusclock = true;
+    }
+
+    // select filter functions based on config
+    bool (*vi_process_start_ptr)(void);
+    void (*vi_process_ptr)(void);
+    void (*vi_process_end_ptr)(void);
 
     if (config->vi.mode == VI_MODE_NORMAL) {
         vi_process_start_ptr = vi_process_start;
