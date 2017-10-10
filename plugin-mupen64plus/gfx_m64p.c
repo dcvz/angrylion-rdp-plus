@@ -23,6 +23,15 @@
 
 #define M64P_PLUGIN_PROTOTYPES 1
 
+#define KEY_FULLSCREEN "Fullscreen"
+#define KEY_SCREEN_WIDTH "ScreenWidth"
+#define KEY_SCREEN_HEIGHT "ScreenHeight"
+#define KEY_NUM_WORKERS "NumWorkers"
+
+#define KEY_VI_MODE "ViMode"
+#define KEY_VI_WIDESCREEN "ViWidescreen"
+#define KEY_VI_OVERSCAN "ViOverscan"
+
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
@@ -82,13 +91,14 @@ EXPORT m64p_error CALL PluginStartup(m64p_dynlib_handle _CoreLibHandle, void *Co
     ConfigOpenSection("Video-General", &configVideoGeneral);
     ConfigOpenSection("Video-Angrylion-Plus", &configVideoAngrylionPlus);
 
-    ConfigSetDefaultBool(configVideoGeneral, "Fullscreen", 0, "Use fullscreen mode if True, or windowed mode if False");
-    ConfigSetDefaultInt(configVideoGeneral, "ScreenWidth", 640, "Width of output window or fullscreen width");
-    ConfigSetDefaultInt(configVideoGeneral, "ScreenHeight", 480, "Height of output window or fullscreen height");
+    ConfigSetDefaultBool(configVideoGeneral, KEY_FULLSCREEN, 0, "Use fullscreen mode if True, or windowed mode if False");
+    ConfigSetDefaultInt(configVideoGeneral, KEY_SCREEN_WIDTH, 640, "Width of output window or fullscreen width");
+    ConfigSetDefaultInt(configVideoGeneral, KEY_SCREEN_HEIGHT, 480, "Height of output window or fullscreen height");
 
-    ConfigSetDefaultInt(configVideoAngrylionPlus, "NumWorkers", 0, "Rendering Workers (0=Use all logical processors)");
-    ConfigSetDefaultInt(configVideoAngrylionPlus, "ViMode", 0, "VI Mode (0=Filtered, 1=Unfiltered, 2=Depth, 3=Coverage)");
-    ConfigSetDefaultBool(configVideoAngrylionPlus, "AnamorphicWidescreen", 0, "Use anamorphic 16:9 output mode if True");
+    ConfigSetDefaultInt(configVideoAngrylionPlus, KEY_NUM_WORKERS, 0, "Rendering Workers (0=Use all logical processors)");
+    ConfigSetDefaultInt(configVideoAngrylionPlus, KEY_VI_MODE, 0, "VI Mode (0=Filtered, 1=Unfiltered, 2=Depth, 3=Coverage)");
+    ConfigSetDefaultBool(configVideoAngrylionPlus, KEY_VI_WIDESCREEN, 0, "Use anamorphic 16:9 output mode if True");
+    ConfigSetDefaultBool(configVideoAngrylionPlus, KEY_VI_OVERSCAN, 0, "Display overscan area in filteded mode if True");
 
     ConfigSaveSection("Video-General");
     ConfigSaveSection("Video-Angrylion-Plus");
@@ -163,13 +173,14 @@ EXPORT void CALL ProcessRDPList(void)
 
 EXPORT int CALL RomOpen (void)
 {
-    window_fullscreen = ConfigGetParamBool(configVideoGeneral, "Fullscreen");
-    window_width = ConfigGetParamInt(configVideoGeneral, "ScreenWidth");
-    window_height = ConfigGetParamInt(configVideoGeneral, "ScreenHeight");
+    window_fullscreen = ConfigGetParamBool(configVideoGeneral, KEY_FULLSCREEN);
+    window_width = ConfigGetParamInt(configVideoGeneral, KEY_SCREEN_WIDTH);
+    window_height = ConfigGetParamInt(configVideoGeneral, KEY_SCREEN_HEIGHT);
 
-    config.num_workers = ConfigGetParamInt(configVideoAngrylionPlus, "NumWorkers");
-    config.vi.mode = ConfigGetParamInt(configVideoAngrylionPlus, "ViMode");
-    config.vi.widescreen = ConfigGetParamBool(configVideoAngrylionPlus, "AnamorphicWidescreen");
+    config.num_workers = ConfigGetParamInt(configVideoAngrylionPlus, KEY_NUM_WORKERS);
+    config.vi.mode = ConfigGetParamInt(configVideoAngrylionPlus, KEY_VI_MODE);
+    config.vi.widescreen = ConfigGetParamBool(configVideoAngrylionPlus, KEY_VI_WIDESCREEN);
+    config.vi.overscan = ConfigGetParamBool(configVideoAngrylionPlus, KEY_VI_OVERSCAN);
 
     core_init(&config);
     return 1;

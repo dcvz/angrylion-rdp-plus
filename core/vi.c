@@ -33,12 +33,6 @@
 #define PRESCALE_WIDTH H_RES_NTSC
 #define PRESCALE_HEIGHT V_SYNC_PAL
 
-// enable output of the normally not visible overscan area (adds black borders)
-#define ENABLE_OVERSCAN 0
-
-// enable TV fading emulation
-#define ENABLE_TVFADEOUT 0
-
 enum vi_type
 {
     VI_TYPE_BLANK,      // no data, no sync
@@ -107,10 +101,7 @@ static uint32_t y_start;
 static int32_t v_sync;
 static int vi_width_low;
 static uint32_t frame_buffer;
-
-#if ENABLE_TVFADEOUT
 static uint32_t tvfadeoutstate[PRESCALE_HEIGHT];
-#endif
 
 static char screenshot_path[FILE_MAX_PATH];
 static enum vi_mode vi_mode;
@@ -294,7 +285,6 @@ static bool vi_process_start(void)
     linecount = ctrl.serrate ? (PRESCALE_WIDTH << 1) : PRESCALE_WIDTH;
     prescale_ptr = v_start * linecount + h_start + (lowerfield ? PRESCALE_WIDTH : 0);
 
-#if ENABLE_TVFADEOUT
     int i;
     if (!(ctrl.type & 2)) {
         memset(tvfadeoutstate, 0, PRESCALE_HEIGHT * sizeof(uint32_t));
@@ -378,7 +368,6 @@ static bool vi_process_start(void)
                 }
         }
     }
-#endif
 
     return validh;
 }
@@ -582,21 +571,25 @@ static void vi_process_end(void)
 {
     int32_t pitch = PRESCALE_WIDTH;
 
-#if ENABLE_OVERSCAN
-    // use entire prescale buffer
-    int32_t width = PRESCALE_WIDTH;
-    int32_t height = (ispal ? V_RES_PAL : V_RES_NTSC) >> !ctrl.serrate;
-    int32_t output_height = V_RES_NTSC;
+    int32_t width;
+    int32_t height;
+    int32_t output_height;
     int32_t* buffer = prescale;
-#else
-    // crop away overscan area from prescale
-    int32_t width = maxhpass - minhpass;
-    int32_t height = vres << ctrl.serrate;
-    int32_t output_height = (vres << 1) * V_SYNC_NTSC / v_sync;
-    int32_t x = h_start + minhpass;
-    int32_t y = (v_start + oldlowerfield) << ctrl.serrate;
-    int32_t* buffer = prescale + x + y * pitch;
-#endif
+
+    if (config->vi.overscan) {
+        // use entire prescale buffer
+        width = PRESCALE_WIDTH;
+        height = (ispal ? V_RES_PAL : V_RES_NTSC) >> !ctrl.serrate;
+        output_height = V_RES_NTSC;
+    } else {
+        // crop away overscan area from prescale
+        width = maxhpass - minhpass;
+        height = vres << ctrl.serrate;
+        output_height = (vres << 1) * V_SYNC_NTSC / v_sync;
+        int32_t x = h_start + minhpass;
+        int32_t y = (v_start + oldlowerfield) << ctrl.serrate;
+        buffer += x + y * pitch;
+    }
 
     if (config->vi.widescreen) {
         output_height = output_height * 9 / 16;

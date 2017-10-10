@@ -8,8 +8,10 @@
 #define SECTION_VIDEO_INTERFACE "VideoInterface"
 
 #define KEY_GEN_NUM_WORKERS "num_workers"
+
 #define KEY_VI_MODE "mode"
 #define KEY_VI_WIDESCREEN "widescreen"
+#define KEY_VI_OVERSCAN "overscan"
 
 static void config_handle(struct core_config* config, const char* key, const char* value, const char* section)
 {
@@ -22,6 +24,8 @@ static void config_handle(struct core_config* config, const char* key, const cha
             config->vi.mode = strtol(value, NULL, 0);
         } else if (!_strcmpi(key, KEY_VI_WIDESCREEN)) {
             config->vi.widescreen = strtol(value, NULL, 0) != 0;
+        } else if (!_strcmpi(key, KEY_VI_OVERSCAN)) {
+            config->vi.overscan = strtol(value, NULL, 0) != 0;
         }
     }
 }
@@ -98,6 +102,7 @@ bool config_save(struct core_config* config, const char* path)
     config_write_section(fp, SECTION_VIDEO_INTERFACE);
     config_write_int32(fp, KEY_VI_MODE, config->vi.mode);
     config_write_int32(fp, KEY_VI_WIDESCREEN, config->vi.widescreen);
+    config_write_int32(fp, KEY_VI_OVERSCAN, config->vi.overscan);
 
     fclose(fp);
 
