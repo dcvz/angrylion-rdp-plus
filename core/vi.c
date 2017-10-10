@@ -207,8 +207,7 @@ static bool vi_process_start(void)
 
     int h_start_clamped = 0;
 
-    if (h_start < 0)
-    {
+    if (h_start < 0) {
         x_start += (x_add * (-h_start));
         hres += h_start;
 
@@ -217,55 +216,51 @@ static bool vi_process_start(void)
     }
 
     int validinterlace = (ctrl.type & 2) && ctrl.serrate;
-    if (validinterlace && prevserrate && emucontrolsvicurrent < 0)
+    if (validinterlace && prevserrate && emucontrolsvicurrent < 0) {
         emucontrolsvicurrent = v_current_line != prevvicurrent;
+    }
 
     int lowerfield = 0;
-    if (validinterlace)
-    {
-        if (emucontrolsvicurrent == 1)
+    if (validinterlace) {
+        if (emucontrolsvicurrent == 1) {
             lowerfield = v_current_line ^ 1;
-        else if (!emucontrolsvicurrent)
-        {
-            if (v_start == oldvstart)
+        } else if (!emucontrolsvicurrent) {
+            if (v_start == oldvstart) {
                 lowerfield = oldlowerfield ^ 1;
-            else
+            } else {
                 lowerfield = v_start < oldvstart;
+            }
         }
     }
 
     oldlowerfield = lowerfield;
 
-    if (validinterlace)
-    {
+    if (validinterlace) {
         prevserrate = 1;
         prevvicurrent = v_current_line;
         oldvstart = v_start;
-    }
-    else
+    } else {
         prevserrate = 0;
+    }
 
     uint32_t lineshifter = !ctrl.serrate;
 
     int32_t vstartoffset = ispal ? 44 : 34;
     v_start = (v_start - vstartoffset) / 2;
 
-    if (v_start < 0)
-    {
+    if (v_start < 0) {
         y_start += (y_add * (uint32_t)(-v_start));
         v_start = 0;
     }
 
     int hres_clamped = 0;
 
-    if ((hres + h_start) > PRESCALE_WIDTH)
-    {
+    if ((hres + h_start) > PRESCALE_WIDTH) {
         hres = PRESCALE_WIDTH - h_start;
         hres_clamped = 1;
     }
 
-    if ((vres + v_start) > PRESCALE_HEIGHT)
-    {
+    if ((vres + v_start) > PRESCALE_HEIGHT) {
         vres = PRESCALE_HEIGHT - v_start;
         msg_warning("vres = %d v_start = %d v_video_start = %d", vres, v_start, (*vi_reg_ptr[VI_V_START] >> 16) & 0x3ff);
     }
@@ -274,10 +269,12 @@ static bool vi_process_start(void)
     int32_t hrightblank = PRESCALE_WIDTH - h_end;
 
     vactivelines = v_sync - vstartoffset;
-    if (vactivelines > PRESCALE_HEIGHT)
+    if (vactivelines > PRESCALE_HEIGHT) {
         msg_error("VI_V_SYNC_REG too big");
-    if (vactivelines < 0)
+    }
+    if (vactivelines < 0) {
         return false;
+    }
     vactivelines >>= lineshifter;
 
     int validh = (hres > 0 && h_start < PRESCALE_WIDTH);
@@ -290,8 +287,7 @@ static bool vi_process_start(void)
     minhpass = h_start_clamped ? 0 : 8;
     maxhpass =  hres_clamped ? hres : (hres - 7);
 
-    if (!(ctrl.type & 2) && prevwasblank)
-    {
+    if (!(ctrl.type & 2) && prevwasblank) {
         return false;
     }
 
@@ -300,96 +296,86 @@ static bool vi_process_start(void)
 
 #if ENABLE_TVFADEOUT
     int i;
-    if (!(ctrl.type & 2))
-    {
+    if (!(ctrl.type & 2)) {
         memset(tvfadeoutstate, 0, PRESCALE_HEIGHT * sizeof(uint32_t));
-        for (i = 0; i < PRESCALE_HEIGHT; i++)
+        for (i = 0; i < PRESCALE_HEIGHT; i++) {
             memset(&prescale[i * PRESCALE_WIDTH], 0, PRESCALE_WIDTH * sizeof(int32_t));
+        }
         prevwasblank = 1;
-    }
-    else
-    {
+    } else {
         prevwasblank = 0;
 
         int j;
-        if (h_start > 0 && h_start < PRESCALE_WIDTH)
-        {
-            for (i = 0; i < vactivelines; i++)
+        if (h_start > 0 && h_start < PRESCALE_WIDTH) {
+            for (i = 0; i < vactivelines; i++) {
                 memset(&prescale[i * PRESCALE_WIDTH], 0, h_start * sizeof(uint32_t));
+            }
         }
-        if (h_end >= 0 && h_end < PRESCALE_WIDTH)
-        {
-            for (i = 0; i < vactivelines; i++)
+        if (h_end >= 0 && h_end < PRESCALE_WIDTH) {
+            for (i = 0; i < vactivelines; i++) {
                 memset(&prescale[i * PRESCALE_WIDTH + h_end], 0, hrightblank * sizeof(uint32_t));
+            }
         }
 
-        for (i = 0; i < ((v_start << ctrl.serrate) + lowerfield); i++)
-        {
-            if (tvfadeoutstate[i])
-            {
+        for (i = 0; i < ((v_start << ctrl.serrate) + lowerfield); i++) {
+            if (tvfadeoutstate[i]) {
                 tvfadeoutstate[i]--;
-                if (!tvfadeoutstate[i])
-                {
-                    if (validh)
+                if (!tvfadeoutstate[i]) {
+                    if (validh) {
                         memset(&prescale[i * PRESCALE_WIDTH + h_start], 0, hres * sizeof(uint32_t));
-                    else
+                    } else {
                         memset(&prescale[i * PRESCALE_WIDTH], 0, PRESCALE_WIDTH * sizeof(uint32_t));
+                    }
                 }
             }
         }
-        if (!ctrl.serrate)
-        {
-            for(j = 0; j < vres; j++)
-            {
-                if (validh)
+        if (!ctrl.serrate) {
+            for(j = 0; j < vres; j++) {
+                if (validh) {
                     tvfadeoutstate[i] = 2;
-                else if (tvfadeoutstate[i])
-                {
+                } else if (tvfadeoutstate[i]) {
                     tvfadeoutstate[i]--;
-                    if (!tvfadeoutstate[i])
-                    {
+                    if (!tvfadeoutstate[i]) {
                         memset(&prescale[i * PRESCALE_WIDTH], 0, PRESCALE_WIDTH * sizeof(uint32_t));
                     }
                 }
 
                 i++;
             }
-        }
-        else
-        {
-            for(j = 0; j < vres; j++)
-            {
-                if (validh)
+        } else {
+            for(j = 0; j < vres; j++) {
+                if (validh) {
                     tvfadeoutstate[i] = 2;
-                else if (tvfadeoutstate[i])
-                {
+                } else if (tvfadeoutstate[i]) {
                     tvfadeoutstate[i]--;
-                    if (!tvfadeoutstate[i])
+                    if (!tvfadeoutstate[i]) {
                         memset(&prescale[i * PRESCALE_WIDTH], 0, PRESCALE_WIDTH * sizeof(uint32_t));
+                    }
                 }
 
-                if (tvfadeoutstate[i + 1])
-                {
+                if (tvfadeoutstate[i + 1]) {
                     tvfadeoutstate[i + 1]--;
                     if (!tvfadeoutstate[i + 1])
-                        if (validh)
+                        if (validh) {
                             memset(&prescale[(i + 1) * PRESCALE_WIDTH + h_start], 0, hres * sizeof(uint32_t));
-                        else
+                        } else {
                             memset(&prescale[(i + 1) * PRESCALE_WIDTH], 0, PRESCALE_WIDTH * sizeof(uint32_t));
+                        }
                 }
 
                 i += 2;
             }
         }
-        for (; i < vactivelines; i++)
-        {
-            if (tvfadeoutstate[i])
+        for (; i < vactivelines; i++) {
+            if (tvfadeoutstate[i]) {
                 tvfadeoutstate[i]--;
+            }
             if (!tvfadeoutstate[i])
-                if (validh)
+                if (validh) {
                     memset(&prescale[i * PRESCALE_WIDTH + h_start], 0, hres * sizeof(uint32_t));
-                else
+                } else {
                     memset(&prescale[i * PRESCALE_WIDTH], 0, PRESCALE_WIDTH * sizeof(uint32_t));
+                }
         }
     }
 #endif
@@ -440,8 +426,9 @@ static void vi_process(void)
         uint32_t prevy = curry >> 10;
 
         cache_marker = cache_next_marker = cache_marker_init;
-        if (ctrl.divot_enable)
+        if (ctrl.divot_enable) {
             divot_cache_marker = divot_cache_next_marker = cache_marker_init;
+        }
 
         int* d = prescale + prescale_ptr + linecount * y;
 
@@ -449,13 +436,13 @@ static void vi_process(void)
         pixels = vi_width_low * prevy;
         nextpixels = vi_width_low + pixels;
 
-        if (prevy == (nexty >> 10))
+        if (prevy == (nexty >> 10)) {
             fetchbugstate = 2;
-        else
+        } else {
             fetchbugstate >>= 1;
+        }
 
-        for (int x = 0; x < hres; x++, x_offs += x_add)
-        {
+        for (int x = 0; x < hres; x++, x_offs += x_add) {
             line_x = x_offs >> 10;
             prev_line_x = line_x - 1;
             next_line_x = line_x + 1;
@@ -480,99 +467,74 @@ static void vi_process(void)
 
             int lerping = ctrl.aa_mode != VI_AA_REPLICATE && (xfrac || yfrac);
 
-            if (prev_line_x > cache_marker)
-            {
+            if (prev_line_x > cache_marker) {
                 vi_fetch_filter_ptr(&viaa_cache[prev_line_x], frame_buffer, prev_x, ctrl, vi_width_low, 0);
                 vi_fetch_filter_ptr(&viaa_cache[line_x], frame_buffer, cur_x, ctrl, vi_width_low, 0);
                 vi_fetch_filter_ptr(&viaa_cache[next_line_x], frame_buffer, next_x, ctrl, vi_width_low, 0);
                 cache_marker = next_line_x;
-            }
-            else if (line_x > cache_marker)
-            {
+            } else if (line_x > cache_marker) {
                 vi_fetch_filter_ptr(&viaa_cache[line_x], frame_buffer, cur_x, ctrl, vi_width_low, 0);
                 vi_fetch_filter_ptr(&viaa_cache[next_line_x], frame_buffer, next_x, ctrl, vi_width_low, 0);
                 cache_marker = next_line_x;
-            }
-            else if (next_line_x > cache_marker)
-            {
+            } else if (next_line_x > cache_marker) {
                 vi_fetch_filter_ptr(&viaa_cache[next_line_x], frame_buffer, next_x, ctrl, vi_width_low, 0);
                 cache_marker = next_line_x;
             }
 
-            if (prev_line_x > cache_next_marker)
-            {
+            if (prev_line_x > cache_next_marker) {
                 vi_fetch_filter_ptr(&viaa_cache_next[prev_line_x], frame_buffer, prev_scan_x, ctrl, vi_width_low, fetchbugstate);
                 vi_fetch_filter_ptr(&viaa_cache_next[line_x], frame_buffer, scan_x, ctrl, vi_width_low, fetchbugstate);
                 vi_fetch_filter_ptr(&viaa_cache_next[next_line_x], frame_buffer, next_scan_x, ctrl, vi_width_low, fetchbugstate);
                 cache_next_marker = next_line_x;
-            }
-            else if (line_x > cache_next_marker)
-            {
+            } else if (line_x > cache_next_marker) {
                 vi_fetch_filter_ptr(&viaa_cache_next[line_x], frame_buffer, scan_x, ctrl, vi_width_low, fetchbugstate);
                 vi_fetch_filter_ptr(&viaa_cache_next[next_line_x], frame_buffer, next_scan_x, ctrl, vi_width_low, fetchbugstate);
                 cache_next_marker = next_line_x;
-            }
-            else if (next_line_x > cache_next_marker)
-            {
+            } else if (next_line_x > cache_next_marker) {
                 vi_fetch_filter_ptr(&viaa_cache_next[next_line_x], frame_buffer, next_scan_x, ctrl, vi_width_low, fetchbugstate);
                 cache_next_marker = next_line_x;
             }
 
-            if (ctrl.divot_enable)
-            {
-                if (far_line_x > cache_marker)
-                {
+            if (ctrl.divot_enable) {
+                if (far_line_x > cache_marker) {
                     vi_fetch_filter_ptr(&viaa_cache[far_line_x], frame_buffer, far_x, ctrl, vi_width_low, 0);
                     cache_marker = far_line_x;
                 }
 
-                if (far_line_x > cache_next_marker)
-                {
+                if (far_line_x > cache_next_marker) {
                     vi_fetch_filter_ptr(&viaa_cache_next[far_line_x], frame_buffer, far_scan_x, ctrl, vi_width_low, fetchbugstate);
                     cache_next_marker = far_line_x;
                 }
 
-                if (line_x > divot_cache_marker)
-                {
+                if (line_x > divot_cache_marker) {
                     divot_filter(&divot_cache[line_x], viaa_cache[line_x], viaa_cache[prev_line_x], viaa_cache[next_line_x]);
                     divot_filter(&divot_cache[next_line_x], viaa_cache[next_line_x], viaa_cache[line_x], viaa_cache[far_line_x]);
                     divot_cache_marker = next_line_x;
-                }
-                else if (next_line_x > divot_cache_marker)
-                {
+                } else if (next_line_x > divot_cache_marker) {
                     divot_filter(&divot_cache[next_line_x], viaa_cache[next_line_x], viaa_cache[line_x], viaa_cache[far_line_x]);
                     divot_cache_marker = next_line_x;
                 }
 
-                if (line_x > divot_cache_next_marker)
-                {
+                if (line_x > divot_cache_next_marker) {
                     divot_filter(&divot_cache_next[line_x], viaa_cache_next[line_x], viaa_cache_next[prev_line_x], viaa_cache_next[next_line_x]);
                     divot_filter(&divot_cache_next[next_line_x], viaa_cache_next[next_line_x], viaa_cache_next[line_x], viaa_cache_next[far_line_x]);
                     divot_cache_next_marker = next_line_x;
-                }
-                else if (next_line_x > divot_cache_next_marker)
-                {
+                } else if (next_line_x > divot_cache_next_marker) {
                     divot_filter(&divot_cache_next[next_line_x], viaa_cache_next[next_line_x], viaa_cache_next[line_x], viaa_cache_next[far_line_x]);
                     divot_cache_next_marker = next_line_x;
                 }
 
                 color = divot_cache[line_x];
-            }
-            else
-            {
+            } else {
                 color = viaa_cache[line_x];
             }
 
-            if (lerping)
-            {
-                if (ctrl.divot_enable)
-                {
+            if (lerping) {
+                if (ctrl.divot_enable) {
                     nextcolor = divot_cache[next_line_x];
                     scancolor = divot_cache_next[line_x];
                     scannextcolor = divot_cache_next[next_line_x];
-                }
-                else
-                {
+                } else {
                     nextcolor = viaa_cache[next_line_x];
                     scancolor = viaa_cache_next[line_x];
                     scannextcolor = viaa_cache_next[next_line_x];
@@ -589,10 +551,11 @@ static void vi_process(void)
 
             gamma_filters(&r, &g, &b, ctrl);
 
-            if (x >= minhpass && x < maxhpass)
+            if (x >= minhpass && x < maxhpass) {
                 d[x] = (r << 16) | (g << 8) | b;
-            else
+            } else {
                 d[x] = 0;
+            }
         }
 
         if (!cache_init && y_add == 0x400) {
@@ -602,8 +565,7 @@ static void vi_process(void)
             struct ccvg* tempccvgptr = viaa_cache;
             viaa_cache = viaa_cache_next;
             viaa_cache_next = tempccvgptr;
-            if (ctrl.divot_enable)
-            {
+            if (ctrl.divot_enable) {
                 divot_cache_marker = divot_cache_next_marker;
                 divot_cache_next_marker = cache_marker_init;
                 tempccvgptr = divot_cache;
@@ -637,7 +599,7 @@ static void vi_process_end(void)
 #endif
 
     if (config->vi.widescreen) {
-         output_height = output_height * 9 / 16;
+        output_height = output_height * 9 / 16;
     }
 
     screen_upload(buffer, width, height, pitch, output_height);
