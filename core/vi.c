@@ -256,7 +256,7 @@ static bool vi_process_start(void)
         msg_warning("vres = %d v_start = %d v_video_start = %d", vres, v_start, (*vi_reg_ptr[VI_V_START] >> 16) & 0x3ff);
     }
 
-    int32_t h_end = hres + h_start; // note: the result appears to be different to VI_H_START
+    int32_t h_end = hres + h_start; // note: the result appears to be different to VI_H_END
     int32_t hrightblank = PRESCALE_WIDTH - h_end;
 
     vactivelines = v_sync - vstartoffset;
@@ -287,6 +287,7 @@ static bool vi_process_start(void)
 
     int i;
     if (!(ctrl.type & 2)) {
+        // blank signal, clear entire screen buffer
         memset(tvfadeoutstate, 0, PRESCALE_HEIGHT * sizeof(uint32_t));
         for (i = 0; i < PRESCALE_HEIGHT; i++) {
             memset(&prescale[i * PRESCALE_WIDTH], 0, PRESCALE_WIDTH * sizeof(int32_t));
@@ -295,18 +296,22 @@ static bool vi_process_start(void)
     } else {
         prevwasblank = 0;
 
+        // clear left border
         int j;
         if (h_start > 0 && h_start < PRESCALE_WIDTH) {
             for (i = 0; i < vactivelines; i++) {
                 memset(&prescale[i * PRESCALE_WIDTH], 0, h_start * sizeof(uint32_t));
             }
         }
+
+        // clear right border
         if (h_end >= 0 && h_end < PRESCALE_WIDTH) {
             for (i = 0; i < vactivelines; i++) {
                 memset(&prescale[i * PRESCALE_WIDTH + h_end], 0, hrightblank * sizeof(uint32_t));
             }
         }
 
+        // clear top border
         for (i = 0; i < ((v_start << ctrl.serrate) + lowerfield); i++) {
             if (tvfadeoutstate[i]) {
                 tvfadeoutstate[i]--;
@@ -319,6 +324,7 @@ static bool vi_process_start(void)
                 }
             }
         }
+
         if (!ctrl.serrate) {
             for(j = 0; j < vres; j++) {
                 if (validh) {
@@ -356,6 +362,8 @@ static bool vi_process_start(void)
                 i += 2;
             }
         }
+
+        // clear bottom border
         for (; i < vactivelines; i++) {
             if (tvfadeoutstate[i]) {
                 tvfadeoutstate[i]--;
