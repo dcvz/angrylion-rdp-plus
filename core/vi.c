@@ -85,21 +85,21 @@ static struct core_config* config;
 
 // states
 static uint32_t prevvicurrent;
-static int emucontrolsvicurrent;
-static int prevserrate;
-static int oldlowerfield;
+static int32_t emucontrolsvicurrent;
+static bool prevserrate;
+static int32_t oldlowerfield;
 static int32_t oldvstart;
-static uint32_t prevwasblank;
-static int vactivelines;
-static int ispal;
-static int minhpass;
-static int maxhpass;
+static bool prevwasblank;
+static int32_t vactivelines;
+static bool ispal;
+static int32_t minhpass;
+static int32_t maxhpass;
 static uint32_t x_add;
 static uint32_t x_start;
 static uint32_t y_add;
 static uint32_t y_start;
 static int32_t v_sync;
-static int vi_width_low;
+static int32_t vi_width_low;
 static uint32_t frame_buffer;
 static uint32_t tvfadeoutstate[PRESCALE_HEIGHT];
 
@@ -109,7 +109,7 @@ static enum vi_mode vi_mode;
 // prescale buffer
 static int32_t prescale[PRESCALE_WIDTH * PRESCALE_HEIGHT];
 static uint32_t prescale_ptr;
-static int linecount;
+static int32_t linecount;
 
 // parsed VI registers
 static uint32_t** vi_reg_ptr;
@@ -120,7 +120,7 @@ static int32_t v_start;
 static int32_t h_start;
 static int32_t v_current_line;
 
-static void vi_screenshot_write(char* path, int32_t* buffer, int width, int height, int pitch, int output_height)
+static void vi_screenshot_write(char* path, int32_t* buffer, int32_t width, int32_t height, int32_t pitch, int32_t output_height)
 {
     msg_debug("screen: writing screenshot to '%s'", path);
 
@@ -156,7 +156,7 @@ static void vi_screenshot_write(char* path, int32_t* buffer, int width, int heig
     if (height != output_height) {
         // nearest-neighbor mode
         for (int32_t y = output_height - 1; y >= 0; y--) {
-            int iy = y * height / output_height;
+            int32_t iy = y * height / output_height;
             fwrite(buffer + pitch * iy, width * sizeof(int32_t), 1, fp);
         }
     } else {
@@ -181,10 +181,10 @@ void vi_init(struct core_config* _config)
 
     prevvicurrent = 0;
     emucontrolsvicurrent = -1;
-    prevserrate = 0;
+    prevserrate = false;
     oldlowerfield = 0;
     oldvstart = 1337;
-    prevwasblank = 0;
+    prevwasblank = false;
 }
 
 static bool vi_process_start(void)
@@ -196,22 +196,23 @@ static bool vi_process_start(void)
     ispal = v_sync > (V_SYNC_NTSC + 25);
     h_start -= (ispal ? 128 : 108);
 
-    int h_start_clamped = 0;
+    bool h_start_clamped = false;
 
     if (h_start < 0) {
         x_start += (x_add * (-h_start));
         hres += h_start;
 
         h_start = 0;
-        h_start_clamped = 1;
+        h_start_clamped = true;
     }
 
-    int validinterlace = (ctrl.type & 2) && ctrl.serrate;
+    bool isblank = (ctrl.type & 2) == 0;
+    bool validinterlace = !isblank && ctrl.serrate;
     if (validinterlace && prevserrate && emucontrolsvicurrent < 0) {
         emucontrolsvicurrent = v_current_line != prevvicurrent;
     }
 
-    int lowerfield = 0;
+    int32_t lowerfield = 0;
     if (validinterlace) {
         if (emucontrolsvicurrent == 1) {
             lowerfield = v_current_line ^ 1;
@@ -227,7 +228,7 @@ static bool vi_process_start(void)
     oldlowerfield = lowerfield;
 
     if (validinterlace) {
-        prevserrate = 1;
+        prevserrate = true;
         prevvicurrent = v_current_line;
         oldvstart = v_start;
     } else {
@@ -244,11 +245,11 @@ static bool vi_process_start(void)
         v_start = 0;
     }
 
-    int hres_clamped = 0;
+    bool hres_clamped = false;
 
     if ((hres + h_start) > PRESCALE_WIDTH) {
         hres = PRESCALE_WIDTH - h_start;
-        hres_clamped = 1;
+        hres_clamped = true;
     }
 
     if ((vres + v_start) > PRESCALE_HEIGHT) {
@@ -268,7 +269,7 @@ static bool vi_process_start(void)
     }
     vactivelines >>= lineshifter;
 
-    int validh = (hres > 0 && h_start < PRESCALE_WIDTH);
+    bool validh = hres > 0 && h_start < PRESCALE_WIDTH;
 
     uint32_t pix = 0;
     uint8_t cur_cvg = 0;
@@ -278,26 +279,25 @@ static bool vi_process_start(void)
     minhpass = h_start_clamped ? 0 : 8;
     maxhpass =  hres_clamped ? hres : (hres - 7);
 
-    if (!(ctrl.type & 2) && prevwasblank) {
+    if (isblank && prevwasblank) {
         return false;
     }
+
+    prevwasblank = isblank;
 
     linecount = ctrl.serrate ? (PRESCALE_WIDTH << 1) : PRESCALE_WIDTH;
     prescale_ptr = v_start * linecount + h_start + (lowerfield ? PRESCALE_WIDTH : 0);
 
-    int i;
-    if (!(ctrl.type & 2)) {
+    int32_t i;
+    if (isblank) {
         // blank signal, clear entire screen buffer
         memset(tvfadeoutstate, 0, PRESCALE_HEIGHT * sizeof(uint32_t));
         for (i = 0; i < PRESCALE_HEIGHT; i++) {
             memset(&prescale[i * PRESCALE_WIDTH], 0, PRESCALE_WIDTH * sizeof(int32_t));
         }
-        prevwasblank = 1;
     } else {
-        prevwasblank = 0;
-
         // clear left border
-        int j;
+        int32_t j;
         if (h_start > 0 && h_start < PRESCALE_WIDTH) {
             for (i = 0; i < vactivelines; i++) {
                 memset(&prescale[i * PRESCALE_WIDTH], 0, h_start * sizeof(uint32_t));
@@ -385,8 +385,8 @@ static void vi_process(void)
     struct ccvg viaa_array[0xa10 << 1];
     struct ccvg divot_array[0xa10 << 1];
 
-    int cache_marker = 0, cache_next_marker = 0, divot_cache_marker = 0, divot_cache_next_marker = 0;
-    int cache_marker_init = (x_start >> 10) - 1;
+    int32_t cache_marker = 0, cache_next_marker = 0, divot_cache_marker = 0, divot_cache_next_marker = 0;
+    int32_t cache_marker_init = (x_start >> 10) - 1;
 
     struct ccvg *viaa_cache = &viaa_array[0];
     struct ccvg *viaa_cache_next = &viaa_array[0xa10];
@@ -397,11 +397,11 @@ static void vi_process(void)
 
     uint32_t pixels = 0, nextpixels = 0, fetchbugstate = 0;
 
-    int r = 0, g = 0, b = 0;
-    int xfrac = 0, yfrac = 0;
-    int line_x = 0, next_line_x = 0, prev_line_x = 0, far_line_x = 0;
-    int prev_scan_x = 0, scan_x = 0, next_scan_x = 0, far_scan_x = 0;
-    int prev_x = 0, cur_x = 0, next_x = 0, far_x = 0;
+    int32_t r = 0, g = 0, b = 0;
+    int32_t xfrac = 0, yfrac = 0;
+    int32_t line_x = 0, next_line_x = 0, prev_line_x = 0, far_line_x = 0;
+    int32_t prev_scan_x = 0, scan_x = 0, next_scan_x = 0, far_scan_x = 0;
+    int32_t prev_x = 0, cur_x = 0, next_x = 0, far_x = 0;
 
     bool cache_init = false;
 
@@ -439,7 +439,7 @@ static void vi_process(void)
             fetchbugstate >>= 1;
         }
 
-        for (int x = 0; x < hres; x++, x_offs += x_add) {
+        for (int32_t x = 0; x < hres; x++, x_offs += x_add) {
             line_x = x_offs >> 10;
             prev_line_x = line_x - 1;
             next_line_x = line_x + 1;
@@ -462,7 +462,7 @@ static void vi_process(void)
 
             xfrac = (x_offs >> 5) & 0x1f;
 
-            int lerping = ctrl.aa_mode != VI_AA_REPLICATE && (xfrac || yfrac);
+            int32_t lerping = ctrl.aa_mode != VI_AA_REPLICATE && (xfrac || yfrac);
 
             if (prev_line_x > cache_marker) {
                 vi_fetch_filter_ptr(&viaa_cache[prev_line_x], frame_buffer, prev_x, ctrl, vi_width_low, 0);
