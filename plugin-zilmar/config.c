@@ -64,23 +64,29 @@ INT_PTR CALLBACK config_dialog_proc(HWND hwnd, UINT iMessage, WPARAM wParam, LPA
             SendMessage(dlg_spin_workers, UDM_SETRANGE, 0, MAKELPARAM(128, 0));
             break;
         }
-        case WM_COMMAND:
-            switch (LOWORD(wParam)) {
-                case IDOK: {
+        case WM_COMMAND: {
+            WORD cmdid = LOWORD(wParam);
+            switch (cmdid) {
+                case IDOK:
+                case IDAPPLY:
                     config.vi.mode = SendMessage(dlg_combo_vi_mode, CB_GETCURSEL, 0, 0);
                     config.vi.widescreen = SendMessage(dlg_check_vi_widescreen, BM_GETCHECK, 0, 0);
                     config.dp.trace_record = SendMessage(dlg_check_trace, BM_GETCHECK, 0, 0);
                     config.num_workers = GetDlgItemInt(hwnd, IDC_EDIT_WORKERS, FALSE, FALSE);
 
                     core_update_config(&config);
-
                     config_save();
-                }
+
+                    // don't close dialog if "Apply" was pressed
+                    if (cmdid == IDAPPLY) {
+                        break;
+                    }
                 case IDCANCEL:
                     EndDialog(hwnd, 0);
                     break;
             }
             break;
+        }
         default:
             return FALSE;
     }
