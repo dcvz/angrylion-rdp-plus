@@ -25,6 +25,11 @@ static HINSTANCE inst;
 static struct core_config config;
 static char config_path[MAX_PATH + 1];
 
+static HWND dlg_combo_vi_mode;
+static HWND dlg_check_trace;
+static HWND dlg_check_vi_widescreen;
+static HWND dlg_spin_workers;
+
 INT_PTR CALLBACK config_dialog_proc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 {
     switch (iMessage) {
@@ -40,37 +45,31 @@ INT_PTR CALLBACK config_dialog_proc(HWND hwnd, UINT iMessage, WPARAM wParam, LPA
                 TEXT("Coverage")    // VI_MODE_COVERAGE
             };
 
-            HWND hCombo1 = GetDlgItem(hwnd, IDC_COMBO_VI_MODE);
-            SendMessage(hCombo1, CB_RESETCONTENT, 0, 0);
+            dlg_combo_vi_mode = GetDlgItem(hwnd, IDC_COMBO_VI_MODE);
+            SendMessage(dlg_combo_vi_mode, CB_RESETCONTENT, 0, 0);
             for (int i = 0; i < VI_MODE_NUM; i++) {
-                SendMessage(hCombo1, CB_ADDSTRING, i, (LPARAM)vi_mode_strings[i]);
+                SendMessage(dlg_combo_vi_mode, CB_ADDSTRING, i, (LPARAM)vi_mode_strings[i]);
             }
-            SendMessage(hCombo1, CB_SETCURSEL, (WPARAM)config.vi.mode, 0);
+            SendMessage(dlg_combo_vi_mode, CB_SETCURSEL, (WPARAM)config.vi.mode, 0);
 
-            HWND hCheckTrace = GetDlgItem(hwnd, IDC_CHECK_TRACE);
-            SendMessage(hCheckTrace, BM_SETCHECK, (WPARAM)config.dp.trace_record, 0);
+            dlg_check_trace = GetDlgItem(hwnd, IDC_CHECK_TRACE);
+            SendMessage(dlg_check_trace, BM_SETCHECK, (WPARAM)config.dp.trace_record, 0);
 
-            HWND hCheckWidescreen = GetDlgItem(hwnd, IDC_CHECK_VI_WIDESCREEN);
-            SendMessage(hCheckWidescreen, BM_SETCHECK, (WPARAM)config.vi.widescreen, 0);
+            dlg_check_vi_widescreen = GetDlgItem(hwnd, IDC_CHECK_VI_WIDESCREEN);
+            SendMessage(dlg_check_vi_widescreen, BM_SETCHECK, (WPARAM)config.vi.widescreen, 0);
 
             SetDlgItemInt(hwnd, IDC_EDIT_WORKERS, config.num_workers, FALSE);
 
-            HWND hSpin1 = GetDlgItem(hwnd, IDC_SPIN_WORKERS);
-            SendMessage(hSpin1, UDM_SETRANGE, 0, MAKELPARAM(128, 0));
+            dlg_spin_workers = GetDlgItem(hwnd, IDC_SPIN_WORKERS);
+            SendMessage(dlg_spin_workers, UDM_SETRANGE, 0, MAKELPARAM(128, 0));
             break;
         }
         case WM_COMMAND:
             switch (LOWORD(wParam)) {
                 case IDOK: {
-                    HWND hCombo1 = GetDlgItem(hwnd, IDC_COMBO_VI_MODE);
-                    config.vi.mode = SendMessage(hCombo1, CB_GETCURSEL, 0, 0);
-
-                    HWND hCheckWidescreen = GetDlgItem(hwnd, IDC_CHECK_VI_WIDESCREEN);
-                    config.vi.widescreen = SendMessage(hCheckWidescreen, BM_GETCHECK, 0, 0);
-
-                    HWND hCheckTrace = GetDlgItem(hwnd, IDC_CHECK_TRACE);
-                    config.dp.trace_record = SendMessage(hCheckTrace, BM_GETCHECK, 0, 0);
-
+                    config.vi.mode = SendMessage(dlg_combo_vi_mode, CB_GETCURSEL, 0, 0);
+                    config.vi.widescreen = SendMessage(dlg_check_vi_widescreen, BM_GETCHECK, 0, 0);
+                    config.dp.trace_record = SendMessage(dlg_check_trace, BM_GETCHECK, 0, 0);
                     config.num_workers = GetDlgItemInt(hwnd, IDC_EDIT_WORKERS, FALSE, FALSE);
 
                     core_update_config(&config);
