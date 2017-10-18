@@ -2,5 +2,10 @@
 
 #include "core/core.h"
 
-bool config_load(struct core_config* config, const char* path);
-bool config_save(struct core_config* config, const char* path);
+#include <Windows.h>
+
+void config_init(HINSTANCE hInst);
+void config_dialog(HWND hParent);
+struct core_config* config_get(void);
+bool config_load(void);
+bool config_save(void);

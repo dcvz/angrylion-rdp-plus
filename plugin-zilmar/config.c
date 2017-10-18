@@ -1,4 +1,10 @@
 #include "config.h"
+#include "resource.h"
+
+#include "core/version.h"
+
+#include <Commctrl.h>
+#include <Shlwapi.h>
 
 #include <stdio.h>
 #include <string.h>
@@ -13,26 +19,114 @@
 #define KEY_VI_WIDESCREEN "widescreen"
 #define KEY_VI_OVERSCAN "overscan"
 
-static void config_handle(struct core_config* config, const char* key, const char* value, const char* section)
+#define CONFIG_FILE_NAME CORE_SIMPLE_NAME "-config.ini"
+
+static HINSTANCE inst;
+static struct core_config config;
+static char config_path[MAX_PATH + 1];
+
+INT_PTR CALLBACK config_dialog_proc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
+{
+    switch (iMessage) {
+        case WM_INITDIALOG: {
+            SetWindowText(hwnd, CORE_BASE_NAME " Config");
+
+            config_load();
+
+            TCHAR vi_mode_strings[VI_MODE_NUM][16] = {
+                TEXT("Filtered"),   // VI_MODE_NORMAL
+                TEXT("Unfiltered"), // VI_MODE_COLOR
+                TEXT("Depth"),      // VI_MODE_DEPTH
+                TEXT("Coverage")    // VI_MODE_COVERAGE
+            };
+
+            HWND hCombo1 = GetDlgItem(hwnd, IDC_COMBO_VI_MODE);
+            SendMessage(hCombo1, CB_RESETCONTENT, 0, 0);
+            for (int i = 0; i < VI_MODE_NUM; i++) {
+                SendMessage(hCombo1, CB_ADDSTRING, i, (LPARAM)vi_mode_strings[i]);
+            }
+            SendMessage(hCombo1, CB_SETCURSEL, (WPARAM)config.vi.mode, 0);
+
+            HWND hCheckTrace = GetDlgItem(hwnd, IDC_CHECK_TRACE);
+            SendMessage(hCheckTrace, BM_SETCHECK, (WPARAM)config.dp.trace_record, 0);
+
+            HWND hCheckWidescreen = GetDlgItem(hwnd, IDC_CHECK_VI_WIDESCREEN);
+            SendMessage(hCheckWidescreen, BM_SETCHECK, (WPARAM)config.vi.widescreen, 0);
+
+            SetDlgItemInt(hwnd, IDC_EDIT_WORKERS, config.num_workers, FALSE);
+
+            HWND hSpin1 = GetDlgItem(hwnd, IDC_SPIN_WORKERS);
+            SendMessage(hSpin1, UDM_SETRANGE, 0, MAKELPARAM(128, 0));
+            break;
+        }
+        case WM_COMMAND:
+            switch (LOWORD(wParam)) {
+                case IDOK: {
+                    HWND hCombo1 = GetDlgItem(hwnd, IDC_COMBO_VI_MODE);
+                    config.vi.mode = SendMessage(hCombo1, CB_GETCURSEL, 0, 0);
+
+                    HWND hCheckWidescreen = GetDlgItem(hwnd, IDC_CHECK_VI_WIDESCREEN);
+                    config.vi.widescreen = SendMessage(hCheckWidescreen, BM_GETCHECK, 0, 0);
+
+                    HWND hCheckTrace = GetDlgItem(hwnd, IDC_CHECK_TRACE);
+                    config.dp.trace_record = SendMessage(hCheckTrace, BM_GETCHECK, 0, 0);
+
+                    config.num_workers = GetDlgItemInt(hwnd, IDC_EDIT_WORKERS, FALSE, FALSE);
+
+                    core_update_config(&config);
+
+                    config_save();
+                }
+                case IDCANCEL:
+                    EndDialog(hwnd, 0);
+                    break;
+            }
+            break;
+        default:
+            return FALSE;
+    }
+    return TRUE;
+}
+
+static void config_handle(const char* key, const char* value, const char* section)
 {
     if (!_strcmpi(section, SECTION_GENERAL)) {
         if (!_strcmpi(key, KEY_GEN_NUM_WORKERS)) {
-            config->num_workers = strtoul(value, NULL, 0);
+            config.num_workers = strtoul(value, NULL, 0);
         }
     } else if (!_strcmpi(section, SECTION_VIDEO_INTERFACE)) {
         if (!_strcmpi(key, KEY_VI_MODE)) {
-            config->vi.mode = strtol(value, NULL, 0);
+            config.vi.mode = strtol(value, NULL, 0);
         } else if (!_strcmpi(key, KEY_VI_WIDESCREEN)) {
-            config->vi.widescreen = strtol(value, NULL, 0) != 0;
+            config.vi.widescreen = strtol(value, NULL, 0) != 0;
         } else if (!_strcmpi(key, KEY_VI_OVERSCAN)) {
-            config->vi.overscan = strtol(value, NULL, 0) != 0;
+            config.vi.overscan = strtol(value, NULL, 0) != 0;
         }
     }
 }
 
-bool config_load(struct core_config* config, const char* path)
+void config_init(HINSTANCE hInst)
 {
-    FILE* fp = fopen(path, "r");
+    inst = hInst;
+    config_path[0] = 0;
+    GetModuleFileName(inst, config_path, sizeof(config_path));
+    PathRemoveFileSpec(config_path);
+    PathAppend(config_path, CONFIG_FILE_NAME);
+}
+
+void config_dialog(HWND hParent)
+{
+    DialogBox(inst, MAKEINTRESOURCE(IDD_DIALOG1), hParent, config_dialog_proc);
+}
+
+struct core_config* config_get(void)
+{
+    return &config;
+}
+
+bool config_load()
+{
+    FILE* fp = fopen(config_path, "r");
     if (!fp) {
         return false;
     }
@@ -56,7 +150,7 @@ bool config_load(struct core_config* config, const char* path)
             *eq_ptr = 0;
             char* key = line;
             char* value = eq_ptr + 1;
-            config_handle(config, key, value, section);
+            config_handle(key, value, section);
             continue;
         }
 
@@ -88,21 +182,21 @@ static void config_write_int32(FILE* fp, const char* key, int32_t value)
     fprintf(fp, "%s=%d\n", key, value);
 }
 
-bool config_save(struct core_config* config, const char* path)
+bool config_save(void)
 {
-    FILE* fp = fopen(path, "w");
+    FILE* fp = fopen(config_path, "w");
     if (!fp) {
         return false;
     }
 
     config_write_section(fp, SECTION_GENERAL);
-    config_write_uint32(fp, KEY_GEN_NUM_WORKERS, config->num_workers);
+    config_write_uint32(fp, KEY_GEN_NUM_WORKERS, config.num_workers);
     fputs("\n", fp);
 
     config_write_section(fp, SECTION_VIDEO_INTERFACE);
-    config_write_int32(fp, KEY_VI_MODE, config->vi.mode);
-    config_write_int32(fp, KEY_VI_WIDESCREEN, config->vi.widescreen);
-    config_write_int32(fp, KEY_VI_OVERSCAN, config->vi.overscan);
+    config_write_int32(fp, KEY_VI_MODE, config.vi.mode);
+    config_write_int32(fp, KEY_VI_WIDESCREEN, config.vi.widescreen);
+    config_write_int32(fp, KEY_VI_OVERSCAN, config.vi.overscan);
 
     fclose(fp);
 
