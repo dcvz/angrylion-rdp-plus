@@ -58,7 +58,7 @@ INT_PTR CALLBACK ConfigDialogProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARA
                 TEXT("Coverage")    // VI_MODE_COVERAGE
             };
 
-            HWND hCombo1 = GetDlgItem(hwnd, IDC_COMBO1);
+            HWND hCombo1 = GetDlgItem(hwnd, IDC_COMBO_VI_MODE);
             SendMessage(hCombo1, CB_RESETCONTENT, 0, 0);
             for (int i = 0; i < VI_MODE_NUM; i++) {
                 SendMessage(hCombo1, CB_ADDSTRING, i, (LPARAM)vi_mode_strings[i]);
@@ -68,28 +68,28 @@ INT_PTR CALLBACK ConfigDialogProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARA
             HWND hCheckTrace = GetDlgItem(hwnd, IDC_CHECK_TRACE);
             SendMessage(hCheckTrace, BM_SETCHECK, (WPARAM)config.dp.trace_record, 0);
 
-            HWND hCheckWidescreen = GetDlgItem(hwnd, IDC_CHECK_WIDESCREEN);
+            HWND hCheckWidescreen = GetDlgItem(hwnd, IDC_CHECK_VI_WIDESCREEN);
             SendMessage(hCheckWidescreen, BM_SETCHECK, (WPARAM)config.vi.widescreen, 0);
 
-            SetDlgItemInt(hwnd, IDC_EDIT1, config.num_workers, FALSE);
+            SetDlgItemInt(hwnd, IDC_EDIT_WORKERS, config.num_workers, FALSE);
 
-            HWND hSpin1 = GetDlgItem(hwnd, IDC_SPIN1);
+            HWND hSpin1 = GetDlgItem(hwnd, IDC_SPIN_WORKERS);
             SendMessage(hSpin1, UDM_SETRANGE, 0, MAKELPARAM(128, 0));
             break;
         }
         case WM_COMMAND:
             switch (LOWORD(wParam)) {
                 case IDOK: {
-                    HWND hCombo1 = GetDlgItem(hwnd, IDC_COMBO1);
+                    HWND hCombo1 = GetDlgItem(hwnd, IDC_COMBO_VI_MODE);
                     config.vi.mode = SendMessage(hCombo1, CB_GETCURSEL, 0, 0);
 
-                    HWND hCheckWidescreen = GetDlgItem(hwnd, IDC_CHECK_WIDESCREEN);
+                    HWND hCheckWidescreen = GetDlgItem(hwnd, IDC_CHECK_VI_WIDESCREEN);
                     config.vi.widescreen = SendMessage(hCheckWidescreen, BM_GETCHECK, 0, 0);
 
                     HWND hCheckTrace = GetDlgItem(hwnd, IDC_CHECK_TRACE);
                     config.dp.trace_record = SendMessage(hCheckTrace, BM_GETCHECK, 0, 0);
 
-                    config.num_workers = GetDlgItemInt(hwnd, IDC_EDIT1, FALSE, FALSE);
+                    config.num_workers = GetDlgItemInt(hwnd, IDC_EDIT_WORKERS, FALSE, FALSE);
 
                     core_update_config(&config);
 
