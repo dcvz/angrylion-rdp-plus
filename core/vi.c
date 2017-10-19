@@ -595,7 +595,7 @@ static void vi_process_end(void)
         height = vres << ctrl.serrate;
         output_height = (vres << 1) * V_SYNC_NTSC / v_sync;
         int32_t x = h_start + minhpass;
-        int32_t y = (v_start + oldlowerfield) << ctrl.serrate;
+        int32_t y = (v_start + (emucontrolsvicurrent ? oldlowerfield : 0)) << ctrl.serrate;
         buffer += x + y * pitch;
     }
 
