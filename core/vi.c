@@ -286,9 +286,7 @@ static bool vi_process_start(void)
     if (isblank) {
         // blank signal, clear entire screen buffer
         memset(tvfadeoutstate, 0, PRESCALE_HEIGHT * sizeof(uint32_t));
-        for (i = 0; i < PRESCALE_HEIGHT; i++) {
-            memset(&prescale[i * PRESCALE_WIDTH], 0, PRESCALE_WIDTH * sizeof(int32_t));
-        }
+        memset(prescale, 0, sizeof(prescale));
     } else {
         // clear left border
         int32_t j;
