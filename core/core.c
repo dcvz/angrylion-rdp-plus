@@ -88,7 +88,7 @@ void core_init(struct core_config* _config)
 
     num_workers = config.num_workers;
 
-    if (num_workers != 1) {
+    if (config.parallel) {
         parallel_init(num_workers);
     }
 
@@ -134,7 +134,7 @@ void core_sync_dp(void)
             num_workers = config.num_workers;
             parallel_close();
 
-            if (num_workers != 1) {
+            if (config.parallel) {
                 parallel_init(num_workers);
             }
         }

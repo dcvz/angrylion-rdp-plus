@@ -54,6 +54,7 @@ struct core_config
         bool widescreen;
         bool overscan;
     } vi;
+    bool parallel;
     uint32_t num_workers;
 };
 

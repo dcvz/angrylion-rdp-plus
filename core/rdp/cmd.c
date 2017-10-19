@@ -161,17 +161,15 @@ void rdp_cmd(const uint32_t* arg, uint32_t length)
 {
     uint32_t cmd_id = CMD_ID(arg);
 
-    bool parallel = config->num_workers != 1;
-
-    if (rdp_commands[cmd_id].sync && parallel) {
+    if (rdp_commands[cmd_id].sync && config->parallel) {
         rdp_cmd_flush();
     }
 
-    if (rdp_commands[cmd_id].singlethread || !parallel) {
+    if (rdp_commands[cmd_id].singlethread || !config->parallel) {
         rdp_cmd_run(arg);
     }
 
-    if (rdp_commands[cmd_id].multithread && parallel) {
+    if (rdp_commands[cmd_id].multithread && config->parallel) {
         rdp_cmd_push(arg, length);
     }
 }

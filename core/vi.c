@@ -405,7 +405,7 @@ static void vi_process(void)
     int32_t y_end = vres;
     int32_t y_inc = 1;
 
-    if (config->num_workers != 1) {
+    if (config->parallel) {
         y_begin = parallel_worker_id();
         y_inc = parallel_worker_num();
     }
@@ -639,7 +639,7 @@ static void vi_process_fast(void)
     int32_t y_end = vres_raw;
     int32_t y_inc = 1;
 
-    if (config->num_workers != 1) {
+    if (config->parallel) {
         y_begin = parallel_worker_id();
         y_inc = parallel_worker_num();
     }
@@ -815,7 +815,7 @@ void vi_update(void)
     }
 
     // run filter update in parallel if enabled
-    if (config->num_workers != 1) {
+    if (config->parallel) {
         parallel_run(vi_process_ptr);
     } else {
         vi_process_ptr();
