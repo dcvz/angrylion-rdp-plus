@@ -13,6 +13,7 @@
 #define SECTION_GENERAL "General"
 #define SECTION_VIDEO_INTERFACE "VideoInterface"
 
+#define KEY_GEN_PARALLEL "parallel"
 #define KEY_GEN_NUM_WORKERS "num_workers"
 
 #define KEY_VI_MODE "mode"
@@ -27,8 +28,24 @@ static char config_path[MAX_PATH + 1];
 
 static HWND dlg_combo_vi_mode;
 static HWND dlg_check_trace;
+static HWND dlg_check_multithread;
 static HWND dlg_check_vi_widescreen;
+static HWND dlg_check_vi_overscan;
 static HWND dlg_spin_workers;
+static HWND dlg_edit_workers;
+
+static void config_dialog_update_multithread(void)
+{
+    LRESULT check = SendMessage(dlg_check_multithread, BM_GETCHECK, 0, 0);
+    EnableWindow(dlg_spin_workers, check);
+    EnableWindow(dlg_edit_workers, check);
+}
+
+static void config_dialog_update_vi_mode(void)
+{
+    LRESULT sel = SendMessage(dlg_combo_vi_mode, CB_GETCURSEL, 0, 0);
+    EnableWindow(dlg_check_vi_overscan, sel == VI_MODE_NORMAL);
+}
 
 INT_PTR CALLBACK config_dialog_proc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 {
@@ -55,23 +72,50 @@ INT_PTR CALLBACK config_dialog_proc(HWND hwnd, UINT iMessage, WPARAM wParam, LPA
             dlg_check_trace = GetDlgItem(hwnd, IDC_CHECK_TRACE);
             SendMessage(dlg_check_trace, BM_SETCHECK, (WPARAM)config.dp.trace_record, 0);
 
+            dlg_check_multithread = GetDlgItem(hwnd, IDC_CHECK_MULTITHREAD);
+            SendMessage(dlg_check_multithread, BM_SETCHECK, (WPARAM)config.parallel, 0);
+
             dlg_check_vi_widescreen = GetDlgItem(hwnd, IDC_CHECK_VI_WIDESCREEN);
             SendMessage(dlg_check_vi_widescreen, BM_SETCHECK, (WPARAM)config.vi.widescreen, 0);
 
+            dlg_check_vi_overscan = GetDlgItem(hwnd, IDC_CHECK_VI_OVERSCAN);
+            SendMessage(dlg_check_vi_overscan, BM_SETCHECK, (WPARAM)config.vi.overscan, 0);
+
+            dlg_edit_workers = GetDlgItem(hwnd, IDC_EDIT_WORKERS);
             SetDlgItemInt(hwnd, IDC_EDIT_WORKERS, config.num_workers, FALSE);
 
             dlg_spin_workers = GetDlgItem(hwnd, IDC_SPIN_WORKERS);
             SendMessage(dlg_spin_workers, UDM_SETRANGE, 0, MAKELPARAM(128, 0));
+
+            // update enabled/disabled state
+            config_dialog_update_multithread();
+            config_dialog_update_vi_mode();
+
             break;
         }
         case WM_COMMAND: {
             WORD cmdid = LOWORD(wParam);
             switch (cmdid) {
+                // disable or enable multithreading options when the checkbox is
+                // checked or unchecked
+                case IDC_CHECK_MULTITHREAD:
+                    config_dialog_update_multithread();
+                    break;
+                // disable overscan option if a non-compatible mode is selected
+                case IDC_COMBO_VI_MODE:
+                    switch (HIWORD(wParam)) {
+                        case CBN_SELCHANGE:
+                            config_dialog_update_vi_mode();
+                            break;
+                    }
+                    break;
                 case IDOK:
                 case IDAPPLY:
                     config.vi.mode = SendMessage(dlg_combo_vi_mode, CB_GETCURSEL, 0, 0);
                     config.vi.widescreen = SendMessage(dlg_check_vi_widescreen, BM_GETCHECK, 0, 0);
+                    config.vi.overscan = SendMessage(dlg_check_vi_overscan, BM_GETCHECK, 0, 0);
                     config.dp.trace_record = SendMessage(dlg_check_trace, BM_GETCHECK, 0, 0);
+                    config.parallel = SendMessage(dlg_check_multithread, BM_GETCHECK, 0, 0);
                     config.num_workers = GetDlgItemInt(hwnd, IDC_EDIT_WORKERS, FALSE, FALSE);
 
                     core_update_config(&config);
@@ -96,6 +140,9 @@ INT_PTR CALLBACK config_dialog_proc(HWND hwnd, UINT iMessage, WPARAM wParam, LPA
 static void config_handle(const char* key, const char* value, const char* section)
 {
     if (!_strcmpi(section, SECTION_GENERAL)) {
+        if (!_strcmpi(key, KEY_GEN_PARALLEL)) {
+            config.parallel = strtol(value, NULL, 0) != 0;
+        }
         if (!_strcmpi(key, KEY_GEN_NUM_WORKERS)) {
             config.num_workers = strtoul(value, NULL, 0);
         }
@@ -195,6 +242,7 @@ bool config_save(void)
     }
 
     config_write_section(fp, SECTION_GENERAL);
+    config_write_int32(fp, KEY_GEN_PARALLEL, config.parallel);
     config_write_uint32(fp, KEY_GEN_NUM_WORKERS, config.num_workers);
     fputs("\n", fp);
 

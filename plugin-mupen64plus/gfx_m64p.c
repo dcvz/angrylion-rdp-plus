@@ -26,6 +26,7 @@
 #define KEY_FULLSCREEN "Fullscreen"
 #define KEY_SCREEN_WIDTH "ScreenWidth"
 #define KEY_SCREEN_HEIGHT "ScreenHeight"
+#define KEY_PARALLEL "parallel"
 #define KEY_NUM_WORKERS "NumWorkers"
 
 #define KEY_VI_MODE "ViMode"
@@ -95,6 +96,7 @@ EXPORT m64p_error CALL PluginStartup(m64p_dynlib_handle _CoreLibHandle, void *Co
     ConfigSetDefaultInt(configVideoGeneral, KEY_SCREEN_WIDTH, 640, "Width of output window or fullscreen width");
     ConfigSetDefaultInt(configVideoGeneral, KEY_SCREEN_HEIGHT, 480, "Height of output window or fullscreen height");
 
+    ConfigSetDefaultBool(configVideoAngrylionPlus, KEY_PARALLEL, 1, "Distribute rendering between multiple processors if True");
     ConfigSetDefaultInt(configVideoAngrylionPlus, KEY_NUM_WORKERS, 0, "Rendering Workers (0=Use all logical processors)");
     ConfigSetDefaultInt(configVideoAngrylionPlus, KEY_VI_MODE, 0, "VI Mode (0=Filtered, 1=Unfiltered, 2=Depth, 3=Coverage)");
     ConfigSetDefaultBool(configVideoAngrylionPlus, KEY_VI_WIDESCREEN, 0, "Use anamorphic 16:9 output mode if True");
@@ -177,6 +179,7 @@ EXPORT int CALL RomOpen (void)
     window_width = ConfigGetParamInt(configVideoGeneral, KEY_SCREEN_WIDTH);
     window_height = ConfigGetParamInt(configVideoGeneral, KEY_SCREEN_HEIGHT);
 
+    config.parallel = ConfigGetParamBool(configVideoAngrylionPlus, KEY_PARALLEL);
     config.num_workers = ConfigGetParamInt(configVideoAngrylionPlus, KEY_NUM_WORKERS);
     config.vi.mode = ConfigGetParamInt(configVideoAngrylionPlus, KEY_VI_MODE);
     config.vi.widescreen = ConfigGetParamBool(configVideoAngrylionPlus, KEY_VI_WIDESCREEN);
