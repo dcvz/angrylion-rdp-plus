@@ -87,7 +87,7 @@ static struct core_config* config;
 static uint32_t prevvicurrent;
 static int32_t emucontrolsvicurrent;
 static bool prevserrate;
-static int32_t oldlowerfield;
+static bool lowerfield;
 static int32_t oldvstart;
 static bool prevwasblank;
 static int32_t vactivelines;
@@ -182,7 +182,6 @@ void vi_init(struct core_config* _config)
     prevvicurrent = 0;
     emucontrolsvicurrent = -1;
     prevserrate = false;
-    oldlowerfield = 0;
     oldvstart = 1337;
     prevwasblank = false;
 }
@@ -208,32 +207,27 @@ static bool vi_process_start(void)
 
     bool isblank = (ctrl.type & 2) == 0;
     bool validinterlace = !isblank && ctrl.serrate;
-    if (validinterlace && prevserrate && emucontrolsvicurrent < 0) {
-        emucontrolsvicurrent = v_current_line != prevvicurrent;
-    }
 
-    int32_t lowerfield = 0;
     if (validinterlace) {
+        if (prevserrate && emucontrolsvicurrent < 0) {
+            emucontrolsvicurrent = v_current_line != prevvicurrent;
+        }
+
         if (emucontrolsvicurrent == 1) {
             lowerfield = v_current_line ^ 1;
         } else if (!emucontrolsvicurrent) {
             if (v_start == oldvstart) {
-                lowerfield = oldlowerfield ^ 1;
+                lowerfield ^= true;
             } else {
                 lowerfield = v_start < oldvstart;
             }
         }
-    }
 
-    oldlowerfield = lowerfield;
-
-    if (validinterlace) {
-        prevserrate = true;
         prevvicurrent = v_current_line;
         oldvstart = v_start;
-    } else {
-        prevserrate = 0;
     }
+
+    prevserrate = validinterlace;
 
     uint32_t lineshifter = !ctrl.serrate;
 
@@ -595,7 +589,7 @@ static void vi_process_end(void)
         height = vres << ctrl.serrate;
         output_height = (vres << 1) * V_SYNC_NTSC / v_sync;
         int32_t x = h_start + minhpass;
-        int32_t y = (v_start + (emucontrolsvicurrent ? oldlowerfield : 0)) << ctrl.serrate;
+        int32_t y = (v_start + (emucontrolsvicurrent ? lowerfield : 0)) << ctrl.serrate;
         buffer += x + y * pitch;
     }
 
