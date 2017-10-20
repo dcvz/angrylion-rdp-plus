@@ -15,9 +15,10 @@
 #include <ctype.h>
 
 static uint32_t screenshot_index;
-static uint32_t trace_num_workers;
 static uint32_t trace_index;
 static uint32_t num_workers;
+static bool parallel;
+static bool parallel_tmp;
 
 static struct core_config* config_new;
 static struct core_config config;
@@ -87,6 +88,7 @@ void core_init(struct core_config* _config)
     vi_init(&config);
 
     num_workers = config.num_workers;
+    parallel = config.parallel;
 
     if (config.parallel) {
         parallel_init(num_workers);
@@ -119,24 +121,32 @@ void core_dp_sync(void)
             trace_write_open(trace_path);
             trace_write_header(plugin_get_rdram_size());
             trace_write_reset();
-            trace_num_workers = config.num_workers;
-            config.num_workers = 1;
+
+            // multithreading is not allowed during tracing, disable it temporarily
+            parallel_tmp = config.parallel;
+            config.parallel = false;
         }
 
         // close trace file when tracing has been disabled
         if (!config.dp.trace_record && trace_write_is_open()) {
             trace_write_close();
-            config.num_workers = trace_num_workers;
+
+            // restore multithreading option
+            config.parallel = parallel_tmp;
         }
 
-        // update number of workers
-        if (config.num_workers != num_workers) {
-            num_workers = config.num_workers;
+        // enable/disable multithreading or update number of workers
+        if (config.parallel != parallel || config.num_workers != num_workers) {
+            // destroy old threads
             parallel_close();
 
+            // create new threads if parallel option is still enabled
             if (config.parallel) {
                 parallel_init(num_workers);
             }
+
+            num_workers = config.num_workers;
+            parallel = config.parallel;
         }
     }
 
