@@ -80,6 +80,9 @@ EXPORT m64p_error CALL PluginStartup(m64p_dynlib_handle _CoreLibHandle, void *Co
     debug_callback = DebugCallback;
     debug_call_context = Context;
 
+    // load low-level config defaults, which are applied on the API defaults
+    core_config_defaults(&config);
+
     CoreLibHandle = _CoreLibHandle;
 
     ConfigOpenSection = (ptr_ConfigOpenSection)DLSYM(CoreLibHandle, "ConfigOpenSection");
@@ -96,11 +99,11 @@ EXPORT m64p_error CALL PluginStartup(m64p_dynlib_handle _CoreLibHandle, void *Co
     ConfigSetDefaultInt(configVideoGeneral, KEY_SCREEN_WIDTH, 640, "Width of output window or fullscreen width");
     ConfigSetDefaultInt(configVideoGeneral, KEY_SCREEN_HEIGHT, 480, "Height of output window or fullscreen height");
 
-    ConfigSetDefaultBool(configVideoAngrylionPlus, KEY_PARALLEL, 1, "Distribute rendering between multiple processors if True");
-    ConfigSetDefaultInt(configVideoAngrylionPlus, KEY_NUM_WORKERS, 0, "Rendering Workers (0=Use all logical processors)");
-    ConfigSetDefaultInt(configVideoAngrylionPlus, KEY_VI_MODE, 0, "VI Mode (0=Filtered, 1=Unfiltered, 2=Depth, 3=Coverage)");
-    ConfigSetDefaultBool(configVideoAngrylionPlus, KEY_VI_WIDESCREEN, 0, "Use anamorphic 16:9 output mode if True");
-    ConfigSetDefaultBool(configVideoAngrylionPlus, KEY_VI_OVERSCAN, 0, "Display overscan area in filteded mode if True");
+    ConfigSetDefaultBool(configVideoAngrylionPlus, KEY_PARALLEL, config.parallel, "Distribute rendering between multiple processors if True");
+    ConfigSetDefaultInt(configVideoAngrylionPlus, KEY_NUM_WORKERS, config.num_workers, "Rendering Workers (0=Use all logical processors)");
+    ConfigSetDefaultInt(configVideoAngrylionPlus, KEY_VI_MODE, config.vi.mode, "VI Mode (0=Filtered, 1=Unfiltered, 2=Depth, 3=Coverage)");
+    ConfigSetDefaultBool(configVideoAngrylionPlus, KEY_VI_WIDESCREEN, config.vi.widescreen, "Use anamorphic 16:9 output mode if True");
+    ConfigSetDefaultBool(configVideoAngrylionPlus, KEY_VI_OVERSCAN, config.vi.overscan, "Display overscan area in filteded mode if True");
 
     ConfigSaveSection("Video-General");
     ConfigSaveSection("Video-Angrylion-Plus");

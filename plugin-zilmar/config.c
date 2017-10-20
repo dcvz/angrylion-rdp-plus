@@ -161,6 +161,7 @@ void config_init(HINSTANCE hInst)
 {
     inst = hInst;
     config_path[0] = 0;
+    core_config_defaults(&config);
     GetModuleFileName(inst, config_path, sizeof(config_path));
     PathRemoveFileSpec(config_path);
     PathAppend(config_path, CONFIG_FILE_NAME);

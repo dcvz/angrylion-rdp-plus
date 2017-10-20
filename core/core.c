@@ -149,6 +149,12 @@ void core_config_update(struct core_config* _config)
     config_new = _config;
 }
 
+void core_config_defaults(struct core_config* config)
+{
+    memset(config, 0, sizeof(*config));
+    config->parallel = true;
+}
+
 void core_dp_update(void)
 {
     rdp_update();
