@@ -26,7 +26,7 @@
 #define KEY_FULLSCREEN "Fullscreen"
 #define KEY_SCREEN_WIDTH "ScreenWidth"
 #define KEY_SCREEN_HEIGHT "ScreenHeight"
-#define KEY_PARALLEL "parallel"
+#define KEY_PARALLEL "Parallel"
 #define KEY_NUM_WORKERS "NumWorkers"
 
 #define KEY_VI_MODE "ViMode"
