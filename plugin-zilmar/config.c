@@ -101,6 +101,7 @@ INT_PTR CALLBACK config_dialog_proc(HWND hwnd, UINT iMessage, WPARAM wParam, LPA
                 case IDC_CHECK_MULTITHREAD:
                     config_dialog_update_multithread();
                     break;
+
                 // disable overscan option if a non-compatible mode is selected
                 case IDC_COMBO_VI_MODE:
                     switch (HIWORD(wParam)) {
@@ -109,6 +110,8 @@ INT_PTR CALLBACK config_dialog_proc(HWND hwnd, UINT iMessage, WPARAM wParam, LPA
                             break;
                     }
                     break;
+
+                // button events
                 case IDOK:
                 case IDAPPLY:
                     config.vi.mode = SendMessage(dlg_combo_vi_mode, CB_GETCURSEL, 0, 0);
@@ -161,7 +164,10 @@ void config_init(HINSTANCE hInst)
 {
     inst = hInst;
     config_path[0] = 0;
+
     core_config_defaults(&config);
+
+    // create path to config file relative to the DLL path
     GetModuleFileName(inst, config_path, sizeof(config_path));
     PathRemoveFileSpec(config_path);
     PathAppend(config_path, CONFIG_FILE_NAME);
