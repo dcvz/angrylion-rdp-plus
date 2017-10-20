@@ -60,8 +60,8 @@ struct core_config
 
 void core_init(struct core_config* config);
 void core_close(void);
-void core_sync_dp(void);
-void core_update_config(struct core_config* config);
-void core_update_dp(void);
-void core_update_vi(void);
+void core_config_update(struct core_config* config);
+void core_dp_sync(void);
+void core_dp_update(void);
+void core_vi_update(void);
 void core_screenshot(char* directory);

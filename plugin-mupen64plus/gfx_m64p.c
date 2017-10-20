@@ -170,7 +170,7 @@ EXPORT void CALL ProcessDList(void)
 
 EXPORT void CALL ProcessRDPList(void)
 {
-    core_update_dp();
+    core_dp_update();
 }
 
 EXPORT int CALL RomOpen (void)
@@ -200,7 +200,7 @@ EXPORT void CALL ShowCFB (void)
 
 EXPORT void CALL UpdateScreen (void)
 {
-    core_update_vi();
+    core_vi_update();
 }
 
 EXPORT void CALL ViStatusChanged (void)

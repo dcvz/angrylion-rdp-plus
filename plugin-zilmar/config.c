@@ -118,7 +118,7 @@ INT_PTR CALLBACK config_dialog_proc(HWND hwnd, UINT iMessage, WPARAM wParam, LPA
                     config.parallel = SendMessage(dlg_check_multithread, BM_GETCHECK, 0, 0);
                     config.num_workers = GetDlgItemInt(hwnd, IDC_EDIT_WORKERS, FALSE, FALSE);
 
-                    core_update_config(&config);
+                    core_config_update(&config);
                     config_save();
 
                     // don't close dialog if "Apply" was pressed

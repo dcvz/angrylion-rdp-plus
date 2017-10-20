@@ -346,7 +346,7 @@ static void rdp_sync_tile(const uint32_t* args)
 
 static void rdp_sync_full(const uint32_t* args)
 {
-    core_sync_dp();
+    core_dp_sync();
 }
 
 static void rdp_set_other_modes(const uint32_t* args)

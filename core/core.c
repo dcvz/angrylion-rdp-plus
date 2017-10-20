@@ -96,7 +96,7 @@ void core_init(struct core_config* _config)
     trace_index = 0;
 }
 
-void core_sync_dp(void)
+void core_dp_sync(void)
 {
     // update config if set
     if (config_new) {
@@ -144,17 +144,17 @@ void core_sync_dp(void)
     plugin_sync_dp();
 }
 
-void core_update_config(struct core_config* _config)
+void core_config_update(struct core_config* _config)
 {
     config_new = _config;
 }
 
-void core_update_dp(void)
+void core_dp_update(void)
 {
     rdp_update();
 }
 
-void core_update_vi(void)
+void core_vi_update(void)
 {
     vi_update();
 }
