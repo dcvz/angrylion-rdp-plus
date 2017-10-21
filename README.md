@@ -27,7 +27,15 @@ The glLoadGen files (`gl_core_3_3` and `wgl_ext`) were generated using the follo
     lua\lua5.1.exe LoadGen.lua core_3_3 -style=noload_c -spec=gl -version=3.3 -profile=core -stdext=gl_ubiquitous.txt -stdext=gl_core_post_3_3.txt
     lua\lua5.1.exe LoadGen.lua ext -style=noload_c -spec=wgl -ext WGL_EXT_swap_control
 
-Building with CMake is also possible, but currently supports the mupen64plus plugin and the retracer only.
+Building with CMake is also possible:
+
+    mkdir build
+    cd build
+    cmake ..
+    make
+
+The CMake rules currently supports the mupen64plus plugin and the retracer only.
+Also, non-Windows platforms currently suffer from massive performance degradation because of interferences with thread-local storage.
 
 ### Credits
 * Angrylion, Ville Linde, MooglyGuy and others involved for creating an awesome N64 RDP reference software.
