@@ -142,7 +142,7 @@ void core_dp_sync(void)
 
             // create new threads if parallel option is still enabled
             if (config.parallel) {
-                parallel_init(num_workers);
+                parallel_init(config.num_workers);
             }
 
             num_workers = config.num_workers;
