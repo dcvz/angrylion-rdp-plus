@@ -747,8 +747,9 @@ void vi_update(void)
     vres = (v_end - v_start) >> 1; // vertical is measured in half-lines
     
     // skip invalid/unsupported frame sizes
-    if (hres <= 0 || vres <= 0)
+    if (hres <= 0 || vres <= 0) {
        return;
+    }
 
     x_add = *vi_reg_ptr[VI_X_SCALE] & 0xfff;
     x_start = (*vi_reg_ptr[VI_X_SCALE] >> 16) & 0xfff;

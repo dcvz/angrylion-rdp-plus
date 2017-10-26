@@ -18,10 +18,11 @@ void plugin_init(void)
 
     int core_version;
     CoreGetVersion(NULL, &core_version, NULL, NULL, NULL);
-    if (core_version >= 0x020501)
+    if (core_version >= 0x020501) {
         rdram_size = *gfx.RDRAM_SIZE;
-    else
+    } else {
         rdram_size = 0x800000;
+    }
 
     // mupen64plus plugins can't access the hidden bits, so allocate it on our own
     rdram_hidden_bits = malloc(rdram_size);
