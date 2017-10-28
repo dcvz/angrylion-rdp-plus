@@ -21,18 +21,55 @@
 #include <windows.h>
 #endif
 
+#include "argparse.h"
+
 static struct core_config config;
 
-bool retrace_frame(uint64_t* num_cmds)
-{
-    *num_cmds = 0;
+static bool loop;
+static bool benchmark;
+static uint64_t start;
+static uint32_t dp_frames;
+static uint32_t vi_frames;
 
+void retrace_stats(void)
+{
+    uint64_t freq = SDL_GetPerformanceFrequency();
+    uint64_t now = SDL_GetPerformanceCounter();
+
+    float seconds_passed = (now - start) / (float)freq;
+    float dp_fps = dp_frames / seconds_passed;
+    float vi_fps = vi_frames / seconds_passed;
+
+    printf("Render time: %.2fs\n", seconds_passed);
+    printf("DP: %d frames, %.1f avg FPS\n", dp_frames, dp_fps);
+    printf("VI: %d frames, %.1f avg FPS\n\n", vi_frames, vi_fps);
+
+    start = SDL_GetPerformanceCounter();
+}
+
+void retrace_reset(void)
+{
+    dp_frames = 0;
+    vi_frames = 0;
+    trace_read_reset();
+}
+
+bool retrace_frame(void)
+{
     while (1) {
         char id = trace_read_id();
 
         switch (id) {
             case TRACE_EOF:
-                return false;
+                if (benchmark) {
+                    retrace_stats();
+                }
+
+                if (loop) {
+                    retrace_reset();
+                }
+
+                return loop;
 
             case TRACE_CMD: {
                 uint32_t cmd[CMD_MAX_INTS];
@@ -40,9 +77,9 @@ bool retrace_frame(uint64_t* num_cmds)
                 trace_read_cmd(cmd, &length);
 
                 rdp_cmd(cmd, length);
-                (*num_cmds)++;
 
                 if (CMD_ID(cmd) == CMD_ID_SYNC_FULL) {
+                    dp_frames++;
                     return true;
                 }
 
@@ -56,6 +93,7 @@ bool retrace_frame(uint64_t* num_cmds)
             case TRACE_VI:
                 trace_read_vi(plugin_get_vi_registers());
                 vi_update();
+                vi_frames++;
                 break;
         }
     }
@@ -65,6 +103,7 @@ void retrace_frames(void)
 {
     bool run = true;
     bool pause = false;
+    start = SDL_GetPerformanceCounter();
 
     while (run) {
         bool render = !pause;
@@ -103,8 +142,7 @@ void retrace_frames(void)
         }
 
         if (render) {
-            uint64_t cmds_per_frame;
-            if (!retrace_frame(&cmds_per_frame)) {
+            if (!retrace_frame()) {
                 run = false;
             }
         } else {
@@ -113,47 +151,34 @@ void retrace_frames(void)
     }
 }
 
-void retrace_frames_verbose(void)
-{
-#ifdef _WIN32
-    // set maximum process priority for most accurate results
-    SetPriorityClass(GetCurrentProcess(), REALTIME_PRIORITY_CLASS);
-#endif
-
-    uint64_t start = SDL_GetPerformanceCounter();
-    uint64_t freq = SDL_GetPerformanceFrequency();
-    uint64_t prev = start;
-
-    // counters for the entire run
-    uint32_t frames_total = 0;
-    uint64_t cmds_total = 0;
-
-    bool running = true;
-    uint64_t cmds_per_frame;
-    while (retrace_frame(&cmds_per_frame)) {
-        // increment command counters
-        cmds_total += cmds_per_frame;
-
-        // increment frame counters
-        frames_total++;
-    }
-
-    uint64_t now = SDL_GetPerformanceCounter();
-    float seconds_passed = (now - start) / (float)freq;
-    float average_fps = frames_total / seconds_passed;
-    float average_cps = cmds_total / seconds_passed;
-
-    printf("Frames: %d\n", frames_total);
-    printf("Commands: %" PRIu64 "\n", cmds_total);
-    printf("Average frames/s: %.2f\n", average_fps);
-    printf("Average commands/s: %.2f\n", average_cps);
-    printf("Render time: %.2fs\n", seconds_passed);
-}
-
 int main(int argc, char** argv)
 {
-    if (argc < 2) {
-        fprintf(stderr, "Usage: %s <trace file>\n", argv[0]);
+    char usage[80];
+    snprintf(usage, sizeof(usage), "%s [options] <trace file>", argv[0]);
+    char* usages[] = {usage, NULL};
+
+    static struct argparse_option options[] = {
+        OPT_HELP(),
+        OPT_GROUP("Retracing options"),
+        OPT_BOOLEAN('l', "loop", &loop, "restart retracing after rendering the last frame"),
+        OPT_BOOLEAN('b', "benchmark", &benchmark, "display elapsed time after rendering the last frame"),
+        OPT_GROUP("Rendering options"),
+        OPT_BOOLEAN('p', "parallel", &config.parallel, "enables multithreaded parallel rendering"),
+        OPT_INTEGER('t', "workers", &config.num_workers, "set the number of workers used for multithreading (0 = auto)"),
+        OPT_GROUP("Video interface options"),
+        OPT_INTEGER('v', "vimode", &config.vi.mode, "set VI mode (0 = filtered, 1 = unfiltered, 2 = depth, 3 = coverage)"),
+        OPT_BOOLEAN('o', "overscan", &config.vi.overscan, "enable overscan output"),
+        OPT_BOOLEAN('w', "widescreen", &config.vi.overscan, "force 16:9 aspect ratio"),
+        OPT_END(),
+    };
+
+    struct argparse argparse;
+    argparse_init(&argparse, options, usages, 0);
+    argparse_describe(&argparse, "\nPlays back a recorded RDP trace file (*.dpt).", NULL);
+    argc = argparse_parse(&argparse, argc, argv);
+
+    if (argc < 1) {
+        argparse_usage(&argparse);
         return EXIT_FAILURE;
     }
 
@@ -169,11 +194,8 @@ int main(int argc, char** argv)
     plugin_set_rdram_size(rdram_size);
 
     core_init(&config);
-
     retrace_frames();
-
     core_close();
-
     trace_read_close();
 
     return EXIT_SUCCESS;

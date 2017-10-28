@@ -78,6 +78,11 @@ void trace_read_vi(uint32_t** vi_reg)
     }
 }
 
+void trace_read_reset(void)
+{
+    fseek(fp, 8, SEEK_SET);
+}
+
 void trace_read_close(void)
 {
     fclose(fp);
