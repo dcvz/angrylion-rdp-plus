@@ -1,7 +1,6 @@
 static uint32_t rdp_cmd_data[0x10000];
 static uint32_t rdp_cmd_ptr = 0;
 static uint32_t rdp_cmd_cur = 0;
-static uint32_t ptr_onstart = 0;
 
 #define CMD_BUFFER_COUNT 1024
 
@@ -187,8 +186,6 @@ void rdp_update(void)
     }
 
     uint32_t length = (dp_end_al - dp_current_al) >> 2;
-
-    ptr_onstart = rdp_cmd_ptr;
 
     dp_current_al >>= 2;
 
