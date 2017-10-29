@@ -176,114 +176,71 @@ void rdp_cmd(const uint32_t* arg, uint32_t length)
 
 void rdp_update(void)
 {
-    int i, length;
-    uint32_t cmd, cmd_length;
-
     uint32_t** dp_reg = plugin_get_dp_registers();
-    uint32_t dp_current_al = *dp_reg[DP_CURRENT] & ~7, dp_end_al = *dp_reg[DP_END] & ~7;
+    uint32_t dp_current_al = *dp_reg[DP_CURRENT] & ~7;
+    uint32_t dp_end_al = *dp_reg[DP_END] & ~7;
 
     *dp_reg[DP_STATUS] &= ~DP_STATUS_FREEZE;
 
-
-
-
-
-
-
-    if (dp_end_al <= dp_current_al)
-    {
-
-
-
-
-
-
+    if (dp_end_al <= dp_current_al) {
         return;
     }
 
-    length = (dp_end_al - dp_current_al) >> 2;
+    uint32_t length = (dp_end_al - dp_current_al) >> 2;
 
     ptr_onstart = rdp_cmd_ptr;
 
-
-
-
-
-
-
-
-
     uint32_t remaining_length = length;
-
 
     dp_current_al >>= 2;
 
-    while (remaining_length)
-    {
+    while (remaining_length) {
+        uint32_t toload = remaining_length > 0x10000 ? 0x10000 : remaining_length;
 
-    int toload = remaining_length > 0x10000 ? 0x10000 : remaining_length;
-
-    if (*dp_reg[DP_STATUS] & DP_STATUS_XBUS_DMA)
-    {
-        uint32_t* dmem = (uint32_t*)plugin_get_dmem();
-        for (i = 0; i < toload; i ++)
-        {
-            rdp_cmd_data[rdp_cmd_ptr] = dmem[dp_current_al & 0x3ff];
-            rdp_cmd_ptr++;
-            dp_current_al++;
-        }
-    }
-    else
-    {
-        for (i = 0; i < toload; i ++)
-        {
-            RREADIDX32(rdp_cmd_data[rdp_cmd_ptr], dp_current_al);
-
-
-
-
-
-            rdp_cmd_ptr++;
-            dp_current_al++;
-        }
-    }
-
-    remaining_length -= toload;
-
-    while (rdp_cmd_cur < rdp_cmd_ptr && !rdp_pipeline_crashed)
-    {
-        cmd = CMD_ID(rdp_cmd_data + rdp_cmd_cur);
-        cmd_length = rdp_commands[cmd].length >> 2;
-
-
-
-        if ((rdp_cmd_ptr - rdp_cmd_cur) < cmd_length)
-        {
-            if (!remaining_length)
-            {
-
-                *dp_reg[DP_START] = *dp_reg[DP_CURRENT] = *dp_reg[DP_END];
-                return;
+        if (*dp_reg[DP_STATUS] & DP_STATUS_XBUS_DMA) {
+            uint32_t* dmem = (uint32_t*)plugin_get_dmem();
+            for (uint32_t i = 0; i < toload; i ++) {
+                rdp_cmd_data[rdp_cmd_ptr] = dmem[dp_current_al & 0x3ff];
+                rdp_cmd_ptr++;
+                dp_current_al++;
             }
-            else
-            {
-                dp_current_al -= (rdp_cmd_ptr - rdp_cmd_cur);
-                remaining_length += (rdp_cmd_ptr - rdp_cmd_cur);
-                break;
+        } else {
+            for (uint32_t i = 0; i < toload; i ++) {
+                RREADIDX32(rdp_cmd_data[rdp_cmd_ptr], dp_current_al);
+                rdp_cmd_ptr++;
+                dp_current_al++;
             }
         }
 
-        rdp_cmd(rdp_cmd_data + rdp_cmd_cur, cmd_length);
+        remaining_length -= toload;
 
-        if (trace_write_is_open()) {
-            trace_write_cmd(rdp_cmd_data + rdp_cmd_cur, cmd_length);
+        while (rdp_cmd_cur < rdp_cmd_ptr && !rdp_pipeline_crashed) {
+            uint32_t cmd = CMD_ID(rdp_cmd_data + rdp_cmd_cur);
+            uint32_t cmd_length = rdp_commands[cmd].length >> 2;
+
+            if ((rdp_cmd_ptr - rdp_cmd_cur) < cmd_length) {
+                if (!remaining_length) {
+                    *dp_reg[DP_START] = *dp_reg[DP_CURRENT] = *dp_reg[DP_END];
+                    return;
+                } else {
+                    dp_current_al -= (rdp_cmd_ptr - rdp_cmd_cur);
+                    remaining_length += (rdp_cmd_ptr - rdp_cmd_cur);
+                    break;
+                }
+            }
+
+            rdp_cmd(rdp_cmd_data + rdp_cmd_cur, cmd_length);
+
+            if (trace_write_is_open()) {
+                trace_write_cmd(rdp_cmd_data + rdp_cmd_cur, cmd_length);
+            }
+
+            rdp_cmd_cur += cmd_length;
         }
 
-        rdp_cmd_cur += cmd_length;
-    };
-    rdp_cmd_ptr = 0;
-    rdp_cmd_cur = 0;
-    };
+        rdp_cmd_ptr = 0;
+        rdp_cmd_cur = 0;
+    }
 
     *dp_reg[DP_START] = *dp_reg[DP_CURRENT] = *dp_reg[DP_END];
 }
