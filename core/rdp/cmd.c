@@ -190,12 +190,10 @@ void rdp_update(void)
 
     ptr_onstart = rdp_cmd_ptr;
 
-    uint32_t remaining_length = length;
-
     dp_current_al >>= 2;
 
-    while (remaining_length) {
-        uint32_t toload = remaining_length > 0x10000 ? 0x10000 : remaining_length;
+    while (length) {
+        uint32_t toload = length > 0x10000 ? 0x10000 : length;
 
         if (*dp_reg[DP_STATUS] & DP_STATUS_XBUS_DMA) {
             uint32_t* dmem = (uint32_t*)plugin_get_dmem();
@@ -212,19 +210,19 @@ void rdp_update(void)
             }
         }
 
-        remaining_length -= toload;
+        length -= toload;
 
         while (rdp_cmd_cur < rdp_cmd_ptr && !rdp_pipeline_crashed) {
             uint32_t cmd = CMD_ID(rdp_cmd_data + rdp_cmd_cur);
             uint32_t cmd_length = rdp_commands[cmd].length >> 2;
 
             if ((rdp_cmd_ptr - rdp_cmd_cur) < cmd_length) {
-                if (!remaining_length) {
+                if (!length) {
                     *dp_reg[DP_START] = *dp_reg[DP_CURRENT] = *dp_reg[DP_END];
                     return;
                 } else {
                     dp_current_al -= (rdp_cmd_ptr - rdp_cmd_cur);
-                    remaining_length += (rdp_cmd_ptr - rdp_cmd_cur);
+                    length += (rdp_cmd_ptr - rdp_cmd_cur);
                     break;
                 }
             }
