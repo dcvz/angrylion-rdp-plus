@@ -49,8 +49,9 @@ void plugin_init(void)
     rdram_size = is_valid_ptr(&gfx.RDRAM[0x7f0000], 16) ? 0x800000 : 0x400000;
 
     // Zilmar plugins also can't access the hidden bits, so allocate it on our own
-    rdram_hidden_bits = malloc(rdram_size);
-    memset(rdram_hidden_bits, 3, rdram_size);
+    uint32_t rdram_hidden_size = rdram_size / 2;
+    rdram_hidden_bits = malloc(rdram_hidden_size);
+    memset(rdram_hidden_bits, 3, rdram_hidden_size);
 }
 
 void plugin_sync_dp(void)

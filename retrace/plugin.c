@@ -7,7 +7,7 @@
 #define RDRAM_MAX_SIZE 0x800000
 
 static uint8_t rdram[RDRAM_MAX_SIZE];
-static uint8_t rdram_hidden_bits[RDRAM_MAX_SIZE];
+static uint8_t rdram_hidden_bits[RDRAM_MAX_SIZE / 2];
 static uint8_t dmem[0x1000];
 
 static uint32_t dp_reg[DP_NUM_REG];

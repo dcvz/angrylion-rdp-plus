@@ -25,8 +25,9 @@ void plugin_init(void)
     }
 
     // mupen64plus plugins can't access the hidden bits, so allocate it on our own
-    rdram_hidden_bits = malloc(rdram_size);
-    memset(rdram_hidden_bits, 3, rdram_size);
+    uint32_t rdram_hidden_size = rdram_size / 2;
+    rdram_hidden_bits = malloc(rdram_hidden_size);
+    memset(rdram_hidden_bits, 3, rdram_hidden_size);
 }
 
 void plugin_sync_dp(void)
