@@ -3,6 +3,7 @@ static uint32_t rdp_cmd_ptr = 0;
 static uint32_t rdp_cmd_cur = 0;
 
 #define CMD_BUFFER_COUNT 1024
+#define CMD_MAX_BUFFER_LENGTH 0x10000
 
 static uint32_t rdp_cmd_buf[CMD_BUFFER_COUNT][CMD_MAX_INTS];
 static uint32_t rdp_cmd_buf_pos;
@@ -160,14 +161,17 @@ void rdp_cmd(const uint32_t* arg, uint32_t length)
 {
     uint32_t cmd_id = CMD_ID(arg);
 
+    // flush pending commands if the next command requires it
     if (rdp_commands[cmd_id].sync && config->parallel) {
         rdp_cmd_flush();
     }
 
+    // run command in main thread
     if (rdp_commands[cmd_id].singlethread || !config->parallel) {
         rdp_cmd_run(arg);
     }
 
+    // run command in worker threads
     if (rdp_commands[cmd_id].multithread && config->parallel) {
         rdp_cmd_push(arg, length);
     }
@@ -190,7 +194,7 @@ void rdp_update(void)
     dp_current_al >>= 2;
 
     while (length) {
-        uint32_t toload = length > 0x10000 ? 0x10000 : length;
+        uint32_t toload = length > CMD_MAX_BUFFER_LENGTH ? CMD_MAX_BUFFER_LENGTH : length;
 
         if (*dp_reg[DP_STATUS] & DP_STATUS_XBUS_DMA) {
             uint32_t* dmem = (uint32_t*)plugin_get_dmem();
