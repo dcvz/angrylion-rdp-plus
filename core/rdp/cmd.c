@@ -215,13 +215,12 @@ void rdp_update(void)
 
             if ((rdp_cmd_ptr - rdp_cmd_cur) < cmd_length) {
                 if (!length) {
-                    *dp_reg[DP_START] = *dp_reg[DP_CURRENT] = *dp_reg[DP_END];
-                    return;
-                } else {
-                    dp_current_al -= (rdp_cmd_ptr - rdp_cmd_cur);
-                    length += (rdp_cmd_ptr - rdp_cmd_cur);
-                    break;
+                    goto end;
                 }
+
+                dp_current_al -= (rdp_cmd_ptr - rdp_cmd_cur);
+                length += (rdp_cmd_ptr - rdp_cmd_cur);
+                break;
             }
 
             rdp_cmd(rdp_cmd_data + rdp_cmd_cur, cmd_length);
@@ -237,5 +236,6 @@ void rdp_update(void)
         rdp_cmd_cur = 0;
     }
 
+end:
     *dp_reg[DP_START] = *dp_reg[DP_CURRENT] = *dp_reg[DP_END];
 }
