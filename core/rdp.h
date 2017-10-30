@@ -48,3 +48,4 @@ int rdp_init(struct core_config* config);
 void rdp_cmd(const uint32_t* arg, uint32_t length);
 void rdp_update(void);
 uint32_t rdp_get_zb_address(void);
+void rdp_close(void);

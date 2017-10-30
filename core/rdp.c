@@ -615,3 +615,11 @@ static void deduce_derivatives(struct rdp_state* rdp)
 
     rdp->other_modes.f.dolod = rdp->other_modes.tex_lod_en || lodfracused;
 }
+
+void rdp_close(void)
+{
+    if (rdp_states) {
+        free(rdp_states);
+        rdp_states = NULL;
+    }
+}

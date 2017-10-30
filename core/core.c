@@ -137,6 +137,9 @@ void core_dp_sync(void)
 
         // enable/disable multithreading or update number of workers
         if (config.parallel != parallel || config.num_workers != num_workers) {
+            // close RDP
+            rdp_close();
+
             // destroy old threads
             parallel_close();
 
@@ -144,6 +147,9 @@ void core_dp_sync(void)
             if (config.parallel) {
                 parallel_init(config.num_workers);
             }
+
+            // re-init RDP
+            rdp_init(&config);
 
             num_workers = config.num_workers;
             parallel = config.parallel;
@@ -194,8 +200,9 @@ void core_screenshot(char* directory)
 
 void core_close(void)
 {
-    parallel_close();
+    rdp_close();
     vi_close();
+    parallel_close();
     plugin_close();
     screen_close();
     if (trace_write_is_open()) {
