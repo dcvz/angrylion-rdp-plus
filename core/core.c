@@ -200,9 +200,9 @@ void core_screenshot(char* directory)
 
 void core_close(void)
 {
+    parallel_close();
     rdp_close();
     vi_close();
-    parallel_close();
     plugin_close();
     screen_close();
     if (trace_write_is_open()) {
