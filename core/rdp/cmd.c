@@ -161,16 +161,16 @@ void rdp_cmd(const uint32_t* arg, uint32_t length)
 
     // check if parallel processing is enabled
     if (config->parallel) {
+        // flush pending commands if the next command requires it
+        if (rdp_commands[cmd_id].sync) {
+            rdp_cmd_flush();
+        }
+
         // special case: sync_full always needs to be run in main thread
         // (parameters are unused, so NULL is fine)
         if (cmd_id == CMD_ID_SYNC_FULL) {
             rdp_sync_full(NULL, NULL);
             return;
-        }
-
-        // flush pending commands if the next command requires it
-        if (rdp_commands[cmd_id].sync) {
-            rdp_cmd_flush();
         }
 
         // put command in the buffer
