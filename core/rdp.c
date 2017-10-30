@@ -173,8 +173,6 @@ struct spansigs {
     int onelessthanmid;
 };
 
-static void deduce_derivatives(struct rdp_state* rdp);
-
 static struct
 {
     int copymstrangecrashes, fillmcrashes, fillmbitcrashes, syncfullcrash;
@@ -400,6 +398,8 @@ struct rdp_state
 
 struct rdp_state* rdp_states;
 
+static void deduce_derivatives(struct rdp_state* rdp);
+
 #include "rdp/cmd.c"
 #include "rdp/dither.c"
 #include "rdp/blender.c"
@@ -413,6 +413,8 @@ struct rdp_state* rdp_states;
 void rdp_init_worker(uint32_t worker_id)
 {
     struct rdp_state* rdp = &rdp_states[worker_id];
+    memset(rdp, 0, sizeof(*rdp));
+
     rdp->worker_id = worker_id;
 
     uint32_t tmp[2] = {0};
@@ -445,10 +447,10 @@ int rdp_init(struct core_config* _config)
     memset(&onetimewarnings, 0, sizeof(onetimewarnings));
 
     if (config->parallel) {
-        rdp_states = calloc(parallel_worker_num(), sizeof(struct rdp_state));
+        rdp_states = malloc(parallel_worker_num() * sizeof(struct rdp_state));
         parallel_run(rdp_init_worker);
     } else {
-        rdp_states = calloc(1, sizeof(struct rdp_state));
+        rdp_states = malloc(sizeof(struct rdp_state));
         rdp_init_worker(0);
     }
 
