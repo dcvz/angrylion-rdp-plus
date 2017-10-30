@@ -11,6 +11,7 @@
 
 #include <memory.h>
 #include <string.h>
+#include <stdlib.h>
 
 #define SIGN16(x)   ((int16_t)(x))
 #define SIGN8(x)    ((int8_t)(x))
@@ -252,7 +253,7 @@ struct spansigs {
     int onelessthanmid;
 };
 
-static void deduce_derivatives(void);
+static void deduce_derivatives(struct rdp_state* rdp);
 
 static TLS int32_t k0_tf = 0, k1_tf = 0, k2_tf = 0, k3_tf = 0;
 static TLS int32_t k4 = 0, k5 = 0;
@@ -277,6 +278,213 @@ static STRICTINLINE int32_t clamp(int32_t value,int32_t min,int32_t max)
         return value;
 }
 
+struct rdp_state
+{
+    uint32_t worker_id;
+
+    int blshifta;
+    int blshiftb;
+    int pastblshifta;
+    int pastblshiftb;
+
+    struct
+    {
+        int lx, rx;
+        int unscrx;
+        int validline;
+        int32_t r, g, b, a, s, t, w, z;
+        int32_t majorx[4];
+        int32_t minorx[4];
+        int32_t invalyscan[4];
+    } span[1024];
+
+    // span states
+    struct
+    {
+        int ds;
+        int dt;
+        int dw;
+        int dr;
+        int dg;
+        int db;
+        int da;
+        int dz;
+        int dzpix;
+
+        int drdy;
+        int dgdy;
+        int dbdy;
+        int dady;
+        int dzdy;
+        int cdr;
+        int cdg;
+        int cdb;
+        int cda;
+        int cdz;
+
+        int dsdy;
+        int dtdy;
+        int dwdy;
+    } spans;
+
+    struct other_modes other_modes;
+
+    struct color combined_color;
+    struct color texel0_color;
+    struct color texel1_color;
+    struct color nexttexel_color;
+    struct color shade_color;
+    int32_t noise;
+    int32_t primitive_lod_frac;
+
+    struct color pixel_color;
+    struct color memory_color;
+    struct color pre_memory_color;
+
+    struct
+    {
+        int format;
+        int size;
+        int line;
+        int tmem;
+        int palette;
+        int ct, mt, cs, ms;
+        int mask_t, shift_t, mask_s, shift_s;
+
+        uint16_t sl, tl, sh, th;
+
+        struct
+        {
+            int clampdiffs, clampdifft;
+            int clampens, clampent;
+            int masksclamped, masktclamped;
+            int notlutswitch, tlutswitch;
+        } f;
+    } tile[8];
+
+    int32_t k0_tf;
+    int32_t k1_tf;
+    int32_t k2_tf;
+    int32_t k3_tf;
+    int32_t k4;
+    int32_t k5;
+    int32_t lod_frac;
+
+    uint32_t max_level;
+    int32_t min_level;
+
+    // irand
+    int32_t iseed;
+
+    // blender
+    struct
+    {
+        int32_t *i1a_r[2];
+        int32_t *i1a_g[2];
+        int32_t *i1a_b[2];
+        int32_t *i1b_a[2];
+        int32_t *i2a_r[2];
+        int32_t *i2a_g[2];
+        int32_t *i2a_b[2];
+        int32_t *i2b_a[2];
+    } blender;
+
+    struct color blend_color;
+    struct color fog_color;
+    struct color inv_pixel_color;
+    struct color blended_pixel_color;
+
+    // combiner
+    struct
+    {
+        int sub_a_rgb0;
+        int sub_b_rgb0;
+        int mul_rgb0;
+        int add_rgb0;
+        int sub_a_a0;
+        int sub_b_a0;
+        int mul_a0;
+        int add_a0;
+
+        int sub_a_rgb1;
+        int sub_b_rgb1;
+        int mul_rgb1;
+        int add_rgb1;
+        int sub_a_a1;
+        int sub_b_a1;
+        int mul_a1;
+        int add_a1;
+    } combine;
+
+    struct
+    {
+        int32_t *rgbsub_a_r[2];
+        int32_t *rgbsub_a_g[2];
+        int32_t *rgbsub_a_b[2];
+        int32_t *rgbsub_b_r[2];
+        int32_t *rgbsub_b_g[2];
+        int32_t *rgbsub_b_b[2];
+        int32_t *rgbmul_r[2];
+        int32_t *rgbmul_g[2];
+        int32_t *rgbmul_b[2];
+        int32_t *rgbadd_r[2];
+        int32_t *rgbadd_g[2];
+        int32_t *rgbadd_b[2];
+
+        int32_t *alphasub_a[2];
+        int32_t *alphasub_b[2];
+        int32_t *alphamul[2];
+        int32_t *alphaadd[2];
+    } combiner;
+
+    struct color prim_color;
+    struct color env_color;
+    struct color key_scale;
+    struct color key_center;
+    struct color key_width;
+
+    int32_t keyalpha;
+
+    // coverage
+    uint8_t cvgbuf[1024];
+
+    // fbuffer
+    void (*fbread1_ptr)(uint32_t, uint32_t*);
+    void (*fbread2_ptr)(uint32_t, uint32_t*);
+    void (*fbwrite_ptr)(uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t);
+
+    int fb_format;
+    int fb_size;
+    int fb_width;
+    uint32_t fb_address;
+    uint32_t fill_color;
+
+    // rasterizer
+    struct rectangle clip;
+    int scfield;
+    int sckeepodd;
+
+    uint32_t primitive_z;
+    uint16_t primitive_delta_z;
+
+    // tcoord
+    void (*tcdiv_ptr)(int32_t, int32_t, int32_t, int32_t*, int32_t*);
+
+    // tex
+    int ti_format;
+    int ti_size;
+    int ti_width;
+    uint32_t ti_address;
+
+    // tmem
+    uint8_t tmem[0x1000];
+
+    // zbuffer
+    uint32_t zb_address;
+    int32_t pastrawdzmem;
+};
+struct rdp_state** rdp_states;
+
 #include "rdp/cmd.c"
 #include "rdp/dither.c"
 #include "rdp/blender.c"
@@ -287,21 +495,30 @@ static STRICTINLINE int32_t clamp(int32_t value,int32_t min,int32_t max)
 #include "rdp/tex.c"
 #include "rdp/rasterizer.c"
 
-int rdp_init(struct core_config* _config)
+void rdp_init_worker(struct rdp_state* rdp)
 {
-    config = _config;
-
     uint32_t tmp[2] = {0};
-    rdp_set_other_modes(tmp);
-    other_modes.f.stalederivs = 1;
-
-    memset(tile, 0, sizeof(tile));
+    rdp_set_other_modes(rdp, tmp);
 
     for (int i = 0; i < 8; i++)
     {
-        calculate_tile_derivs(i);
-        calculate_clamp_diffs(i);
+        calculate_tile_derivs(rdp, i);
+        calculate_clamp_diffs(rdp, i);
     }
+
+    precalc_cvmask_derivatives(rdp);
+    z_init(rdp);
+    dither_init(rdp);
+    fb_init(rdp);
+    blender_init(rdp);
+    combiner_init(rdp);
+    tex_init(rdp);
+    rasterizer_init(rdp);
+}
+
+int rdp_init(struct core_config* _config)
+{
+    config = _config;
 
     memset(&combined_color, 0, sizeof(struct color));
     memset(&prim_color, 0, sizeof(struct color));
@@ -309,47 +526,46 @@ int rdp_init(struct core_config* _config)
     memset(&key_scale, 0, sizeof(struct color));
     memset(&key_center, 0, sizeof(struct color));
 
+    memset(tile, 0, sizeof(tile));
+
     rdp_pipeline_crashed = 0;
     memset(&onetimewarnings, 0, sizeof(onetimewarnings));
 
-    precalc_cvmask_derivatives();
-    z_init();
-    dither_init();
-    fb_init();
-    blender_init();
-    combiner_init();
-    tex_init();
-    rasterizer_init();
+    rdp_states = calloc(parallel_worker_num(), sizeof(struct rdp_state));
+
+    for (uint32_t i = 0; i < parallel_worker_num(); i++) {
+        rdp_init_worker(rdp_states[i]);
+    }
 
     return 0;
 }
 
-static void rdp_invalid(const uint32_t* args)
+static void rdp_invalid(struct rdp_state* rdp, const uint32_t* args)
 {
 }
 
-static void rdp_noop(const uint32_t* args)
+static void rdp_noop(struct rdp_state* rdp, const uint32_t* args)
 {
 }
 
-static void rdp_sync_load(const uint32_t* args)
+static void rdp_sync_load(struct rdp_state* rdp, const uint32_t* args)
 {
 }
 
-static void rdp_sync_pipe(const uint32_t* args)
+static void rdp_sync_pipe(struct rdp_state* rdp, const uint32_t* args)
 {
 }
 
-static void rdp_sync_tile(const uint32_t* args)
+static void rdp_sync_tile(struct rdp_state* rdp, const uint32_t* args)
 {
 }
 
-static void rdp_sync_full(const uint32_t* args)
+static void rdp_sync_full(struct rdp_state* rdp, const uint32_t* args)
 {
     core_dp_sync();
 }
 
-static void rdp_set_other_modes(const uint32_t* args)
+static void rdp_set_other_modes(struct rdp_state* rdp, const uint32_t* args)
 {
     other_modes.cycle_type          = (args[0] >> 20) & 3;
     other_modes.persp_tex_en        = (args[0] >> 19) & 1;
@@ -388,19 +604,19 @@ static void rdp_set_other_modes(const uint32_t* args)
     other_modes.dither_alpha_en     = (args[1] >>  1) & 1;
     other_modes.alpha_compare_en    = (args[1] >>  0) & 1;
 
-    set_blender_input(0, 0, &blender.i1a_r[0], &blender.i1a_g[0], &blender.i1a_b[0], &blender.i1b_a[0],
+    set_blender_input(rdp, 0, 0, &blender.i1a_r[0], &blender.i1a_g[0], &blender.i1a_b[0], &blender.i1b_a[0],
                       other_modes.blend_m1a_0, other_modes.blend_m1b_0);
-    set_blender_input(0, 1, &blender.i2a_r[0], &blender.i2a_g[0], &blender.i2a_b[0], &blender.i2b_a[0],
+    set_blender_input(rdp, 0, 1, &blender.i2a_r[0], &blender.i2a_g[0], &blender.i2a_b[0], &blender.i2b_a[0],
                       other_modes.blend_m2a_0, other_modes.blend_m2b_0);
-    set_blender_input(1, 0, &blender.i1a_r[1], &blender.i1a_g[1], &blender.i1a_b[1], &blender.i1b_a[1],
+    set_blender_input(rdp, 1, 0, &blender.i1a_r[1], &blender.i1a_g[1], &blender.i1a_b[1], &blender.i1b_a[1],
                       other_modes.blend_m1a_1, other_modes.blend_m1b_1);
-    set_blender_input(1, 1, &blender.i2a_r[1], &blender.i2a_g[1], &blender.i2a_b[1], &blender.i2b_a[1],
+    set_blender_input(rdp, 1, 1, &blender.i2a_r[1], &blender.i2a_g[1], &blender.i2a_b[1], &blender.i2b_a[1],
                       other_modes.blend_m2a_1, other_modes.blend_m2b_1);
 
     other_modes.f.stalederivs = 1;
 }
 
-static void deduce_derivatives()
+static void deduce_derivatives(struct rdp_state* rdp)
 {
     int special_bsel0, special_bsel1;
 

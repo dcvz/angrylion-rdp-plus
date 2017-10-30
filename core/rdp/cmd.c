@@ -8,47 +8,47 @@ static uint32_t rdp_cmd_cur = 0;
 static uint32_t rdp_cmd_buf[CMD_BUFFER_COUNT][CMD_MAX_INTS];
 static uint32_t rdp_cmd_buf_pos;
 
-static void rdp_invalid(const uint32_t* args);
-static void rdp_noop(const uint32_t* args);
-static void rdp_tri_noshade(const uint32_t* args);
-static void rdp_tri_noshade_z(const uint32_t* args);
-static void rdp_tri_tex(const uint32_t* args);
-static void rdp_tri_tex_z(const uint32_t* args);
-static void rdp_tri_shade(const uint32_t* args);
-static void rdp_tri_shade_z(const uint32_t* args);
-static void rdp_tri_texshade(const uint32_t* args);
-static void rdp_tri_texshade_z(const uint32_t* args);
-static void rdp_tex_rect(const uint32_t* args);
-static void rdp_tex_rect_flip(const uint32_t* args);
-static void rdp_sync_load(const uint32_t* args);
-static void rdp_sync_pipe(const uint32_t* args);
-static void rdp_sync_tile(const uint32_t* args);
-static void rdp_sync_full(const uint32_t* args);
-static void rdp_set_key_gb(const uint32_t* args);
-static void rdp_set_key_r(const uint32_t* args);
-static void rdp_set_convert(const uint32_t* args);
-static void rdp_set_scissor(const uint32_t* args);
-static void rdp_set_prim_depth(const uint32_t* args);
-static void rdp_set_other_modes(const uint32_t* args);
-static void rdp_set_tile_size(const uint32_t* args);
-static void rdp_load_block(const uint32_t* args);
-static void rdp_load_tlut(const uint32_t* args);
-static void rdp_load_tile(const uint32_t* args);
-static void rdp_set_tile(const uint32_t* args);
-static void rdp_fill_rect(const uint32_t* args);
-static void rdp_set_fill_color(const uint32_t* args);
-static void rdp_set_fog_color(const uint32_t* args);
-static void rdp_set_blend_color(const uint32_t* args);
-static void rdp_set_prim_color(const uint32_t* args);
-static void rdp_set_env_color(const uint32_t* args);
-static void rdp_set_combine(const uint32_t* args);
-static void rdp_set_texture_image(const uint32_t* args);
-static void rdp_set_mask_image(const uint32_t* args);
-static void rdp_set_color_image(const uint32_t* args);
+static void rdp_invalid(struct rdp_state* rdp, const uint32_t* args);
+static void rdp_noop(struct rdp_state* rdp, const uint32_t* args);
+static void rdp_tri_noshade(struct rdp_state* rdp, const uint32_t* args);
+static void rdp_tri_noshade_z(struct rdp_state* rdp, const uint32_t* args);
+static void rdp_tri_tex(struct rdp_state* rdp, const uint32_t* args);
+static void rdp_tri_tex_z(struct rdp_state* rdp, const uint32_t* args);
+static void rdp_tri_shade(struct rdp_state* rdp, const uint32_t* args);
+static void rdp_tri_shade_z(struct rdp_state* rdp, const uint32_t* args);
+static void rdp_tri_texshade(struct rdp_state* rdp, const uint32_t* args);
+static void rdp_tri_texshade_z(struct rdp_state* rdp, const uint32_t* args);
+static void rdp_tex_rect(struct rdp_state* rdp, const uint32_t* args);
+static void rdp_tex_rect_flip(struct rdp_state* rdp, const uint32_t* args);
+static void rdp_sync_load(struct rdp_state* rdp, const uint32_t* args);
+static void rdp_sync_pipe(struct rdp_state* rdp, const uint32_t* args);
+static void rdp_sync_tile(struct rdp_state* rdp, const uint32_t* args);
+static void rdp_sync_full(struct rdp_state* rdp, const uint32_t* args);
+static void rdp_set_key_gb(struct rdp_state* rdp, const uint32_t* args);
+static void rdp_set_key_r(struct rdp_state* rdp, const uint32_t* args);
+static void rdp_set_convert(struct rdp_state* rdp, const uint32_t* args);
+static void rdp_set_scissor(struct rdp_state* rdp, const uint32_t* args);
+static void rdp_set_prim_depth(struct rdp_state* rdp, const uint32_t* args);
+static void rdp_set_other_modes(struct rdp_state* rdp, const uint32_t* args);
+static void rdp_set_tile_size(struct rdp_state* rdp, const uint32_t* args);
+static void rdp_load_block(struct rdp_state* rdp, const uint32_t* args);
+static void rdp_load_tlut(struct rdp_state* rdp, const uint32_t* args);
+static void rdp_load_tile(struct rdp_state* rdp, const uint32_t* args);
+static void rdp_set_tile(struct rdp_state* rdp, const uint32_t* args);
+static void rdp_fill_rect(struct rdp_state* rdp, const uint32_t* args);
+static void rdp_set_fill_color(struct rdp_state* rdp, const uint32_t* args);
+static void rdp_set_fog_color(struct rdp_state* rdp, const uint32_t* args);
+static void rdp_set_blend_color(struct rdp_state* rdp, const uint32_t* args);
+static void rdp_set_prim_color(struct rdp_state* rdp, const uint32_t* args);
+static void rdp_set_env_color(struct rdp_state* rdp, const uint32_t* args);
+static void rdp_set_combine(struct rdp_state* rdp, const uint32_t* args);
+static void rdp_set_texture_image(struct rdp_state* rdp, const uint32_t* args);
+static void rdp_set_mask_image(struct rdp_state* rdp, const uint32_t* args);
+static void rdp_set_color_image(struct rdp_state* rdp, const uint32_t* args);
 
 static const struct
 {
-    void (*handler)(const uint32_t*);   // command handler function pointer
+    void (*handler)(struct rdp_state* rdp, const uint32_t*);   // command handler function pointer
     uint32_t length;                    // command data length in bytes
     bool singlethread;                  // run in main thread
     bool multithread;                   // run in worker threads
@@ -121,16 +121,16 @@ static const struct
     {rdp_set_color_image,   8,   false, true,  true,  "Set_Color_Image"}
 };
 
-static void rdp_cmd_run(const uint32_t* arg)
+static void rdp_cmd_run(struct rdp_state* rdp, const uint32_t* arg)
 {
     uint32_t cmd_id = CMD_ID(arg);
-    rdp_commands[cmd_id].handler(arg);
+    rdp_commands[cmd_id].handler(rdp, arg);
 }
 
 static void rdp_cmd_run_buffered(void)
 {
     for (uint32_t pos = 0; pos < rdp_cmd_buf_pos; pos++) {
-        rdp_cmd_run(rdp_cmd_buf[pos]);
+        rdp_cmd_run(rdp_states[parallel_worker_id()], rdp_cmd_buf[pos]);
     }
 }
 
@@ -168,7 +168,7 @@ void rdp_cmd(const uint32_t* arg, uint32_t length)
 
     // run command in main thread
     if (rdp_commands[cmd_id].singlethread || !config->parallel) {
-        rdp_cmd_run(arg);
+        rdp_cmd_run(rdp_states[0], arg);
     }
 
     // run command in worker threads

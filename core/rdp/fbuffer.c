@@ -1,34 +1,34 @@
-static void fbwrite_4(uint32_t curpixel, uint32_t r, uint32_t g, uint32_t b, uint32_t blend_en, uint32_t curpixel_cvg, uint32_t curpixel_memcvg);
-static void fbwrite_8(uint32_t curpixel, uint32_t r, uint32_t g, uint32_t b, uint32_t blend_en, uint32_t curpixel_cvg, uint32_t curpixel_memcvg);
-static void fbwrite_16(uint32_t curpixel, uint32_t r, uint32_t g, uint32_t b, uint32_t blend_en, uint32_t curpixel_cvg, uint32_t curpixel_memcvg);
-static void fbwrite_32(uint32_t curpixel, uint32_t r, uint32_t g, uint32_t b, uint32_t blend_en, uint32_t curpixel_cvg, uint32_t curpixel_memcvg);
-static void fbread_4(uint32_t num, uint32_t* curpixel_memcvg);
-static void fbread_8(uint32_t num, uint32_t* curpixel_memcvg);
-static void fbread_16(uint32_t num, uint32_t* curpixel_memcvg);
-static void fbread_32(uint32_t num, uint32_t* curpixel_memcvg);
-static void fbread2_4(uint32_t num, uint32_t* curpixel_memcvg);
-static void fbread2_8(uint32_t num, uint32_t* curpixel_memcvg);
-static void fbread2_16(uint32_t num, uint32_t* curpixel_memcvg);
-static void fbread2_32(uint32_t num, uint32_t* curpixel_memcvg);
+static void fbwrite_4(struct rdp_state* rdp, uint32_t curpixel, uint32_t r, uint32_t g, uint32_t b, uint32_t blend_en, uint32_t curpixel_cvg, uint32_t curpixel_memcvg);
+static void fbwrite_8(struct rdp_state* rdp, uint32_t curpixel, uint32_t r, uint32_t g, uint32_t b, uint32_t blend_en, uint32_t curpixel_cvg, uint32_t curpixel_memcvg);
+static void fbwrite_16(struct rdp_state* rdp, uint32_t curpixel, uint32_t r, uint32_t g, uint32_t b, uint32_t blend_en, uint32_t curpixel_cvg, uint32_t curpixel_memcvg);
+static void fbwrite_32(struct rdp_state* rdp, uint32_t curpixel, uint32_t r, uint32_t g, uint32_t b, uint32_t blend_en, uint32_t curpixel_cvg, uint32_t curpixel_memcvg);
+static void fbread_4(struct rdp_state* rdp, uint32_t num, uint32_t* curpixel_memcvg);
+static void fbread_8(struct rdp_state* rdp, uint32_t num, uint32_t* curpixel_memcvg);
+static void fbread_16(struct rdp_state* rdp, uint32_t num, uint32_t* curpixel_memcvg);
+static void fbread_32(struct rdp_state* rdp, uint32_t num, uint32_t* curpixel_memcvg);
+static void fbread2_4(struct rdp_state* rdp, uint32_t num, uint32_t* curpixel_memcvg);
+static void fbread2_8(struct rdp_state* rdp, uint32_t num, uint32_t* curpixel_memcvg);
+static void fbread2_16(struct rdp_state* rdp, uint32_t num, uint32_t* curpixel_memcvg);
+static void fbread2_32(struct rdp_state* rdp, uint32_t num, uint32_t* curpixel_memcvg);
 
-static void (*fbread_func[4])(uint32_t, uint32_t*) =
+static void (*fbread_func[4])(struct rdp_state*,uint32_t, uint32_t*) =
 {
     fbread_4, fbread_8, fbread_16, fbread_32
 };
 
-static void (*fbread2_func[4])(uint32_t, uint32_t*) =
+static void (*fbread2_func[4])(struct rdp_state*,uint32_t, uint32_t*) =
 {
     fbread2_4, fbread2_8, fbread2_16, fbread2_32
 };
 
-static void (*fbwrite_func[4])(uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t) =
+static void (*fbwrite_func[4])(struct rdp_state*, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t) =
 {
     fbwrite_4, fbwrite_8, fbwrite_16, fbwrite_32
 };
 
-static TLS void (*fbread1_ptr)(uint32_t, uint32_t*);
-static TLS void (*fbread2_ptr)(uint32_t, uint32_t*);
-static TLS void (*fbwrite_ptr)(uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t);
+static TLS void (*fbread1_ptr)(struct rdp_state*,uint32_t, uint32_t*);
+static TLS void (*fbread2_ptr)(struct rdp_state*,uint32_t, uint32_t*);
+static TLS void (*fbwrite_ptr)(struct rdp_state*,uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t);
 
 static TLS int fb_format;
 static TLS int fb_size;
@@ -36,19 +36,19 @@ static TLS int fb_width;
 static TLS uint32_t fb_address;
 static TLS uint32_t fill_color;
 
-static void fbwrite_4(uint32_t curpixel, uint32_t r, uint32_t g, uint32_t b, uint32_t blend_en, uint32_t curpixel_cvg, uint32_t curpixel_memcvg)
+static void fbwrite_4(struct rdp_state* rdp, uint32_t curpixel, uint32_t r, uint32_t g, uint32_t b, uint32_t blend_en, uint32_t curpixel_cvg, uint32_t curpixel_memcvg)
 {
     uint32_t fb = fb_address + curpixel;
     RWRITEADDR8(fb, 0);
 }
 
-static void fbwrite_8(uint32_t curpixel, uint32_t r, uint32_t g, uint32_t b, uint32_t blend_en, uint32_t curpixel_cvg, uint32_t curpixel_memcvg)
+static void fbwrite_8(struct rdp_state* rdp, uint32_t curpixel, uint32_t r, uint32_t g, uint32_t b, uint32_t blend_en, uint32_t curpixel_cvg, uint32_t curpixel_memcvg)
 {
     uint32_t fb = fb_address + curpixel;
     PAIRWRITE8(fb, r & 0xff, (r & 1) ? 3 : 0);
 }
 
-static void fbwrite_16(uint32_t curpixel, uint32_t r, uint32_t g, uint32_t b, uint32_t blend_en, uint32_t curpixel_cvg, uint32_t curpixel_memcvg)
+static void fbwrite_16(struct rdp_state* rdp, uint32_t curpixel, uint32_t r, uint32_t g, uint32_t b, uint32_t blend_en, uint32_t curpixel_cvg, uint32_t curpixel_memcvg)
 {
 #undef CVG_DRAW
 #ifdef CVG_DRAW
@@ -80,7 +80,7 @@ static void fbwrite_16(uint32_t curpixel, uint32_t r, uint32_t g, uint32_t b, ui
     PAIRWRITE16(fb, rval, hval);
 }
 
-static void fbwrite_32(uint32_t curpixel, uint32_t r, uint32_t g, uint32_t b, uint32_t blend_en, uint32_t curpixel_cvg, uint32_t curpixel_memcvg)
+static void fbwrite_32(struct rdp_state* rdp, uint32_t curpixel, uint32_t r, uint32_t g, uint32_t b, uint32_t blend_en, uint32_t curpixel_cvg, uint32_t curpixel_memcvg)
 {
     uint32_t fb = (fb_address >> 2) + curpixel;
 
@@ -93,12 +93,12 @@ static void fbwrite_32(uint32_t curpixel, uint32_t r, uint32_t g, uint32_t b, ui
     PAIRWRITE32(fb, finalcolor, (g & 1) ? 3 : 0, 0);
 }
 
-static void fbfill_4(uint32_t curpixel)
+static void fbfill_4(struct rdp_state* rdp, uint32_t curpixel)
 {
     rdp_pipeline_crashed = 1;
 }
 
-static void fbfill_8(uint32_t curpixel)
+static void fbfill_8(struct rdp_state* rdp, uint32_t curpixel)
 {
     uint32_t fb = fb_address + curpixel;
     uint32_t val = (fill_color >> (((fb & 3) ^ 3) << 3)) & 0xff;
@@ -106,7 +106,7 @@ static void fbfill_8(uint32_t curpixel)
     PAIRWRITE8(fb, val, hval);
 }
 
-static void fbfill_16(uint32_t curpixel)
+static void fbfill_16(struct rdp_state* rdp, uint32_t curpixel)
 {
     uint16_t val;
     uint8_t hval;
@@ -119,13 +119,13 @@ static void fbfill_16(uint32_t curpixel)
     PAIRWRITE16(fb, val, hval);
 }
 
-static void fbfill_32(uint32_t curpixel)
+static void fbfill_32(struct rdp_state* rdp, uint32_t curpixel)
 {
     uint32_t fb = (fb_address >> 2) + curpixel;
     PAIRWRITE32(fb, fill_color, (fill_color & 0x10000) ? 3 : 0, (fill_color & 0x1) ? 3 : 0);
 }
 
-static void fbread_4(uint32_t curpixel, uint32_t* curpixel_memcvg)
+static void fbread_4(struct rdp_state* rdp, uint32_t curpixel, uint32_t* curpixel_memcvg)
 {
     memory_color.r = memory_color.g = memory_color.b = 0;
 
@@ -133,14 +133,14 @@ static void fbread_4(uint32_t curpixel, uint32_t* curpixel_memcvg)
     memory_color.a = 0xe0;
 }
 
-static void fbread2_4(uint32_t curpixel, uint32_t* curpixel_memcvg)
+static void fbread2_4(struct rdp_state* rdp, uint32_t curpixel, uint32_t* curpixel_memcvg)
 {
     pre_memory_color.r = pre_memory_color.g = pre_memory_color.b = 0;
     pre_memory_color.a = 0xe0;
     *curpixel_memcvg = 7;
 }
 
-static void fbread_8(uint32_t curpixel, uint32_t* curpixel_memcvg)
+static void fbread_8(struct rdp_state* rdp, uint32_t curpixel, uint32_t* curpixel_memcvg)
 {
     uint8_t mem;
     uint32_t addr = fb_address + curpixel;
@@ -150,7 +150,7 @@ static void fbread_8(uint32_t curpixel, uint32_t* curpixel_memcvg)
     memory_color.a = 0xe0;
 }
 
-static void fbread2_8(uint32_t curpixel, uint32_t* curpixel_memcvg)
+static void fbread2_8(struct rdp_state* rdp, uint32_t curpixel, uint32_t* curpixel_memcvg)
 {
     uint8_t mem;
     uint32_t addr = fb_address + curpixel;
@@ -160,7 +160,7 @@ static void fbread2_8(uint32_t curpixel, uint32_t* curpixel_memcvg)
     *curpixel_memcvg = 7;
 }
 
-static void fbread_16(uint32_t curpixel, uint32_t* curpixel_memcvg)
+static void fbread_16(struct rdp_state* rdp, uint32_t curpixel, uint32_t* curpixel_memcvg)
 {
     uint16_t fword;
     uint8_t hbyte;
@@ -207,7 +207,7 @@ static void fbread_16(uint32_t curpixel, uint32_t* curpixel_memcvg)
     }
 }
 
-static void fbread2_16(uint32_t curpixel, uint32_t* curpixel_memcvg)
+static void fbread2_16(struct rdp_state* rdp, uint32_t curpixel, uint32_t* curpixel_memcvg)
 {
     uint16_t fword;
     uint8_t hbyte;
@@ -254,7 +254,7 @@ static void fbread2_16(uint32_t curpixel, uint32_t* curpixel_memcvg)
 
 }
 
-static void fbread_32(uint32_t curpixel, uint32_t* curpixel_memcvg)
+static void fbread_32(struct rdp_state* rdp, uint32_t curpixel, uint32_t* curpixel_memcvg)
 {
     uint32_t mem, addr = (fb_address >> 2) + curpixel;
     RREADIDX32(mem, addr);
@@ -273,7 +273,7 @@ static void fbread_32(uint32_t curpixel, uint32_t* curpixel_memcvg)
     }
 }
 
-static INLINE void fbread2_32(uint32_t curpixel, uint32_t* curpixel_memcvg)
+static INLINE void fbread2_32(struct rdp_state* rdp, uint32_t curpixel, uint32_t* curpixel_memcvg)
 {
     uint32_t mem, addr = (fb_address >> 2) + curpixel;
     RREADIDX32(mem, addr);
@@ -292,7 +292,7 @@ static INLINE void fbread2_32(uint32_t curpixel, uint32_t* curpixel_memcvg)
     }
 }
 
-static void rdp_set_color_image(const uint32_t* args)
+static void rdp_set_color_image(struct rdp_state* rdp, const uint32_t* args)
 {
     fb_format   = (args[0] >> 21) & 0x7;
     fb_size     = (args[0] >> 19) & 0x3;
@@ -305,12 +305,12 @@ static void rdp_set_color_image(const uint32_t* args)
     fbwrite_ptr = fbwrite_func[fb_size];
 }
 
-static void rdp_set_fill_color(const uint32_t* args)
+static void rdp_set_fill_color(struct rdp_state* rdp, const uint32_t* args)
 {
     fill_color = args[1];
 }
 
-static void fb_init()
+static void fb_init(struct rdp_state* rdp)
 {
     fb_format = FORMAT_RGBA;
     fb_size = PIXEL_SIZE_4BIT;

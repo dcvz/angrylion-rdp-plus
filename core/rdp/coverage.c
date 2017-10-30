@@ -12,7 +12,7 @@ static struct  {
 
 static TLS uint8_t cvgbuf[1024];
 
-static STRICTINLINE uint32_t rightcvghex(uint32_t x, uint32_t fmask)
+static STRICTINLINE uint32_t rightcvghex(struct rdp_state* rdp, uint32_t x, uint32_t fmask)
 {
     uint32_t covered = ((x & 7) + 1) >> 1;
 
@@ -20,7 +20,7 @@ static STRICTINLINE uint32_t rightcvghex(uint32_t x, uint32_t fmask)
     return (covered & fmask);
 }
 
-static STRICTINLINE uint32_t leftcvghex(uint32_t x, uint32_t fmask)
+static STRICTINLINE uint32_t leftcvghex(struct rdp_state* rdp, uint32_t x, uint32_t fmask)
 {
     uint32_t covered = ((x & 7) + 1) >> 1;
     covered = 0xf >> covered;
@@ -29,7 +29,7 @@ static STRICTINLINE uint32_t leftcvghex(uint32_t x, uint32_t fmask)
 
 
 
-static STRICTINLINE void compute_cvg_flip(int32_t scanline)
+static STRICTINLINE void compute_cvg_flip(struct rdp_state* rdp, int32_t scanline)
 {
     int32_t purgestart, purgeend;
     int i, length, fmask, maskshift, fmaskshifted;
@@ -81,12 +81,12 @@ static STRICTINLINE void compute_cvg_flip(int32_t scanline)
 
                     if (minorcurint > majorcurint)
                     {
-                        cvgbuf[minorcurint] |= (rightcvghex(minorcur, fmask) << maskshift);
-                        cvgbuf[majorcurint] |= (leftcvghex(majorcur, fmask) << maskshift);
+                        cvgbuf[minorcurint] |= (rightcvghex(rdp, minorcur, fmask) << maskshift);
+                        cvgbuf[majorcurint] |= (leftcvghex(rdp, majorcur, fmask) << maskshift);
                     }
                     else if (minorcurint == majorcurint)
                     {
-                        samecvg = rightcvghex(minorcur, fmask) & leftcvghex(majorcur, fmask);
+                        samecvg = rightcvghex(rdp, minorcur, fmask) & leftcvghex(rdp, majorcur, fmask);
                         cvgbuf[majorcurint] |= (samecvg << maskshift);
                     }
                 }
@@ -102,7 +102,7 @@ static STRICTINLINE void compute_cvg_flip(int32_t scanline)
 
 }
 
-static STRICTINLINE void compute_cvg_noflip(int32_t scanline)
+static STRICTINLINE void compute_cvg_noflip(struct rdp_state* rdp, int32_t scanline)
 {
     int32_t purgestart, purgeend;
     int i, length, fmask, maskshift, fmaskshifted;
@@ -136,12 +136,12 @@ static STRICTINLINE void compute_cvg_noflip(int32_t scanline)
 
                 if (majorcurint > minorcurint)
                 {
-                    cvgbuf[minorcurint] |= (leftcvghex(minorcur, fmask) << maskshift);
-                    cvgbuf[majorcurint] |= (rightcvghex(majorcur, fmask) << maskshift);
+                    cvgbuf[minorcurint] |= (leftcvghex(rdp, minorcur, fmask) << maskshift);
+                    cvgbuf[majorcurint] |= (rightcvghex(rdp, majorcur, fmask) << maskshift);
                 }
                 else if (minorcurint == majorcurint)
                 {
-                    samecvg = leftcvghex(minorcur, fmask) & rightcvghex(majorcur, fmask);
+                    samecvg = leftcvghex(rdp, minorcur, fmask) & rightcvghex(rdp, majorcur, fmask);
                     cvgbuf[majorcurint] |= (samecvg << maskshift);
                 }
             }
@@ -202,7 +202,7 @@ static STRICTINLINE uint16_t decompress_cvmask_frombyte(uint8_t x)
     return y;
 }
 
-static STRICTINLINE void lookup_cvmask_derivatives(uint32_t idx, uint8_t* offx, uint8_t* offy, uint32_t* curpixel_cvg, uint32_t* curpixel_cvbit)
+static STRICTINLINE void lookup_cvmask_derivatives(struct rdp_state* rdp, uint32_t idx, uint8_t* offx, uint8_t* offy, uint32_t* curpixel_cvg, uint32_t* curpixel_cvbit)
 {
     uint8_t mask = cvgbuf[idx];
     *curpixel_cvg = cvarray[mask].cvg;
@@ -211,7 +211,7 @@ static STRICTINLINE void lookup_cvmask_derivatives(uint32_t idx, uint8_t* offx, 
     *offy = cvarray[mask].yoff;
 }
 
-static INLINE void precalc_cvmask_derivatives(void)
+static INLINE void precalc_cvmask_derivatives(struct rdp_state* rdp)
 {
     int i = 0, k = 0;
     uint16_t mask = 0, maskx = 0, masky = 0;

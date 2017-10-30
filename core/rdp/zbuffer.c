@@ -21,12 +21,12 @@ static struct {uint32_t shift; uint32_t add;} z_dec_table[8] = {
 static TLS uint32_t zb_address = 0;
 static TLS int32_t pastrawdzmem = 0;
 
-static STRICTINLINE uint32_t z_decompress(uint32_t zb)
+static STRICTINLINE uint32_t z_decompress(struct rdp_state* rdp, uint32_t zb)
 {
     return z_complete_dec_table[(zb >> 2) & 0x3fff];
 }
 
-static INLINE void z_build_com_table(void)
+static INLINE void z_build_com_table(struct rdp_state* rdp)
 {
 
     uint16_t altmem = 0;
@@ -188,20 +188,20 @@ static INLINE void z_build_com_table(void)
     }
 }
 
-static STRICTINLINE void z_store(uint32_t zcurpixel, uint32_t z, int dzpixenc)
+static STRICTINLINE void z_store(struct rdp_state* rdp, uint32_t zcurpixel, uint32_t z, int dzpixenc)
 {
     uint16_t zval = z_com_table[z & 0x3ffff]|(dzpixenc >> 2);
     uint8_t hval = dzpixenc & 3;
     PAIRWRITE16(zcurpixel, zval, hval);
 }
 
-static STRICTINLINE uint32_t dz_decompress(uint32_t dz_compressed)
+static STRICTINLINE uint32_t dz_decompress(struct rdp_state* rdp, uint32_t dz_compressed)
 {
     return (1 << dz_compressed);
 }
 
 
-static STRICTINLINE uint32_t dz_compress(uint32_t value)
+static STRICTINLINE uint32_t dz_compress(struct rdp_state* rdp, uint32_t value)
 {
     int j = 0;
     if (value & 0xff00)
@@ -215,7 +215,7 @@ static STRICTINLINE uint32_t dz_compress(uint32_t value)
     return j;
 }
 
-static STRICTINLINE uint32_t z_compare(uint32_t zcurpixel, uint32_t sz, uint16_t dzpix, int dzpixenc, uint32_t* blend_en, uint32_t* prewrap, uint32_t* curpixel_cvg, uint32_t curpixel_memcvg)
+static STRICTINLINE uint32_t z_compare(struct rdp_state* rdp, uint32_t zcurpixel, uint32_t sz, uint16_t dzpix, int dzpixenc, uint32_t* blend_en, uint32_t* prewrap, uint32_t* curpixel_cvg, uint32_t curpixel_memcvg)
 {
 
 
@@ -230,9 +230,9 @@ static STRICTINLINE uint32_t z_compare(uint32_t zcurpixel, uint32_t sz, uint16_t
     if (other_modes.z_compare_en)
     {
         PAIRREAD16(zval, hval, zcurpixel);
-        oz = z_decompress(zval);
+        oz = z_decompress(rdp, zval);
         rawdzmem = ((zval & 3) << 2) | hval;
-        dzmem = dz_decompress(rawdzmem);
+        dzmem = dz_decompress(rdp, rawdzmem);
 
 
 
@@ -321,7 +321,7 @@ static STRICTINLINE uint32_t z_compare(uint32_t zcurpixel, uint32_t sz, uint16_t
             }
             else
             {
-                dzenc = dz_compress(dznotshift & 0xffff);
+                dzenc = dz_compress(rdp, dznotshift & 0xffff);
                 cvgcoeff = ((oz >> dzenc) - (sz >> dzenc)) & 0xf;
                 *curpixel_cvg = ((cvgcoeff * (*curpixel_cvg)) >> 3) & 0xf;
                 return 1;
@@ -373,7 +373,7 @@ static STRICTINLINE uint32_t z_compare(uint32_t zcurpixel, uint32_t sz, uint16_t
     }
 }
 
-static void rdp_set_mask_image(const uint32_t* args)
+static void rdp_set_mask_image(struct rdp_state* rdp, const uint32_t* args)
 {
     zb_address  = args[1] & 0x0ffffff;
 }
@@ -383,9 +383,9 @@ uint32_t rdp_get_zb_address(void)
     return zb_address;
 }
 
-void z_init(void)
+void z_init(struct rdp_state* rdp)
 {
-    z_build_com_table();
+    z_build_com_table(rdp);
 
     uint32_t exponent;
     uint32_t mantissa;

@@ -19,7 +19,7 @@ static int32_t blenderone = 0xff;
 
 static uint8_t bldiv_hwaccurate_table[0x8000];
 
-static INLINE void set_blender_input(int cycle, int which, int32_t **input_r, int32_t **input_g, int32_t **input_b, int32_t **input_a, int a, int b)
+static INLINE void set_blender_input(struct rdp_state* rdp, int cycle, int which, int32_t **input_r, int32_t **input_g, int32_t **input_b, int32_t **input_a, int a, int b)
 {
 
     switch (a & 0x3)
@@ -84,7 +84,7 @@ static INLINE void set_blender_input(int cycle, int which, int32_t **input_r, in
     }
 }
 
-static STRICTINLINE int alpha_compare(int32_t comb_alpha)
+static STRICTINLINE int alpha_compare(struct rdp_state* rdp, int32_t comb_alpha)
 {
     int32_t threshold;
     if (!other_modes.alpha_compare_en)
@@ -104,7 +104,7 @@ static STRICTINLINE int alpha_compare(int32_t comb_alpha)
     }
 }
 
-static STRICTINLINE void blender_equation_cycle0(int* r, int* g, int* b)
+static STRICTINLINE void blender_equation_cycle0(struct rdp_state* rdp, int* r, int* g, int* b)
 {
     int blend1a, blend2a;
     int blr, blg, blb, sum;
@@ -150,7 +150,7 @@ static STRICTINLINE void blender_equation_cycle0(int* r, int* g, int* b)
     }
 }
 
-static STRICTINLINE void blender_equation_cycle0_2(int* r, int* g, int* b)
+static STRICTINLINE void blender_equation_cycle0_2(struct rdp_state* rdp, int* r, int* g, int* b)
 {
     int blend1a, blend2a;
     blend1a = *blender.i1b_a[0] >> 3;
@@ -168,7 +168,7 @@ static STRICTINLINE void blender_equation_cycle0_2(int* r, int* g, int* b)
     *b = (((*blender.i1a_b[0]) * blend1a + (*blender.i2a_b[0]) * blend2a) >> 5) & 0xff;
 }
 
-static STRICTINLINE void blender_equation_cycle1(int* r, int* g, int* b)
+static STRICTINLINE void blender_equation_cycle1(struct rdp_state* rdp, int* r, int* g, int* b)
 {
     int blend1a, blend2a;
     int blr, blg, blb, sum;
@@ -202,12 +202,12 @@ static STRICTINLINE void blender_equation_cycle1(int* r, int* g, int* b)
     }
 }
 
-static STRICTINLINE int blender_1cycle(uint32_t* fr, uint32_t* fg, uint32_t* fb, int dith, uint32_t blend_en, uint32_t prewrap, uint32_t curpixel_cvg, uint32_t curpixel_cvbit)
+static STRICTINLINE int blender_1cycle(struct rdp_state* rdp, uint32_t* fr, uint32_t* fg, uint32_t* fb, int dith, uint32_t blend_en, uint32_t prewrap, uint32_t curpixel_cvg, uint32_t curpixel_cvbit)
 {
     int r, g, b, dontblend;
 
 
-    if (alpha_compare(pixel_color.a))
+    if (alpha_compare(rdp, pixel_color.a))
     {
 
 
@@ -235,7 +235,7 @@ static STRICTINLINE int blender_1cycle(uint32_t* fr, uint32_t* fg, uint32_t* fb,
 
 
 
-                    blender_equation_cycle0(&r, &g, &b);
+                    blender_equation_cycle0(rdp, &r, &g, &b);
                 }
             }
             else
@@ -246,7 +246,7 @@ static STRICTINLINE int blender_1cycle(uint32_t* fr, uint32_t* fg, uint32_t* fb,
             }
 
             if (other_modes.rgb_dither_sel != 3)
-                rgb_dither(&r, &g, &b, dith);
+                rgb_dither(rdp, &r, &g, &b, dith);
 
             *fr = r;
             *fg = g;
@@ -260,18 +260,18 @@ static STRICTINLINE int blender_1cycle(uint32_t* fr, uint32_t* fg, uint32_t* fb,
         return 0;
 }
 
-static STRICTINLINE int blender_2cycle(uint32_t* fr, uint32_t* fg, uint32_t* fb, int dith, uint32_t blend_en, uint32_t prewrap, uint32_t curpixel_cvg, uint32_t curpixel_cvbit, int32_t acalpha)
+static STRICTINLINE int blender_2cycle(struct rdp_state* rdp, uint32_t* fr, uint32_t* fg, uint32_t* fb, int dith, uint32_t blend_en, uint32_t prewrap, uint32_t curpixel_cvg, uint32_t curpixel_cvbit, int32_t acalpha)
 {
     int r, g, b, dontblend;
 
 
-    if (alpha_compare(acalpha))
+    if (alpha_compare(rdp, acalpha))
     {
         if (other_modes.antialias_en ? (curpixel_cvg) : (curpixel_cvbit))
         {
 
             inv_pixel_color.a =  (~(*blender.i1b_a[0])) & 0xff;
-            blender_equation_cycle0_2(&r, &g, &b);
+            blender_equation_cycle0_2(rdp, &r, &g, &b);
 
 
             memory_color = pre_memory_color;
@@ -293,7 +293,7 @@ static STRICTINLINE int blender_2cycle(uint32_t* fr, uint32_t* fg, uint32_t* fb,
                 else
                 {
                     inv_pixel_color.a =  (~(*blender.i1b_a[1])) & 0xff;
-                    blender_equation_cycle1(&r, &g, &b);
+                    blender_equation_cycle1(rdp, &r, &g, &b);
                 }
             }
             else
@@ -305,7 +305,7 @@ static STRICTINLINE int blender_2cycle(uint32_t* fr, uint32_t* fg, uint32_t* fb,
 
 
             if (other_modes.rgb_dither_sel != 3)
-                rgb_dither(&r, &g, &b, dith);
+                rgb_dither(rdp, &r, &g, &b, dith);
             *fr = r;
             *fg = g;
             *fb = b;
@@ -324,7 +324,7 @@ static STRICTINLINE int blender_2cycle(uint32_t* fr, uint32_t* fg, uint32_t* fb,
     }
 }
 
-static void blender_init(void)
+static void blender_init(struct rdp_state* rdp)
 {
     int d = 0, n = 0, temp = 0, res = 0, invd = 0, nbit = 0;
     int ps[9];
@@ -353,7 +353,7 @@ static void blender_init(void)
     }
 }
 
-static void rdp_set_fog_color(const uint32_t* args)
+static void rdp_set_fog_color(struct rdp_state* rdp, const uint32_t* args)
 {
     fog_color.r = (args[1] >> 24) & 0xff;
     fog_color.g = (args[1] >> 16) & 0xff;
@@ -361,7 +361,7 @@ static void rdp_set_fog_color(const uint32_t* args)
     fog_color.a = (args[1] >>  0) & 0xff;
 }
 
-static void rdp_set_blend_color(const uint32_t* args)
+static void rdp_set_blend_color(struct rdp_state* rdp, const uint32_t* args)
 {
     blend_color.r = (args[1] >> 24) & 0xff;
     blend_color.g = (args[1] >> 16) & 0xff;

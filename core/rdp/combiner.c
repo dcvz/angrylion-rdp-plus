@@ -51,7 +51,7 @@ static TLS int32_t keyalpha;
 static uint32_t special_9bit_clamptable[512];
 static int32_t special_9bit_exttable[512];
 
-static INLINE void set_suba_rgb_input(int32_t **input_r, int32_t **input_g, int32_t **input_b, int code)
+static INLINE void set_suba_rgb_input(struct rdp_state* rdp, int32_t **input_r, int32_t **input_g, int32_t **input_b, int code)
 {
     switch (code & 0xf)
     {
@@ -70,7 +70,7 @@ static INLINE void set_suba_rgb_input(int32_t **input_r, int32_t **input_g, int3
     }
 }
 
-static INLINE void set_subb_rgb_input(int32_t **input_r, int32_t **input_g, int32_t **input_b, int code)
+static INLINE void set_subb_rgb_input(struct rdp_state* rdp, int32_t **input_r, int32_t **input_g, int32_t **input_b, int code)
 {
     switch (code & 0xf)
     {
@@ -89,7 +89,7 @@ static INLINE void set_subb_rgb_input(int32_t **input_r, int32_t **input_g, int3
     }
 }
 
-static INLINE void set_mul_rgb_input(int32_t **input_r, int32_t **input_g, int32_t **input_b, int code)
+static INLINE void set_mul_rgb_input(struct rdp_state* rdp, int32_t **input_r, int32_t **input_g, int32_t **input_b, int code)
 {
     switch (code & 0x1f)
     {
@@ -117,7 +117,7 @@ static INLINE void set_mul_rgb_input(int32_t **input_r, int32_t **input_g, int32
     }
 }
 
-static INLINE void set_add_rgb_input(int32_t **input_r, int32_t **input_g, int32_t **input_b, int code)
+static INLINE void set_add_rgb_input(struct rdp_state* rdp, int32_t **input_r, int32_t **input_g, int32_t **input_b, int code)
 {
     switch (code & 0x7)
     {
@@ -132,7 +132,7 @@ static INLINE void set_add_rgb_input(int32_t **input_r, int32_t **input_g, int32
     }
 }
 
-static INLINE void set_sub_alpha_input(int32_t **input, int code)
+static INLINE void set_sub_alpha_input(struct rdp_state* rdp, int32_t **input, int code)
 {
     switch (code & 0x7)
     {
@@ -147,7 +147,7 @@ static INLINE void set_sub_alpha_input(int32_t **input, int code)
     }
 }
 
-static INLINE void set_mul_alpha_input(int32_t **input, int code)
+static INLINE void set_mul_alpha_input(struct rdp_state* rdp, int32_t **input, int code)
 {
     switch (code & 0x7)
     {
@@ -162,7 +162,7 @@ static INLINE void set_mul_alpha_input(int32_t **input, int code)
     }
 }
 
-static STRICTINLINE int32_t color_combiner_equation(int32_t a, int32_t b, int32_t c, int32_t d)
+static STRICTINLINE int32_t color_combiner_equation(struct rdp_state* rdp, int32_t a, int32_t b, int32_t c, int32_t d)
 {
 
 
@@ -177,7 +177,7 @@ static STRICTINLINE int32_t color_combiner_equation(int32_t a, int32_t b, int32_
     return (a & 0x1ffff);
 }
 
-static STRICTINLINE int32_t alpha_combiner_equation(int32_t a, int32_t b, int32_t c, int32_t d)
+static STRICTINLINE int32_t alpha_combiner_equation(struct rdp_state* rdp, int32_t a, int32_t b, int32_t c, int32_t d)
 {
     a = special_9bit_exttable[a];
     b = special_9bit_exttable[b];
@@ -187,7 +187,7 @@ static STRICTINLINE int32_t alpha_combiner_equation(int32_t a, int32_t b, int32_
     return (a & 0x1ff);
 }
 
-static STRICTINLINE int32_t chroma_key_min(struct color* col)
+static STRICTINLINE int32_t chroma_key_min(struct rdp_state* rdp, struct color* col)
 {
     int32_t redkey, greenkey, bluekey, keyalpha;
 
@@ -218,7 +218,7 @@ static STRICTINLINE int32_t chroma_key_min(struct color* col)
     return keyalpha;
 }
 
-static STRICTINLINE void combiner_1cycle(int adseed, uint32_t* curpixel_cvg)
+static STRICTINLINE void combiner_1cycle(struct rdp_state* rdp, int adseed, uint32_t* curpixel_cvg)
 {
 
     int32_t keyalpha, temp;
@@ -254,9 +254,9 @@ static STRICTINLINE void combiner_1cycle(int adseed, uint32_t* curpixel_cvg)
 
 
 
-        combined_color.r = color_combiner_equation(*combiner.rgbsub_a_r[1],*combiner.rgbsub_b_r[1],*combiner.rgbmul_r[1],*combiner.rgbadd_r[1]);
-        combined_color.g = color_combiner_equation(*combiner.rgbsub_a_g[1],*combiner.rgbsub_b_g[1],*combiner.rgbmul_g[1],*combiner.rgbadd_g[1]);
-        combined_color.b = color_combiner_equation(*combiner.rgbsub_a_b[1],*combiner.rgbsub_b_b[1],*combiner.rgbmul_b[1],*combiner.rgbadd_b[1]);
+        combined_color.r = color_combiner_equation(rdp, *combiner.rgbsub_a_r[1],*combiner.rgbsub_b_r[1],*combiner.rgbmul_r[1],*combiner.rgbadd_r[1]);
+        combined_color.g = color_combiner_equation(rdp, *combiner.rgbsub_a_g[1],*combiner.rgbsub_b_g[1],*combiner.rgbmul_g[1],*combiner.rgbadd_g[1]);
+        combined_color.b = color_combiner_equation(rdp, *combiner.rgbsub_a_b[1],*combiner.rgbsub_b_b[1],*combiner.rgbmul_b[1],*combiner.rgbadd_b[1]);
     }
     else
     {
@@ -266,7 +266,7 @@ static STRICTINLINE void combiner_1cycle(int adseed, uint32_t* curpixel_cvg)
     }
 
     if (combiner.alphamul[1] != &zero_color)
-        combined_color.a = alpha_combiner_equation(*combiner.alphasub_a[1],*combiner.alphasub_b[1],*combiner.alphamul[1],*combiner.alphaadd[1]);
+        combined_color.a = alpha_combiner_equation(rdp, *combiner.alphasub_a[1],*combiner.alphasub_b[1],*combiner.alphamul[1],*combiner.alphaadd[1]);
     else
         combined_color.a = special_9bit_exttable[*combiner.alphaadd[1]] & 0x1ff;
 
@@ -286,7 +286,7 @@ static STRICTINLINE void combiner_1cycle(int adseed, uint32_t* curpixel_cvg)
     }
     else
     {
-        keyalpha = chroma_key_min(&combined_color);
+        keyalpha = chroma_key_min(rdp, &combined_color);
 
 
 
@@ -333,16 +333,16 @@ static STRICTINLINE void combiner_1cycle(int adseed, uint32_t* curpixel_cvg)
         shade_color.a = 0xff;
 }
 
-static STRICTINLINE void combiner_2cycle(int adseed, uint32_t* curpixel_cvg, int32_t* acalpha)
+static STRICTINLINE void combiner_2cycle(struct rdp_state* rdp, int adseed, uint32_t* curpixel_cvg, int32_t* acalpha)
 {
     int32_t keyalpha, temp;
     struct color chromabypass;
 
     if (combiner.rgbmul_r[0] != &zero_color)
     {
-        combined_color.r = color_combiner_equation(*combiner.rgbsub_a_r[0],*combiner.rgbsub_b_r[0],*combiner.rgbmul_r[0],*combiner.rgbadd_r[0]);
-        combined_color.g = color_combiner_equation(*combiner.rgbsub_a_g[0],*combiner.rgbsub_b_g[0],*combiner.rgbmul_g[0],*combiner.rgbadd_g[0]);
-        combined_color.b = color_combiner_equation(*combiner.rgbsub_a_b[0],*combiner.rgbsub_b_b[0],*combiner.rgbmul_b[0],*combiner.rgbadd_b[0]);
+        combined_color.r = color_combiner_equation(rdp, *combiner.rgbsub_a_r[0],*combiner.rgbsub_b_r[0],*combiner.rgbmul_r[0],*combiner.rgbadd_r[0]);
+        combined_color.g = color_combiner_equation(rdp, *combiner.rgbsub_a_g[0],*combiner.rgbsub_b_g[0],*combiner.rgbmul_g[0],*combiner.rgbadd_g[0]);
+        combined_color.b = color_combiner_equation(rdp, *combiner.rgbsub_a_b[0],*combiner.rgbsub_b_b[0],*combiner.rgbmul_b[0],*combiner.rgbadd_b[0]);
     }
     else
     {
@@ -352,7 +352,7 @@ static STRICTINLINE void combiner_2cycle(int adseed, uint32_t* curpixel_cvg, int
     }
 
     if (combiner.alphamul[0] != &zero_color)
-        combined_color.a = alpha_combiner_equation(*combiner.alphasub_a[0],*combiner.alphasub_b[0],*combiner.alphamul[0],*combiner.alphaadd[0]);
+        combined_color.a = alpha_combiner_equation(rdp, *combiner.alphasub_a[0],*combiner.alphasub_b[0],*combiner.alphamul[0],*combiner.alphaadd[0]);
     else
         combined_color.a = special_9bit_exttable[*combiner.alphaadd[0]] & 0x1ff;
 
@@ -361,7 +361,7 @@ static STRICTINLINE void combiner_2cycle(int adseed, uint32_t* curpixel_cvg, int
     if (other_modes.alpha_compare_en)
     {
         if (other_modes.key_en)
-            keyalpha = chroma_key_min(&combined_color);
+            keyalpha = chroma_key_min(rdp, &combined_color);
 
         int32_t preacalpha = special_9bit_clamptable[combined_color.a];
         if (preacalpha == 0xff)
@@ -423,9 +423,9 @@ static STRICTINLINE void combiner_2cycle(int adseed, uint32_t* curpixel_cvg, int
 
     if (combiner.rgbmul_r[1] != &zero_color)
     {
-        combined_color.r = color_combiner_equation(*combiner.rgbsub_a_r[1],*combiner.rgbsub_b_r[1],*combiner.rgbmul_r[1],*combiner.rgbadd_r[1]);
-        combined_color.g = color_combiner_equation(*combiner.rgbsub_a_g[1],*combiner.rgbsub_b_g[1],*combiner.rgbmul_g[1],*combiner.rgbadd_g[1]);
-        combined_color.b = color_combiner_equation(*combiner.rgbsub_a_b[1],*combiner.rgbsub_b_b[1],*combiner.rgbmul_b[1],*combiner.rgbadd_b[1]);
+        combined_color.r = color_combiner_equation(rdp, *combiner.rgbsub_a_r[1],*combiner.rgbsub_b_r[1],*combiner.rgbmul_r[1],*combiner.rgbadd_r[1]);
+        combined_color.g = color_combiner_equation(rdp, *combiner.rgbsub_a_g[1],*combiner.rgbsub_b_g[1],*combiner.rgbmul_g[1],*combiner.rgbadd_g[1]);
+        combined_color.b = color_combiner_equation(rdp, *combiner.rgbsub_a_b[1],*combiner.rgbsub_b_b[1],*combiner.rgbmul_b[1],*combiner.rgbadd_b[1]);
     }
     else
     {
@@ -435,7 +435,7 @@ static STRICTINLINE void combiner_2cycle(int adseed, uint32_t* curpixel_cvg, int
     }
 
     if (combiner.alphamul[1] != &zero_color)
-        combined_color.a = alpha_combiner_equation(*combiner.alphasub_a[1],*combiner.alphasub_b[1],*combiner.alphamul[1],*combiner.alphaadd[1]);
+        combined_color.a = alpha_combiner_equation(rdp, *combiner.alphasub_a[1],*combiner.alphasub_b[1],*combiner.alphamul[1],*combiner.alphaadd[1]);
     else
         combined_color.a = special_9bit_exttable[*combiner.alphaadd[1]] & 0x1ff;
 
@@ -452,7 +452,7 @@ static STRICTINLINE void combiner_2cycle(int adseed, uint32_t* curpixel_cvg, int
     }
     else
     {
-        keyalpha = chroma_key_min(&combined_color);
+        keyalpha = chroma_key_min(rdp, &combined_color);
 
 
 
@@ -506,7 +506,7 @@ static STRICTINLINE void combiner_2cycle(int adseed, uint32_t* curpixel_cvg, int
         shade_color.a = 0xff;
 }
 
-static void combiner_init(void)
+static void combiner_init(struct rdp_state* rdp)
 {
     combiner.rgbsub_a_r[0] = combiner.rgbsub_a_r[1] = &one_color;
     combiner.rgbsub_a_g[0] = combiner.rgbsub_a_g[1] = &one_color;
@@ -549,7 +549,7 @@ static void combiner_init(void)
     }
 }
 
-static void rdp_set_prim_color(const uint32_t* args)
+static void rdp_set_prim_color(struct rdp_state* rdp, const uint32_t* args)
 {
     min_level = (args[0] >> 8) & 0x1f;
     primitive_lod_frac = args[0] & 0xff;
@@ -559,7 +559,7 @@ static void rdp_set_prim_color(const uint32_t* args)
     prim_color.a = (args[1] >>  0) & 0xff;
 }
 
-static void rdp_set_env_color(const uint32_t* args)
+static void rdp_set_env_color(struct rdp_state* rdp, const uint32_t* args)
 {
     env_color.r = (args[1] >> 24) & 0xff;
     env_color.g = (args[1] >> 16) & 0xff;
@@ -567,7 +567,7 @@ static void rdp_set_env_color(const uint32_t* args)
     env_color.a = (args[1] >>  0) & 0xff;
 }
 
-static void rdp_set_combine(const uint32_t* args)
+static void rdp_set_combine(struct rdp_state* rdp, const uint32_t* args)
 {
     combine.sub_a_rgb0  = (args[0] >> 20) & 0xf;
     combine.mul_rgb0    = (args[0] >> 15) & 0x1f;
@@ -588,28 +588,28 @@ static void rdp_set_combine(const uint32_t* args)
     combine.add_a1      = (args[1] >>  0) & 0x7;
 
 
-    set_suba_rgb_input(&combiner.rgbsub_a_r[0], &combiner.rgbsub_a_g[0], &combiner.rgbsub_a_b[0], combine.sub_a_rgb0);
-    set_subb_rgb_input(&combiner.rgbsub_b_r[0], &combiner.rgbsub_b_g[0], &combiner.rgbsub_b_b[0], combine.sub_b_rgb0);
-    set_mul_rgb_input(&combiner.rgbmul_r[0], &combiner.rgbmul_g[0], &combiner.rgbmul_b[0], combine.mul_rgb0);
-    set_add_rgb_input(&combiner.rgbadd_r[0], &combiner.rgbadd_g[0], &combiner.rgbadd_b[0], combine.add_rgb0);
-    set_sub_alpha_input(&combiner.alphasub_a[0], combine.sub_a_a0);
-    set_sub_alpha_input(&combiner.alphasub_b[0], combine.sub_b_a0);
-    set_mul_alpha_input(&combiner.alphamul[0], combine.mul_a0);
-    set_sub_alpha_input(&combiner.alphaadd[0], combine.add_a0);
+    set_suba_rgb_input(rdp, &combiner.rgbsub_a_r[0], &combiner.rgbsub_a_g[0], &combiner.rgbsub_a_b[0], combine.sub_a_rgb0);
+    set_subb_rgb_input(rdp, &combiner.rgbsub_b_r[0], &combiner.rgbsub_b_g[0], &combiner.rgbsub_b_b[0], combine.sub_b_rgb0);
+    set_mul_rgb_input(rdp, &combiner.rgbmul_r[0], &combiner.rgbmul_g[0], &combiner.rgbmul_b[0], combine.mul_rgb0);
+    set_add_rgb_input(rdp, &combiner.rgbadd_r[0], &combiner.rgbadd_g[0], &combiner.rgbadd_b[0], combine.add_rgb0);
+    set_sub_alpha_input(rdp, &combiner.alphasub_a[0], combine.sub_a_a0);
+    set_sub_alpha_input(rdp, &combiner.alphasub_b[0], combine.sub_b_a0);
+    set_mul_alpha_input(rdp, &combiner.alphamul[0], combine.mul_a0);
+    set_sub_alpha_input(rdp, &combiner.alphaadd[0], combine.add_a0);
 
-    set_suba_rgb_input(&combiner.rgbsub_a_r[1], &combiner.rgbsub_a_g[1], &combiner.rgbsub_a_b[1], combine.sub_a_rgb1);
-    set_subb_rgb_input(&combiner.rgbsub_b_r[1], &combiner.rgbsub_b_g[1], &combiner.rgbsub_b_b[1], combine.sub_b_rgb1);
-    set_mul_rgb_input(&combiner.rgbmul_r[1], &combiner.rgbmul_g[1], &combiner.rgbmul_b[1], combine.mul_rgb1);
-    set_add_rgb_input(&combiner.rgbadd_r[1], &combiner.rgbadd_g[1], &combiner.rgbadd_b[1], combine.add_rgb1);
-    set_sub_alpha_input(&combiner.alphasub_a[1], combine.sub_a_a1);
-    set_sub_alpha_input(&combiner.alphasub_b[1], combine.sub_b_a1);
-    set_mul_alpha_input(&combiner.alphamul[1], combine.mul_a1);
-    set_sub_alpha_input(&combiner.alphaadd[1], combine.add_a1);
+    set_suba_rgb_input(rdp, &combiner.rgbsub_a_r[1], &combiner.rgbsub_a_g[1], &combiner.rgbsub_a_b[1], combine.sub_a_rgb1);
+    set_subb_rgb_input(rdp, &combiner.rgbsub_b_r[1], &combiner.rgbsub_b_g[1], &combiner.rgbsub_b_b[1], combine.sub_b_rgb1);
+    set_mul_rgb_input(rdp, &combiner.rgbmul_r[1], &combiner.rgbmul_g[1], &combiner.rgbmul_b[1], combine.mul_rgb1);
+    set_add_rgb_input(rdp, &combiner.rgbadd_r[1], &combiner.rgbadd_g[1], &combiner.rgbadd_b[1], combine.add_rgb1);
+    set_sub_alpha_input(rdp, &combiner.alphasub_a[1], combine.sub_a_a1);
+    set_sub_alpha_input(rdp, &combiner.alphasub_b[1], combine.sub_b_a1);
+    set_mul_alpha_input(rdp, &combiner.alphamul[1], combine.mul_a1);
+    set_sub_alpha_input(rdp, &combiner.alphaadd[1], combine.add_a1);
 
     other_modes.f.stalederivs = 1;
 }
 
-static void rdp_set_key_gb(const uint32_t* args)
+static void rdp_set_key_gb(struct rdp_state* rdp, const uint32_t* args)
 {
     key_width.g = (args[0] >> 12) & 0xfff;
     key_width.b = args[0] & 0xfff;
@@ -619,7 +619,7 @@ static void rdp_set_key_gb(const uint32_t* args)
     key_scale.b = args[1] & 0xff;
 }
 
-static void rdp_set_key_r(const uint32_t* args)
+static void rdp_set_key_r(struct rdp_state* rdp, const uint32_t* args)
 {
     key_width.r = (args[1] >> 16) & 0xfff;
     key_center.r = (args[1] >> 8) & 0xff;

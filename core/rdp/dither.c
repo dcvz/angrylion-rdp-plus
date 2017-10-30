@@ -15,7 +15,7 @@ static const uint8_t magic_matrix[16] =
      7,  1,  6, 0
 };
 
-static STRICTINLINE void rgb_dither(int* r, int* g, int* b, int dith)
+static STRICTINLINE void rgb_dither(struct rdp_state* rdp, int* r, int* g, int* b, int dith)
 {
 
     int32_t newr = *r, newg = *g, newb = *b;
@@ -62,7 +62,7 @@ static STRICTINLINE void rgb_dither(int* r, int* g, int* b, int dith)
     *b = *b + (ditherdiff & replacesign);
 }
 
-static STRICTINLINE void get_dither_noise(int x, int y, int* cdith, int* adith)
+static STRICTINLINE void get_dither_noise(struct rdp_state* rdp, int x, int y, int* cdith, int* adith)
 {
     if (!other_modes.f.getditherlevel)
         noise = ((irand() & 7) << 6) | 0x20;
@@ -147,6 +147,6 @@ static STRICTINLINE void get_dither_noise(int x, int y, int* cdith, int* adith)
     }
 }
 
-static void dither_init(void)
+static void dither_init(struct rdp_state* rdp)
 {
 }
