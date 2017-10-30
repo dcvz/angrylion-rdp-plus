@@ -10,8 +10,6 @@ static struct  {
     uint8_t yoff;
 } cvarray[0x100];
 
-static TLS uint8_t cvgbuf[1024];
-
 static STRICTINLINE uint32_t rightcvghex(struct rdp_state* rdp, uint32_t x, uint32_t fmask)
 {
     uint32_t covered = ((x & 7) + 1) >> 1;
@@ -35,8 +33,8 @@ static STRICTINLINE void compute_cvg_flip(struct rdp_state* rdp, int32_t scanlin
     int i, length, fmask, maskshift, fmaskshifted;
     int32_t minorcur, majorcur, minorcurint, majorcurint, samecvg;
 
-    purgestart = span[scanline].rx;
-    purgeend = span[scanline].lx;
+    purgestart = rdp->span[scanline].rx;
+    purgeend = rdp->span[scanline].lx;
     length = purgeend - purgestart;
     if (length >= 0)
     {
@@ -46,7 +44,7 @@ static STRICTINLINE void compute_cvg_flip(struct rdp_state* rdp, int32_t scanlin
 
 
 
-        memset(&cvgbuf[purgestart], 0xff, length + 1);
+        memset(&rdp->cvgbuf[purgestart], 0xff, length + 1);
         for(i = 0; i < 4; i++)
         {
 
@@ -58,18 +56,18 @@ static STRICTINLINE void compute_cvg_flip(struct rdp_state* rdp, int32_t scanlin
                 maskshift = (i - 2) & 4;
                 fmaskshifted = fmask << maskshift;
 
-                if (!span[scanline].invalyscan[i])
+                if (!rdp->span[scanline].invalyscan[i])
                 {
-                    minorcur = span[scanline].minorx[i];
-                    majorcur = span[scanline].majorx[i];
+                    minorcur = rdp->span[scanline].minorx[i];
+                    majorcur = rdp->span[scanline].majorx[i];
                     minorcurint = minorcur >> 3;
                     majorcurint = majorcur >> 3;
 
 
                     for (int k = purgestart; k <= majorcurint; k++)
-                        cvgbuf[k] &= ~fmaskshifted;
+                        rdp->cvgbuf[k] &= ~fmaskshifted;
                     for (int k = minorcurint; k <= purgeend; k++)
-                        cvgbuf[k] &= ~fmaskshifted;
+                        rdp->cvgbuf[k] &= ~fmaskshifted;
 
 
 
@@ -81,19 +79,19 @@ static STRICTINLINE void compute_cvg_flip(struct rdp_state* rdp, int32_t scanlin
 
                     if (minorcurint > majorcurint)
                     {
-                        cvgbuf[minorcurint] |= (rightcvghex(rdp, minorcur, fmask) << maskshift);
-                        cvgbuf[majorcurint] |= (leftcvghex(rdp, majorcur, fmask) << maskshift);
+                        rdp->cvgbuf[minorcurint] |= (rightcvghex(rdp, minorcur, fmask) << maskshift);
+                        rdp->cvgbuf[majorcurint] |= (leftcvghex(rdp, majorcur, fmask) << maskshift);
                     }
                     else if (minorcurint == majorcurint)
                     {
                         samecvg = rightcvghex(rdp, minorcur, fmask) & leftcvghex(rdp, majorcur, fmask);
-                        cvgbuf[majorcurint] |= (samecvg << maskshift);
+                        rdp->cvgbuf[majorcurint] |= (samecvg << maskshift);
                     }
                 }
                 else
                 {
                     for (int k = purgestart; k <= purgeend; k++)
-                        cvgbuf[k] &= ~fmaskshifted;
+                        rdp->cvgbuf[k] &= ~fmaskshifted;
                 }
 
         }
@@ -108,13 +106,13 @@ static STRICTINLINE void compute_cvg_noflip(struct rdp_state* rdp, int32_t scanl
     int i, length, fmask, maskshift, fmaskshifted;
     int32_t minorcur, majorcur, minorcurint, majorcurint, samecvg;
 
-    purgestart = span[scanline].lx;
-    purgeend = span[scanline].rx;
+    purgestart = rdp->span[scanline].lx;
+    purgeend = rdp->span[scanline].rx;
     length = purgeend - purgestart;
 
     if (length >= 0)
     {
-        memset(&cvgbuf[purgestart], 0xff, length + 1);
+        memset(&rdp->cvgbuf[purgestart], 0xff, length + 1);
 
         for(i = 0; i < 4; i++)
         {
@@ -122,45 +120,45 @@ static STRICTINLINE void compute_cvg_noflip(struct rdp_state* rdp, int32_t scanl
             maskshift = (i - 2) & 4;
             fmaskshifted = fmask << maskshift;
 
-            if (!span[scanline].invalyscan[i])
+            if (!rdp->span[scanline].invalyscan[i])
             {
-                minorcur = span[scanline].minorx[i];
-                majorcur = span[scanline].majorx[i];
+                minorcur = rdp->span[scanline].minorx[i];
+                majorcur = rdp->span[scanline].majorx[i];
                 minorcurint = minorcur >> 3;
                 majorcurint = majorcur >> 3;
 
                 for (int k = purgestart; k <= minorcurint; k++)
-                    cvgbuf[k] &= ~fmaskshifted;
+                    rdp->cvgbuf[k] &= ~fmaskshifted;
                 for (int k = majorcurint; k <= purgeend; k++)
-                    cvgbuf[k] &= ~fmaskshifted;
+                    rdp->cvgbuf[k] &= ~fmaskshifted;
 
                 if (majorcurint > minorcurint)
                 {
-                    cvgbuf[minorcurint] |= (leftcvghex(rdp, minorcur, fmask) << maskshift);
-                    cvgbuf[majorcurint] |= (rightcvghex(rdp, majorcur, fmask) << maskshift);
+                    rdp->cvgbuf[minorcurint] |= (leftcvghex(rdp, minorcur, fmask) << maskshift);
+                    rdp->cvgbuf[majorcurint] |= (rightcvghex(rdp, majorcur, fmask) << maskshift);
                 }
                 else if (minorcurint == majorcurint)
                 {
                     samecvg = leftcvghex(rdp, minorcur, fmask) & rightcvghex(rdp, majorcur, fmask);
-                    cvgbuf[majorcurint] |= (samecvg << maskshift);
+                    rdp->cvgbuf[majorcurint] |= (samecvg << maskshift);
                 }
             }
             else
             {
                 for (int k = purgestart; k <= purgeend; k++)
-                    cvgbuf[k] &= ~fmaskshifted;
+                    rdp->cvgbuf[k] &= ~fmaskshifted;
             }
         }
     }
 }
 
-static STRICTINLINE int finalize_spanalpha(uint32_t blend_en, uint32_t curpixel_cvg, uint32_t curpixel_memcvg)
+static STRICTINLINE int finalize_spanalpha(struct rdp_state* rdp, uint32_t blend_en, uint32_t curpixel_cvg, uint32_t curpixel_memcvg)
 {
     int finalcvg;
 
 
 
-    switch(other_modes.cvg_dest)
+    switch(rdp->other_modes.cvg_dest)
     {
     case CVG_CLAMP:
         if (!blend_en)
@@ -204,7 +202,7 @@ static STRICTINLINE uint16_t decompress_cvmask_frombyte(uint8_t x)
 
 static STRICTINLINE void lookup_cvmask_derivatives(struct rdp_state* rdp, uint32_t idx, uint8_t* offx, uint8_t* offy, uint32_t* curpixel_cvg, uint32_t* curpixel_cvbit)
 {
-    uint8_t mask = cvgbuf[idx];
+    uint8_t mask = rdp->cvgbuf[idx];
     *curpixel_cvg = cvarray[mask].cvg;
     *curpixel_cvbit = cvarray[mask].cvbit;
     *offx = cvarray[mask].xoff;

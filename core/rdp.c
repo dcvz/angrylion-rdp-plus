@@ -41,50 +41,6 @@
 static struct core_config* config;
 static struct plugin_api* plugin;
 
-static TLS int blshifta = 0, blshiftb = 0, pastblshifta = 0, pastblshiftb = 0;
-
-static TLS struct
-{
-    int lx, rx;
-    int unscrx;
-    int validline;
-    int32_t r, g, b, a, s, t, w, z;
-    int32_t majorx[4];
-    int32_t minorx[4];
-    int32_t invalyscan[4];
-} span[1024];
-
-// span states
-static TLS struct
-{
-    int ds;
-    int dt;
-    int dw;
-    int dr;
-    int dg;
-    int db;
-    int da;
-    int dz;
-    int dzpix;
-
-    int drdy;
-    int dgdy;
-    int dbdy;
-    int dady;
-    int dzdy;
-    int cdr;
-    int cdg;
-    int cdb;
-    int cda;
-    int cdz;
-
-    int dsdy;
-    int dtdy;
-    int dwdy;
-} spans;
-
-
-
 struct color
 {
     int32_t r, g, b, a;
@@ -202,44 +158,8 @@ struct other_modes
 #define TEXEL_I16               0x12
 #define TEXEL_I32               0x13
 
-
-
-static TLS struct other_modes other_modes;
-
-static TLS struct color combined_color;
-static TLS struct color texel0_color;
-static TLS struct color texel1_color;
-static TLS struct color nexttexel_color;
-static TLS struct color shade_color;
-static TLS int32_t noise = 0;
-static TLS int32_t primitive_lod_frac = 0;
 static int32_t one_color = 0x100;
 static int32_t zero_color = 0x00;
-
-static TLS struct color pixel_color;
-static TLS struct color memory_color;
-static TLS struct color pre_memory_color;
-
-static TLS struct tile
-{
-    int format;
-    int size;
-    int line;
-    int tmem;
-    int palette;
-    int ct, mt, cs, ms;
-    int mask_t, shift_t, mask_s, shift_s;
-
-    uint16_t sl, tl, sh, th;
-
-    struct
-    {
-        int clampdiffs, clampdifft;
-        int clampens, clampent;
-        int masksclamped, masktclamped;
-        int notlutswitch, tlutswitch;
-    } f;
-} tile[8];
 
 #define PIXELS_TO_BYTES(pix, siz) (((pix) << (siz)) >> 1)
 
@@ -255,17 +175,11 @@ struct spansigs {
 
 static void deduce_derivatives(struct rdp_state* rdp);
 
-static TLS int32_t k0_tf = 0, k1_tf = 0, k2_tf = 0, k3_tf = 0;
-static TLS int32_t k4 = 0, k5 = 0;
-static TLS int32_t lod_frac = 0;
-
 static struct
 {
     int copymstrangecrashes, fillmcrashes, fillmbitcrashes, syncfullcrash;
 } onetimewarnings;
 
-static TLS uint32_t max_level = 0;
-static TLS int32_t min_level = 0;
 static int rdp_pipeline_crashed = 0;
 
 static STRICTINLINE int32_t clamp(int32_t value,int32_t min,int32_t max)
@@ -449,9 +363,9 @@ struct rdp_state
     uint8_t cvgbuf[1024];
 
     // fbuffer
-    void (*fbread1_ptr)(uint32_t, uint32_t*);
-    void (*fbread2_ptr)(uint32_t, uint32_t*);
-    void (*fbwrite_ptr)(uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t);
+    void (*fbread1_ptr)(struct rdp_state*, uint32_t, uint32_t*);
+    void (*fbread2_ptr)(struct rdp_state*, uint32_t, uint32_t*);
+    void (*fbwrite_ptr)(struct rdp_state*, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t);
 
     int fb_format;
     int fb_size;
@@ -468,7 +382,7 @@ struct rdp_state
     uint16_t primitive_delta_z;
 
     // tcoord
-    void (*tcdiv_ptr)(int32_t, int32_t, int32_t, int32_t*, int32_t*);
+    void (*tcdiv_ptr)(struct rdp_state*, int32_t, int32_t, int32_t, int32_t*, int32_t*);
 
     // tex
     int ti_format;
@@ -504,6 +418,9 @@ void rdp_init_worker(uint32_t worker_id)
     uint32_t tmp[2] = {0};
     rdp_set_other_modes(rdp, tmp);
 
+    memset(&rdp->combined_color, 0, sizeof(struct color));
+    memset(&rdp->tile, 0, sizeof(rdp->tile));
+
     for (int i = 0; i < 8; i++)
     {
         calculate_tile_derivs(rdp, i);
@@ -523,14 +440,6 @@ void rdp_init_worker(uint32_t worker_id)
 int rdp_init(struct core_config* _config)
 {
     config = _config;
-
-    memset(&combined_color, 0, sizeof(struct color));
-    memset(&prim_color, 0, sizeof(struct color));
-    memset(&env_color, 0, sizeof(struct color));
-    memset(&key_scale, 0, sizeof(struct color));
-    memset(&key_center, 0, sizeof(struct color));
-
-    memset(tile, 0, sizeof(tile));
 
     rdp_pipeline_crashed = 0;
     memset(&onetimewarnings, 0, sizeof(onetimewarnings));
@@ -573,53 +482,53 @@ static void rdp_sync_full(struct rdp_state* rdp, const uint32_t* args)
 
 static void rdp_set_other_modes(struct rdp_state* rdp, const uint32_t* args)
 {
-    other_modes.cycle_type          = (args[0] >> 20) & 3;
-    other_modes.persp_tex_en        = (args[0] >> 19) & 1;
-    other_modes.detail_tex_en       = (args[0] >> 18) & 1;
-    other_modes.sharpen_tex_en      = (args[0] >> 17) & 1;
-    other_modes.tex_lod_en          = (args[0] >> 16) & 1;
-    other_modes.en_tlut             = (args[0] >> 15) & 1;
-    other_modes.tlut_type           = (args[0] >> 14) & 1;
-    other_modes.sample_type         = (args[0] >> 13) & 1;
-    other_modes.mid_texel           = (args[0] >> 12) & 1;
-    other_modes.bi_lerp0            = (args[0] >> 11) & 1;
-    other_modes.bi_lerp1            = (args[0] >> 10) & 1;
-    other_modes.convert_one         = (args[0] >>  9) & 1;
-    other_modes.key_en              = (args[0] >>  8) & 1;
-    other_modes.rgb_dither_sel      = (args[0] >>  6) & 3;
-    other_modes.alpha_dither_sel    = (args[0] >>  4) & 3;
-    other_modes.blend_m1a_0         = (args[1] >> 30) & 3;
-    other_modes.blend_m1a_1         = (args[1] >> 28) & 3;
-    other_modes.blend_m1b_0         = (args[1] >> 26) & 3;
-    other_modes.blend_m1b_1         = (args[1] >> 24) & 3;
-    other_modes.blend_m2a_0         = (args[1] >> 22) & 3;
-    other_modes.blend_m2a_1         = (args[1] >> 20) & 3;
-    other_modes.blend_m2b_0         = (args[1] >> 18) & 3;
-    other_modes.blend_m2b_1         = (args[1] >> 16) & 3;
-    other_modes.force_blend         = (args[1] >> 14) & 1;
-    other_modes.alpha_cvg_select    = (args[1] >> 13) & 1;
-    other_modes.cvg_times_alpha     = (args[1] >> 12) & 1;
-    other_modes.z_mode              = (args[1] >> 10) & 3;
-    other_modes.cvg_dest            = (args[1] >>  8) & 3;
-    other_modes.color_on_cvg        = (args[1] >>  7) & 1;
-    other_modes.image_read_en       = (args[1] >>  6) & 1;
-    other_modes.z_update_en         = (args[1] >>  5) & 1;
-    other_modes.z_compare_en        = (args[1] >>  4) & 1;
-    other_modes.antialias_en        = (args[1] >>  3) & 1;
-    other_modes.z_source_sel        = (args[1] >>  2) & 1;
-    other_modes.dither_alpha_en     = (args[1] >>  1) & 1;
-    other_modes.alpha_compare_en    = (args[1] >>  0) & 1;
+    rdp->other_modes.cycle_type          = (args[0] >> 20) & 3;
+    rdp->other_modes.persp_tex_en        = (args[0] >> 19) & 1;
+    rdp->other_modes.detail_tex_en       = (args[0] >> 18) & 1;
+    rdp->other_modes.sharpen_tex_en      = (args[0] >> 17) & 1;
+    rdp->other_modes.tex_lod_en          = (args[0] >> 16) & 1;
+    rdp->other_modes.en_tlut             = (args[0] >> 15) & 1;
+    rdp->other_modes.tlut_type           = (args[0] >> 14) & 1;
+    rdp->other_modes.sample_type         = (args[0] >> 13) & 1;
+    rdp->other_modes.mid_texel           = (args[0] >> 12) & 1;
+    rdp->other_modes.bi_lerp0            = (args[0] >> 11) & 1;
+    rdp->other_modes.bi_lerp1            = (args[0] >> 10) & 1;
+    rdp->other_modes.convert_one         = (args[0] >>  9) & 1;
+    rdp->other_modes.key_en              = (args[0] >>  8) & 1;
+    rdp->other_modes.rgb_dither_sel      = (args[0] >>  6) & 3;
+    rdp->other_modes.alpha_dither_sel    = (args[0] >>  4) & 3;
+    rdp->other_modes.blend_m1a_0         = (args[1] >> 30) & 3;
+    rdp->other_modes.blend_m1a_1         = (args[1] >> 28) & 3;
+    rdp->other_modes.blend_m1b_0         = (args[1] >> 26) & 3;
+    rdp->other_modes.blend_m1b_1         = (args[1] >> 24) & 3;
+    rdp->other_modes.blend_m2a_0         = (args[1] >> 22) & 3;
+    rdp->other_modes.blend_m2a_1         = (args[1] >> 20) & 3;
+    rdp->other_modes.blend_m2b_0         = (args[1] >> 18) & 3;
+    rdp->other_modes.blend_m2b_1         = (args[1] >> 16) & 3;
+    rdp->other_modes.force_blend         = (args[1] >> 14) & 1;
+    rdp->other_modes.alpha_cvg_select    = (args[1] >> 13) & 1;
+    rdp->other_modes.cvg_times_alpha     = (args[1] >> 12) & 1;
+    rdp->other_modes.z_mode              = (args[1] >> 10) & 3;
+    rdp->other_modes.cvg_dest            = (args[1] >>  8) & 3;
+    rdp->other_modes.color_on_cvg        = (args[1] >>  7) & 1;
+    rdp->other_modes.image_read_en       = (args[1] >>  6) & 1;
+    rdp->other_modes.z_update_en         = (args[1] >>  5) & 1;
+    rdp->other_modes.z_compare_en        = (args[1] >>  4) & 1;
+    rdp->other_modes.antialias_en        = (args[1] >>  3) & 1;
+    rdp->other_modes.z_source_sel        = (args[1] >>  2) & 1;
+    rdp->other_modes.dither_alpha_en     = (args[1] >>  1) & 1;
+    rdp->other_modes.alpha_compare_en    = (args[1] >>  0) & 1;
 
-    set_blender_input(rdp, 0, 0, &blender.i1a_r[0], &blender.i1a_g[0], &blender.i1a_b[0], &blender.i1b_a[0],
-                      other_modes.blend_m1a_0, other_modes.blend_m1b_0);
-    set_blender_input(rdp, 0, 1, &blender.i2a_r[0], &blender.i2a_g[0], &blender.i2a_b[0], &blender.i2b_a[0],
-                      other_modes.blend_m2a_0, other_modes.blend_m2b_0);
-    set_blender_input(rdp, 1, 0, &blender.i1a_r[1], &blender.i1a_g[1], &blender.i1a_b[1], &blender.i1b_a[1],
-                      other_modes.blend_m1a_1, other_modes.blend_m1b_1);
-    set_blender_input(rdp, 1, 1, &blender.i2a_r[1], &blender.i2a_g[1], &blender.i2a_b[1], &blender.i2b_a[1],
-                      other_modes.blend_m2a_1, other_modes.blend_m2b_1);
+    set_blender_input(rdp, 0, 0, &rdp->blender.i1a_r[0], &rdp->blender.i1a_g[0], &rdp->blender.i1a_b[0], &rdp->blender.i1b_a[0],
+                      rdp->other_modes.blend_m1a_0, rdp->other_modes.blend_m1b_0);
+    set_blender_input(rdp, 0, 1, &rdp->blender.i2a_r[0], &rdp->blender.i2a_g[0], &rdp->blender.i2a_b[0], &rdp->blender.i2b_a[0],
+                      rdp->other_modes.blend_m2a_0, rdp->other_modes.blend_m2b_0);
+    set_blender_input(rdp, 1, 0, &rdp->blender.i1a_r[1], &rdp->blender.i1a_g[1], &rdp->blender.i1a_b[1], &rdp->blender.i1b_a[1],
+                      rdp->other_modes.blend_m1a_1, rdp->other_modes.blend_m1b_1);
+    set_blender_input(rdp, 1, 1, &rdp->blender.i2a_r[1], &rdp->blender.i2a_g[1], &rdp->blender.i2a_b[1], &rdp->blender.i2b_a[1],
+                      rdp->other_modes.blend_m2a_1, rdp->other_modes.blend_m2b_1);
 
-    other_modes.f.stalederivs = 1;
+    rdp->other_modes.f.stalederivs = 1;
 }
 
 static void deduce_derivatives(struct rdp_state* rdp)
@@ -627,82 +536,82 @@ static void deduce_derivatives(struct rdp_state* rdp)
     int special_bsel0, special_bsel1;
 
 
-    other_modes.f.partialreject_1cycle = (blender.i2b_a[0] == &inv_pixel_color.a && blender.i1b_a[0] == &pixel_color.a);
-    other_modes.f.partialreject_2cycle = (blender.i2b_a[1] == &inv_pixel_color.a && blender.i1b_a[1] == &pixel_color.a);
+    rdp->other_modes.f.partialreject_1cycle = (rdp->blender.i2b_a[0] == &rdp->inv_pixel_color.a && rdp->blender.i1b_a[0] == &rdp->pixel_color.a);
+    rdp->other_modes.f.partialreject_2cycle = (rdp->blender.i2b_a[1] == &rdp->inv_pixel_color.a && rdp->blender.i1b_a[1] == &rdp->pixel_color.a);
 
 
-    special_bsel0 = (blender.i2b_a[0] == &memory_color.a);
-    special_bsel1 = (blender.i2b_a[1] == &memory_color.a);
+    special_bsel0 = (rdp->blender.i2b_a[0] == &rdp->memory_color.a);
+    special_bsel1 = (rdp->blender.i2b_a[1] == &rdp->memory_color.a);
 
 
-    other_modes.f.realblendershiftersneeded = (special_bsel0 && other_modes.cycle_type == CYCLE_TYPE_1) || (special_bsel1 && other_modes.cycle_type == CYCLE_TYPE_2);
-    other_modes.f.interpixelblendershiftersneeded = (special_bsel0 && other_modes.cycle_type == CYCLE_TYPE_2);
+    rdp->other_modes.f.realblendershiftersneeded = (special_bsel0 && rdp->other_modes.cycle_type == CYCLE_TYPE_1) || (special_bsel1 && rdp->other_modes.cycle_type == CYCLE_TYPE_2);
+    rdp->other_modes.f.interpixelblendershiftersneeded = (special_bsel0 && rdp->other_modes.cycle_type == CYCLE_TYPE_2);
 
-    other_modes.f.rgb_alpha_dither = (other_modes.rgb_dither_sel << 2) | other_modes.alpha_dither_sel;
+    rdp->other_modes.f.rgb_alpha_dither = (rdp->other_modes.rgb_dither_sel << 2) | rdp->other_modes.alpha_dither_sel;
 
-    tcdiv_ptr = tcdiv_func[other_modes.persp_tex_en];
+    rdp->tcdiv_ptr = tcdiv_func[rdp->other_modes.persp_tex_en];
 
 
     int texel1_used_in_cc1 = 0, texel0_used_in_cc1 = 0, texel0_used_in_cc0 = 0, texel1_used_in_cc0 = 0;
     int texels_in_cc0 = 0, texels_in_cc1 = 0;
     int lod_frac_used_in_cc1 = 0, lod_frac_used_in_cc0 = 0;
 
-    if ((combiner.rgbmul_r[1] == &lod_frac) || (combiner.alphamul[1] == &lod_frac))
+    if ((rdp->combiner.rgbmul_r[1] == &rdp->lod_frac) || (rdp->combiner.alphamul[1] == &rdp->lod_frac))
         lod_frac_used_in_cc1 = 1;
-    if ((combiner.rgbmul_r[0] == &lod_frac) || (combiner.alphamul[0] == &lod_frac))
+    if ((rdp->combiner.rgbmul_r[0] == &rdp->lod_frac) || (rdp->combiner.alphamul[0] == &rdp->lod_frac))
         lod_frac_used_in_cc0 = 1;
 
-    if (combiner.rgbmul_r[1] == &texel1_color.r || combiner.rgbsub_a_r[1] == &texel1_color.r || combiner.rgbsub_b_r[1] == &texel1_color.r || combiner.rgbadd_r[1] == &texel1_color.r || \
-        combiner.alphamul[1] == &texel1_color.a || combiner.alphasub_a[1] == &texel1_color.a || combiner.alphasub_b[1] == &texel1_color.a || combiner.alphaadd[1] == &texel1_color.a || \
-        combiner.rgbmul_r[1] == &texel1_color.a)
+    if (rdp->combiner.rgbmul_r[1] == &rdp->texel1_color.r || rdp->combiner.rgbsub_a_r[1] == &rdp->texel1_color.r || rdp->combiner.rgbsub_b_r[1] == &rdp->texel1_color.r || rdp->combiner.rgbadd_r[1] == &rdp->texel1_color.r || \
+        rdp->combiner.alphamul[1] == &rdp->texel1_color.a || rdp->combiner.alphasub_a[1] == &rdp->texel1_color.a || rdp->combiner.alphasub_b[1] == &rdp->texel1_color.a || rdp->combiner.alphaadd[1] == &rdp->texel1_color.a || \
+        rdp->combiner.rgbmul_r[1] == &rdp->texel1_color.a)
         texel1_used_in_cc1 = 1;
-    if (combiner.rgbmul_r[1] == &texel0_color.r || combiner.rgbsub_a_r[1] == &texel0_color.r || combiner.rgbsub_b_r[1] == &texel0_color.r || combiner.rgbadd_r[1] == &texel0_color.r || \
-        combiner.alphamul[1] == &texel0_color.a || combiner.alphasub_a[1] == &texel0_color.a || combiner.alphasub_b[1] == &texel0_color.a || combiner.alphaadd[1] == &texel0_color.a || \
-        combiner.rgbmul_r[1] == &texel0_color.a)
+    if (rdp->combiner.rgbmul_r[1] == &rdp->texel0_color.r || rdp->combiner.rgbsub_a_r[1] == &rdp->texel0_color.r || rdp->combiner.rgbsub_b_r[1] == &rdp->texel0_color.r || rdp->combiner.rgbadd_r[1] == &rdp->texel0_color.r || \
+        rdp->combiner.alphamul[1] == &rdp->texel0_color.a || rdp->combiner.alphasub_a[1] == &rdp->texel0_color.a || rdp->combiner.alphasub_b[1] == &rdp->texel0_color.a || rdp->combiner.alphaadd[1] == &rdp->texel0_color.a || \
+        rdp->combiner.rgbmul_r[1] == &rdp->texel0_color.a)
         texel0_used_in_cc1 = 1;
-    if (combiner.rgbmul_r[0] == &texel1_color.r || combiner.rgbsub_a_r[0] == &texel1_color.r || combiner.rgbsub_b_r[0] == &texel1_color.r || combiner.rgbadd_r[0] == &texel1_color.r || \
-        combiner.alphamul[0] == &texel1_color.a || combiner.alphasub_a[0] == &texel1_color.a || combiner.alphasub_b[0] == &texel1_color.a || combiner.alphaadd[0] == &texel1_color.a || \
-        combiner.rgbmul_r[0] == &texel1_color.a)
+    if (rdp->combiner.rgbmul_r[0] == &rdp->texel1_color.r || rdp->combiner.rgbsub_a_r[0] == &rdp->texel1_color.r || rdp->combiner.rgbsub_b_r[0] == &rdp->texel1_color.r || rdp->combiner.rgbadd_r[0] == &rdp->texel1_color.r || \
+        rdp->combiner.alphamul[0] == &rdp->texel1_color.a || rdp->combiner.alphasub_a[0] == &rdp->texel1_color.a || rdp->combiner.alphasub_b[0] == &rdp->texel1_color.a || rdp->combiner.alphaadd[0] == &rdp->texel1_color.a || \
+        rdp->combiner.rgbmul_r[0] == &rdp->texel1_color.a)
         texel1_used_in_cc0 = 1;
-    if (combiner.rgbmul_r[0] == &texel0_color.r || combiner.rgbsub_a_r[0] == &texel0_color.r || combiner.rgbsub_b_r[0] == &texel0_color.r || combiner.rgbadd_r[0] == &texel0_color.r || \
-        combiner.alphamul[0] == &texel0_color.a || combiner.alphasub_a[0] == &texel0_color.a || combiner.alphasub_b[0] == &texel0_color.a || combiner.alphaadd[0] == &texel0_color.a || \
-        combiner.rgbmul_r[0] == &texel0_color.a)
+    if (rdp->combiner.rgbmul_r[0] == &rdp->texel0_color.r || rdp->combiner.rgbsub_a_r[0] == &rdp->texel0_color.r || rdp->combiner.rgbsub_b_r[0] == &rdp->texel0_color.r || rdp->combiner.rgbadd_r[0] == &rdp->texel0_color.r || \
+        rdp->combiner.alphamul[0] == &rdp->texel0_color.a || rdp->combiner.alphasub_a[0] == &rdp->texel0_color.a || rdp->combiner.alphasub_b[0] == &rdp->texel0_color.a || rdp->combiner.alphaadd[0] == &rdp->texel0_color.a || \
+        rdp->combiner.rgbmul_r[0] == &rdp->texel0_color.a)
         texel0_used_in_cc0 = 1;
     texels_in_cc0 = texel0_used_in_cc0 || texel1_used_in_cc0;
     texels_in_cc1 = texel0_used_in_cc1 || texel1_used_in_cc1;
 
 
     if (texel1_used_in_cc1)
-        other_modes.f.textureuselevel0 = 0;
+        rdp->other_modes.f.textureuselevel0 = 0;
     else if (texel0_used_in_cc1 || lod_frac_used_in_cc1)
-        other_modes.f.textureuselevel0 = 1;
+        rdp->other_modes.f.textureuselevel0 = 1;
     else
-        other_modes.f.textureuselevel0 = 2;
+        rdp->other_modes.f.textureuselevel0 = 2;
 
     if (texel1_used_in_cc1)
-        other_modes.f.textureuselevel1 = 0;
+        rdp->other_modes.f.textureuselevel1 = 0;
     else if (texel1_used_in_cc0 || texel0_used_in_cc1)
-        other_modes.f.textureuselevel1 = 1;
+        rdp->other_modes.f.textureuselevel1 = 1;
     else if (texel0_used_in_cc0 || lod_frac_used_in_cc0 || lod_frac_used_in_cc1)
-        other_modes.f.textureuselevel1 = 2;
+        rdp->other_modes.f.textureuselevel1 = 2;
     else
-        other_modes.f.textureuselevel1 = 3;
+        rdp->other_modes.f.textureuselevel1 = 3;
 
 
     int lodfracused = 0;
 
-    if ((other_modes.cycle_type == CYCLE_TYPE_2 && (lod_frac_used_in_cc0 || lod_frac_used_in_cc1)) || \
-        (other_modes.cycle_type == CYCLE_TYPE_1 && lod_frac_used_in_cc1))
+    if ((rdp->other_modes.cycle_type == CYCLE_TYPE_2 && (lod_frac_used_in_cc0 || lod_frac_used_in_cc1)) || \
+        (rdp->other_modes.cycle_type == CYCLE_TYPE_1 && lod_frac_used_in_cc1))
         lodfracused = 1;
 
-    if ((other_modes.cycle_type == CYCLE_TYPE_1 && combiner.rgbsub_a_r[1] == &noise) || \
-        (other_modes.cycle_type == CYCLE_TYPE_2 && (combiner.rgbsub_a_r[0] == &noise || combiner.rgbsub_a_r[1] == &noise)) || \
-        other_modes.alpha_dither_sel == 2)
-        other_modes.f.getditherlevel = 0;
-    else if (other_modes.f.rgb_alpha_dither != 0xf)
-        other_modes.f.getditherlevel = 1;
+    if ((rdp->other_modes.cycle_type == CYCLE_TYPE_1 && rdp->combiner.rgbsub_a_r[1] == &rdp->noise) || \
+        (rdp->other_modes.cycle_type == CYCLE_TYPE_2 && (rdp->combiner.rgbsub_a_r[0] == &rdp->noise || rdp->combiner.rgbsub_a_r[1] == &rdp->noise)) || \
+        rdp->other_modes.alpha_dither_sel == 2)
+        rdp->other_modes.f.getditherlevel = 0;
+    else if (rdp->other_modes.f.rgb_alpha_dither != 0xf)
+        rdp->other_modes.f.getditherlevel = 1;
     else
-        other_modes.f.getditherlevel = 2;
+        rdp->other_modes.f.getditherlevel = 2;
 
-    other_modes.f.dolod = other_modes.tex_lod_en || lodfracused;
+    rdp->other_modes.f.dolod = rdp->other_modes.tex_lod_en || lodfracused;
 }

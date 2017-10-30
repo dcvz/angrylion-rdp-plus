@@ -35,7 +35,7 @@ static STRICTINLINE void rgb_dither(struct rdp_state* rdp, int* r, int* g, int* 
     else
         newb = (newb & 0xf8) + 8;
 
-    if (other_modes.rgb_dither_sel != 2)
+    if (rdp->other_modes.rgb_dither_sel != 2)
         rcomp = gcomp = bcomp = dith;
     else
     {
@@ -64,11 +64,11 @@ static STRICTINLINE void rgb_dither(struct rdp_state* rdp, int* r, int* g, int* 
 
 static STRICTINLINE void get_dither_noise(struct rdp_state* rdp, int x, int y, int* cdith, int* adith)
 {
-    if (!other_modes.f.getditherlevel)
-        noise = ((irand() & 7) << 6) | 0x20;
+    if (!rdp->other_modes.f.getditherlevel)
+        rdp->noise = ((irand() & 7) << 6) | 0x20;
 
     int dithindex;
-    switch(other_modes.f.rgb_alpha_dither)
+    switch(rdp->other_modes.f.rgb_alpha_dither)
     {
     case 0:
         dithindex = ((y & 3) << 2) | (x & 3);
@@ -82,7 +82,7 @@ static STRICTINLINE void get_dither_noise(struct rdp_state* rdp, int x, int y, i
     case 2:
         dithindex = ((y & 3) << 2) | (x & 3);
         *cdith = magic_matrix[dithindex];
-        *adith = (noise >> 6) & 7;
+        *adith = (rdp->noise >> 6) & 7;
         break;
     case 3:
         dithindex = ((y & 3) << 2) | (x & 3);
@@ -101,7 +101,7 @@ static STRICTINLINE void get_dither_noise(struct rdp_state* rdp, int x, int y, i
     case 6:
         dithindex = ((y & 3) << 2) | (x & 3);
         *cdith = bayer_matrix[dithindex];
-        *adith = (noise >> 6) & 7;
+        *adith = (rdp->noise >> 6) & 7;
         break;
     case 7:
         dithindex = ((y & 3) << 2) | (x & 3);
@@ -120,7 +120,7 @@ static STRICTINLINE void get_dither_noise(struct rdp_state* rdp, int x, int y, i
         break;
     case 10:
         *cdith = irand();
-        *adith = (noise >> 6) & 7;
+        *adith = (rdp->noise >> 6) & 7;
         break;
     case 11:
         *cdith = irand();
@@ -138,7 +138,7 @@ static STRICTINLINE void get_dither_noise(struct rdp_state* rdp, int x, int y, i
         break;
     case 14:
         *cdith = 7;
-        *adith = (noise >> 6) & 7;
+        *adith = (rdp->noise >> 6) & 7;
         break;
     case 15:
         *cdith = 7;
