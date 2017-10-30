@@ -190,6 +190,27 @@ static STRICTINLINE int32_t clamp(int32_t value,int32_t min,int32_t max)
         return value;
 }
 
+struct tile
+{
+    int format;
+    int size;
+    int line;
+    int tmem;
+    int palette;
+    int ct, mt, cs, ms;
+    int mask_t, shift_t, mask_s, shift_s;
+
+    uint16_t sl, tl, sh, th;
+
+    struct
+    {
+        int clampdiffs, clampdifft;
+        int clampens, clampent;
+        int masksclamped, masktclamped;
+        int notlutswitch, tlutswitch;
+    } f;
+};
+
 struct rdp_state
 {
     uint32_t worker_id;
@@ -253,26 +274,7 @@ struct rdp_state
     struct color memory_color;
     struct color pre_memory_color;
 
-    struct
-    {
-        int format;
-        int size;
-        int line;
-        int tmem;
-        int palette;
-        int ct, mt, cs, ms;
-        int mask_t, shift_t, mask_s, shift_s;
-
-        uint16_t sl, tl, sh, th;
-
-        struct
-        {
-            int clampdiffs, clampdifft;
-            int clampens, clampent;
-            int masksclamped, masktclamped;
-            int notlutswitch, tlutswitch;
-        } f;
-    } tile[8];
+    struct tile tile[8];
 
     int32_t k0_tf;
     int32_t k1_tf;
@@ -422,8 +424,8 @@ void rdp_init_worker(uint32_t worker_id)
 
     for (int i = 0; i < 8; i++)
     {
-        calculate_tile_derivs(rdp, i);
-        calculate_clamp_diffs(rdp, i);
+        calculate_tile_derivs(&rdp->tile[i]);
+        calculate_clamp_diffs(&rdp->tile[i]);
     }
 
     z_init(rdp);

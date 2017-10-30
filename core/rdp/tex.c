@@ -100,31 +100,31 @@ static STRICTINLINE void tcmask_coupled(struct rdp_state* rdp, int32_t* S, int32
 }
 
 
-static INLINE void calculate_clamp_diffs(struct rdp_state* rdp, uint32_t i)
+static INLINE void calculate_clamp_diffs(struct tile* t)
 {
-    rdp->tile[i].f.clampdiffs = ((rdp->tile[i].sh >> 2) - (rdp->tile[i].sl >> 2)) & 0x3ff;
-    rdp->tile[i].f.clampdifft = ((rdp->tile[i].th >> 2) - (rdp->tile[i].tl >> 2)) & 0x3ff;
+    t->f.clampdiffs = ((t->sh >> 2) - (t->sl >> 2)) & 0x3ff;
+    t->f.clampdifft = ((t->th >> 2) - (t->tl >> 2)) & 0x3ff;
 }
 
 
-static INLINE void calculate_tile_derivs(struct rdp_state* rdp, uint32_t i)
+static INLINE void calculate_tile_derivs(struct tile* t)
 {
-    rdp->tile[i].f.clampens = rdp->tile[i].cs || !rdp->tile[i].mask_s;
-    rdp->tile[i].f.clampent = rdp->tile[i].ct || !rdp->tile[i].mask_t;
-    rdp->tile[i].f.masksclamped = rdp->tile[i].mask_s <= 10 ? rdp->tile[i].mask_s : 10;
-    rdp->tile[i].f.masktclamped = rdp->tile[i].mask_t <= 10 ? rdp->tile[i].mask_t : 10;
-    rdp->tile[i].f.notlutswitch = (rdp->tile[i].format << 2) | rdp->tile[i].size;
-    rdp->tile[i].f.tlutswitch = (rdp->tile[i].size << 2) | ((rdp->tile[i].format + 2) & 3);
+    t->f.clampens = t->cs || !t->mask_s;
+    t->f.clampent = t->ct || !t->mask_t;
+    t->f.masksclamped = t->mask_s <= 10 ? t->mask_s : 10;
+    t->f.masktclamped = t->mask_t <= 10 ? t->mask_t : 10;
+    t->f.notlutswitch = (t->format << 2) | t->size;
+    t->f.tlutswitch = (t->size << 2) | ((t->format + 2) & 3);
 
-    if (rdp->tile[i].format < 5)
+    if (t->format < 5)
     {
-        rdp->tile[i].f.notlutswitch = (rdp->tile[i].format << 2) | rdp->tile[i].size;
-        rdp->tile[i].f.tlutswitch = (rdp->tile[i].size << 2) | ((rdp->tile[i].format + 2) & 3);
+        t->f.notlutswitch = (t->format << 2) | t->size;
+        t->f.tlutswitch = (t->size << 2) | ((t->format + 2) & 3);
     }
     else
     {
-        rdp->tile[i].f.notlutswitch = 0x10 | rdp->tile[i].size;
-        rdp->tile[i].f.tlutswitch = (rdp->tile[i].size << 2) | 2;
+        t->f.notlutswitch = 0x10 | t->size;
+        t->f.tlutswitch = (t->size << 2) | 2;
     }
 }
 
@@ -885,7 +885,7 @@ static void rdp_set_tile_size(struct rdp_state* rdp, const uint32_t* args)
     rdp->tile[tilenum].sh = (args[1] >> 12) & 0xfff;
     rdp->tile[tilenum].th = (args[1] >>  0) & 0xfff;
 
-    calculate_clamp_diffs(rdp, tilenum);
+    calculate_clamp_diffs(&rdp->tile[tilenum]);
 }
 
 static void rdp_load_block(struct rdp_state* rdp, const uint32_t* args)
@@ -899,7 +899,7 @@ static void rdp_load_block(struct rdp_state* rdp, const uint32_t* args)
     rdp->tile[tilenum].sh = sh = ((args[1] >> 12) & 0xfff);
     rdp->tile[tilenum].th = dxt  = ((args[1] >>  0) & 0xfff);
 
-    calculate_clamp_diffs(rdp, tilenum);
+    calculate_clamp_diffs(&rdp->tile[tilenum]);
 
     int tlclamped = tl & 0x3ff;
 
@@ -931,7 +931,7 @@ static void tile_tlut_common_cs_decoder(struct rdp_state* rdp, const uint32_t* a
     rdp->tile[tilenum].sh = sh = ((args[1] >> 12) & 0xfff);
     rdp->tile[tilenum].th = th = ((args[1] >>  0) & 0xfff);
 
-    calculate_clamp_diffs(rdp, tilenum);
+    calculate_clamp_diffs(&rdp->tile[tilenum]);
 
 
     int32_t lewdata[10];
@@ -978,7 +978,7 @@ static void rdp_set_tile(struct rdp_state* rdp, const uint32_t* args)
     rdp->tile[tilenum].mask_s    = (args[1] >>  4) & 0xf;
     rdp->tile[tilenum].shift_s   = (args[1] >>  0) & 0xf;
 
-    calculate_tile_derivs(rdp, tilenum);
+    calculate_tile_derivs(&rdp->tile[tilenum]);
 }
 
 static void rdp_set_texture_image(struct rdp_state* rdp, const uint32_t* args)
