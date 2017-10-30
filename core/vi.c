@@ -372,7 +372,7 @@ static bool vi_process_start(void)
     return validh;
 }
 
-static void vi_process(void)
+static void vi_process(uint32_t worker_id)
 {
     struct ccvg viaa_array[0xa10 << 1];
     struct ccvg divot_array[0xa10 << 1];
@@ -404,7 +404,7 @@ static void vi_process(void)
     int32_t y_inc = 1;
 
     if (config->parallel) {
-        y_begin = parallel_worker_id();
+        y_begin = worker_id;
         y_inc = parallel_worker_num();
     }
 
@@ -631,14 +631,14 @@ static bool vi_process_start_fast(void)
     return true;
 }
 
-static void vi_process_fast(void)
+static void vi_process_fast(uint32_t worker_id)
 {
     int32_t y_begin = 0;
     int32_t y_end = vres_raw;
     int32_t y_inc = 1;
 
     if (config->parallel) {
-        y_begin = parallel_worker_id();
+        y_begin = worker_id;
         y_inc = parallel_worker_num();
     }
 
@@ -799,7 +799,7 @@ void vi_update(void)
 
     // select filter functions based on config
     bool (*vi_process_start_ptr)(void);
-    void (*vi_process_ptr)(void);
+    void (*vi_process_ptr)(uint32_t);
     void (*vi_process_end_ptr)(void);
 
     if (config->vi.mode == VI_MODE_NORMAL) {
@@ -821,7 +821,7 @@ void vi_update(void)
     if (config->parallel) {
         parallel_run(vi_process_ptr);
     } else {
-        vi_process_ptr();
+        vi_process_ptr(0);
     }
 
     // finish and send buffer to screen

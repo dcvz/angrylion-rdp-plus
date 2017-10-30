@@ -1906,7 +1906,7 @@ static void edgewalker_for_prims(struct rdp_state* rdp, int32_t* ewdata)
     xfrac = ((xright >> 8) & 0xff);
 
 
-    uint32_t worker_id = parallel_worker_id();
+    uint32_t worker_id = rdp->worker_id;
     uint32_t worker_num = parallel_worker_num();
 
     if (flip)

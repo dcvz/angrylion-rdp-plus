@@ -1,10 +1,10 @@
 #include "parallel.hpp"
 
-Parallel::Parallel(uint32_t num_workers, std::function<void(uint32_t)>&& func_worker_id)
+Parallel::Parallel(uint32_t num_workers)
 {
     // create worker threads
     for (uint32_t worker_id = 0; worker_id < num_workers; worker_id++) {
-        m_workers.emplace_back(std::thread(&Parallel::do_work, this, worker_id, func_worker_id));
+        m_workers.emplace_back(std::thread(&Parallel::do_work, this, worker_id));
     }
 }
 
@@ -15,7 +15,7 @@ Parallel::~Parallel()
 
     // set a dummy task in case nothing has been done yet
     if (!m_task) {
-        m_task = []() {};
+        m_task = [](uint32_t) {};
     }
 
     // exit worker main loops
@@ -31,7 +31,7 @@ Parallel::~Parallel()
     m_workers.clear();
 }
 
-void Parallel::run(std::function<void(void)>&& task)
+void Parallel::run(std::function<void(uint32_t)>&& task)
 {
     // don't allow more tasks if workers are stopping
     if (!m_accept_work) {
@@ -47,14 +47,13 @@ void Parallel::run(std::function<void(void)>&& task)
     wait();
 }
 
-void Parallel::do_work(int32_t worker_id, std::function<void(uint32_t)>&& func_worker_id)
+void Parallel::do_work(int32_t worker_id)
 {
     std::unique_lock<std::mutex> ul(m_mutex);
-    func_worker_id(worker_id);
     while (m_accept_work) {
         m_signal_work.wait(ul);
         ul.unlock();
-        m_task();
+        m_task(worker_id);
         ul.lock();
         m_workers_active--;
         m_signal_done.notify_all();

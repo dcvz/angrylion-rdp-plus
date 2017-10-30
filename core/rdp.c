@@ -483,7 +483,8 @@ struct rdp_state
     uint32_t zb_address;
     int32_t pastrawdzmem;
 };
-struct rdp_state** rdp_states;
+
+struct rdp_state* rdp_states;
 
 #include "rdp/cmd.c"
 #include "rdp/dither.c"
@@ -495,8 +496,11 @@ struct rdp_state** rdp_states;
 #include "rdp/tex.c"
 #include "rdp/rasterizer.c"
 
-void rdp_init_worker(struct rdp_state* rdp)
+void rdp_init_worker(uint32_t worker_id)
 {
+    struct rdp_state* rdp = &rdp_states[worker_id];
+    rdp->worker_id = worker_id;
+
     uint32_t tmp[2] = {0};
     rdp_set_other_modes(rdp, tmp);
 
@@ -531,10 +535,12 @@ int rdp_init(struct core_config* _config)
     rdp_pipeline_crashed = 0;
     memset(&onetimewarnings, 0, sizeof(onetimewarnings));
 
-    rdp_states = calloc(parallel_worker_num(), sizeof(struct rdp_state));
-
-    for (uint32_t i = 0; i < parallel_worker_num(); i++) {
-        rdp_init_worker(rdp_states[i]);
+    if (config->parallel) {
+        rdp_states = calloc(parallel_worker_num(), sizeof(struct rdp_state));
+        parallel_run(rdp_init_worker);
+    } else {
+        rdp_states = calloc(1, sizeof(struct rdp_state));
+        rdp_init_worker(0);
     }
 
     return 0;

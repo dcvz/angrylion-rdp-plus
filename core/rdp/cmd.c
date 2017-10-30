@@ -50,75 +50,73 @@ static const struct
 {
     void (*handler)(struct rdp_state* rdp, const uint32_t*);   // command handler function pointer
     uint32_t length;                    // command data length in bytes
-    bool singlethread;                  // run in main thread
-    bool multithread;                   // run in worker threads
     bool sync;                          // synchronize all workers before execution
     char name[32];                      // descriptive name for debugging
 } rdp_commands[] = {
-    {rdp_noop,              8,   true,  false, false, "No_Op"},
-    {rdp_invalid,           8,   true,  false, false, "???"},
-    {rdp_invalid,           8,   true,  false, false, "???"},
-    {rdp_invalid,           8,   true,  false, false, "???"},
-    {rdp_invalid,           8,   true,  false, false, "???"},
-    {rdp_invalid,           8,   true,  false, false, "???"},
-    {rdp_invalid,           8,   true,  false, false, "???"},
-    {rdp_invalid,           8,   true,  false, false, "???"},
-    {rdp_tri_noshade,       32,  false, true,  false, "Fill_Triangle"},
-    {rdp_tri_noshade_z,     48,  false, true,  false, "Fill_ZBuffer_Triangle"},
-    {rdp_tri_tex,           96,  false, true,  false, "Texture_Triangle"},
-    {rdp_tri_tex_z,         112, false, true,  false, "Texture_ZBuffer_Triangle"},
-    {rdp_tri_shade,         96,  false, true,  false, "Shade_Triangle"},
-    {rdp_tri_shade_z,       112, false, true,  false, "Shade_ZBuffer_Triangle"},
-    {rdp_tri_texshade,      160, false, true,  false, "Shade_Texture_Triangle"},
-    {rdp_tri_texshade_z,    176, false, true,  false, "Shade_Texture_Z_Buffer_Triangle"},
-    {rdp_invalid,           8,   true,  false, false, "???"},
-    {rdp_invalid,           8,   true,  false, false, "???"},
-    {rdp_invalid,           8,   true,  false, false, "???"},
-    {rdp_invalid,           8,   true,  false, false, "???"},
-    {rdp_invalid,           8,   true,  false, false, "???"},
-    {rdp_invalid,           8,   true,  false, false, "???"},
-    {rdp_invalid,           8,   true,  false, false, "???"},
-    {rdp_invalid,           8,   true,  false, false, "???"},
-    {rdp_invalid,           8,   true,  false, false, "???"},
-    {rdp_invalid,           8,   true,  false, false, "???"},
-    {rdp_invalid,           8,   true,  false, false, "???"},
-    {rdp_invalid,           8,   true,  false, false, "???"},
-    {rdp_invalid,           8,   true,  false, false, "???"},
-    {rdp_invalid,           8,   true,  false, false, "???"},
-    {rdp_invalid,           8,   true,  false, false, "???"},
-    {rdp_invalid,           8,   true,  false, false, "???"},
-    {rdp_invalid,           8,   true,  false, false, "???"},
-    {rdp_invalid,           8,   true,  false, false, "???"},
-    {rdp_invalid,           8,   true,  false, false, "???"},
-    {rdp_invalid,           8,   true,  false, false, "???"},
-    {rdp_tex_rect,          16,  false, true,  false, "Texture_Rectangle"},
-    {rdp_tex_rect_flip,     16,  false, true,  false, "Texture_Rectangle_Flip"},
-    {rdp_sync_load,         8,   true,  false, false, "Sync_Load"},
-    {rdp_sync_pipe,         8,   true,  false, false, "Sync_Pipe"},
-    {rdp_sync_tile,         8,   true,  false, false, "Sync_Tile"},
-    {rdp_sync_full,         8,   true,  false, true,  "Sync_Full"},
-    {rdp_set_key_gb,        8,   false, true,  false, "Set_Key_GB"},
-    {rdp_set_key_r,         8,   false, true,  false, "Set_Key_R"},
-    {rdp_set_convert,       8,   false, true,  false, "Set_Convert"},
-    {rdp_set_scissor,       8,   false, true,  false, "Set_Scissor"},
-    {rdp_set_prim_depth,    8,   false, true,  false, "Set_Prim_Depth"},
-    {rdp_set_other_modes,   8,   false, true,  false, "Set_Other_Modes"},
-    {rdp_load_tlut,         8,   false, true,  false, "Load_TLUT"},
-    {rdp_invalid,           8,   true,  false, false, "???"},
-    {rdp_set_tile_size,     8,   false, true,  false, "Set_Tile_Size"},
-    {rdp_load_block,        8,   false, true,  false, "Load_Block"},
-    {rdp_load_tile,         8,   false, true,  false, "Load_Tile"},
-    {rdp_set_tile,          8,   false, true,  false, "Set_Tile"},
-    {rdp_fill_rect,         8,   false, true,  false, "Fill_Rectangle"},
-    {rdp_set_fill_color,    8,   false, true,  false, "Set_Fill_Color"},
-    {rdp_set_fog_color,     8,   false, true,  false, "Set_Fog_Color"},
-    {rdp_set_blend_color,   8,   false, true,  false, "Set_Blend_Color"},
-    {rdp_set_prim_color,    8,   false, true,  false, "Set_Prim_Color"},
-    {rdp_set_env_color,     8,   false, true,  false, "Set_Env_Color"},
-    {rdp_set_combine,       8,   false, true,  false, "Set_Combine"},
-    {rdp_set_texture_image, 8,   false, true,  false, "Set_Texture_Image"},
-    {rdp_set_mask_image,    8,   true,  true,  true,  "Set_Mask_Image"},
-    {rdp_set_color_image,   8,   false, true,  true,  "Set_Color_Image"}
+    {rdp_noop,              8,   false, "No_Op"},
+    {rdp_invalid,           8,   false, "???"},
+    {rdp_invalid,           8,   false, "???"},
+    {rdp_invalid,           8,   false, "???"},
+    {rdp_invalid,           8,   false, "???"},
+    {rdp_invalid,           8,   false, "???"},
+    {rdp_invalid,           8,   false, "???"},
+    {rdp_invalid,           8,   false, "???"},
+    {rdp_tri_noshade,       32,  false, "Fill_Triangle"},
+    {rdp_tri_noshade_z,     48,  false, "Fill_ZBuffer_Triangle"},
+    {rdp_tri_tex,           96,  false, "Texture_Triangle"},
+    {rdp_tri_tex_z,         112, false, "Texture_ZBuffer_Triangle"},
+    {rdp_tri_shade,         96,  false, "Shade_Triangle"},
+    {rdp_tri_shade_z,       112, false, "Shade_ZBuffer_Triangle"},
+    {rdp_tri_texshade,      160, false, "Shade_Texture_Triangle"},
+    {rdp_tri_texshade_z,    176, false, "Shade_Texture_Z_Buffer_Triangle"},
+    {rdp_invalid,           8,   false, "???"},
+    {rdp_invalid,           8,   false, "???"},
+    {rdp_invalid,           8,   false, "???"},
+    {rdp_invalid,           8,   false, "???"},
+    {rdp_invalid,           8,   false, "???"},
+    {rdp_invalid,           8,   false, "???"},
+    {rdp_invalid,           8,   false, "???"},
+    {rdp_invalid,           8,   false, "???"},
+    {rdp_invalid,           8,   false, "???"},
+    {rdp_invalid,           8,   false, "???"},
+    {rdp_invalid,           8,   false, "???"},
+    {rdp_invalid,           8,   false, "???"},
+    {rdp_invalid,           8,   false, "???"},
+    {rdp_invalid,           8,   false, "???"},
+    {rdp_invalid,           8,   false, "???"},
+    {rdp_invalid,           8,   false, "???"},
+    {rdp_invalid,           8,   false, "???"},
+    {rdp_invalid,           8,   false, "???"},
+    {rdp_invalid,           8,   false, "???"},
+    {rdp_invalid,           8,   false, "???"},
+    {rdp_tex_rect,          16,  false, "Texture_Rectangle"},
+    {rdp_tex_rect_flip,     16,  false, "Texture_Rectangle_Flip"},
+    {rdp_sync_load,         8,   false, "Sync_Load"},
+    {rdp_sync_pipe,         8,   false, "Sync_Pipe"},
+    {rdp_sync_tile,         8,   false, "Sync_Tile"},
+    {rdp_sync_full,         8,   true,  "Sync_Full"},
+    {rdp_set_key_gb,        8,   false, "Set_Key_GB"},
+    {rdp_set_key_r,         8,   false, "Set_Key_R"},
+    {rdp_set_convert,       8,   false, "Set_Convert"},
+    {rdp_set_scissor,       8,   false, "Set_Scissor"},
+    {rdp_set_prim_depth,    8,   false, "Set_Prim_Depth"},
+    {rdp_set_other_modes,   8,   false, "Set_Other_Modes"},
+    {rdp_load_tlut,         8,   false, "Load_TLUT"},
+    {rdp_invalid,           8,   false, "???"},
+    {rdp_set_tile_size,     8,   false, "Set_Tile_Size"},
+    {rdp_load_block,        8,   false, "Load_Block"},
+    {rdp_load_tile,         8,   false, "Load_Tile"},
+    {rdp_set_tile,          8,   false, "Set_Tile"},
+    {rdp_fill_rect,         8,   false, "Fill_Rectangle"},
+    {rdp_set_fill_color,    8,   false, "Set_Fill_Color"},
+    {rdp_set_fog_color,     8,   false, "Set_Fog_Color"},
+    {rdp_set_blend_color,   8,   false, "Set_Blend_Color"},
+    {rdp_set_prim_color,    8,   false, "Set_Prim_Color"},
+    {rdp_set_env_color,     8,   false, "Set_Env_Color"},
+    {rdp_set_combine,       8,   false, "Set_Combine"},
+    {rdp_set_texture_image, 8,   false, "Set_Texture_Image"},
+    {rdp_set_mask_image,    8,   true,  "Set_Mask_Image"},
+    {rdp_set_color_image,   8,   true,  "Set_Color_Image"}
 };
 
 static void rdp_cmd_run(struct rdp_state* rdp, const uint32_t* arg)
@@ -127,10 +125,10 @@ static void rdp_cmd_run(struct rdp_state* rdp, const uint32_t* arg)
     rdp_commands[cmd_id].handler(rdp, arg);
 }
 
-static void rdp_cmd_run_buffered(void)
+static void rdp_cmd_run_buffered(uint32_t worker_id)
 {
     for (uint32_t pos = 0; pos < rdp_cmd_buf_pos; pos++) {
-        rdp_cmd_run(rdp_states[parallel_worker_id()], rdp_cmd_buf[pos]);
+        rdp_cmd_run(&rdp_states[worker_id], rdp_cmd_buf[pos]);
     }
 }
 
@@ -161,19 +159,25 @@ void rdp_cmd(const uint32_t* arg, uint32_t length)
 {
     uint32_t cmd_id = CMD_ID(arg);
 
-    // flush pending commands if the next command requires it
-    if (rdp_commands[cmd_id].sync && config->parallel) {
-        rdp_cmd_flush();
-    }
+    // check if parallel processing is enabled
+    if (config->parallel) {
+        // special case: sync_full always needs to be run in main thread
+        // (parameters are unused, so NULL is fine)
+        if (cmd_id == CMD_ID_SYNC_FULL) {
+            rdp_sync_full(NULL, NULL);
+            return;
+        }
 
-    // run command in main thread
-    if (rdp_commands[cmd_id].singlethread || !config->parallel) {
-        rdp_cmd_run(rdp_states[0], arg);
-    }
+        // flush pending commands if the next command requires it
+        if (rdp_commands[cmd_id].sync) {
+            rdp_cmd_flush();
+        }
 
-    // run command in worker threads
-    if (rdp_commands[cmd_id].multithread && config->parallel) {
+        // put command in the buffer
         rdp_cmd_push(arg, length);
+    } else {
+        // run command directly
+        rdp_cmd_run(&rdp_states[0], arg);
     }
 }
 
