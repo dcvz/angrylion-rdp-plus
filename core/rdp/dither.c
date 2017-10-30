@@ -146,7 +146,3 @@ static STRICTINLINE void get_dither_noise(struct rdp_state* rdp, int x, int y, i
         break;
     }
 }
-
-static void dither_init(struct rdp_state* rdp)
-{
-}

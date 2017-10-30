@@ -456,31 +456,8 @@ static STRICTINLINE void combiner_2cycle(struct rdp_state* rdp, int adseed, uint
         rdp->shade_color.a = 0xff;
 }
 
-static void combiner_init(struct rdp_state* rdp)
+static void combiner_init_lut(void)
 {
-    rdp->combiner.rgbsub_a_r[0] = rdp->combiner.rgbsub_a_r[1] = &one_color;
-    rdp->combiner.rgbsub_a_g[0] = rdp->combiner.rgbsub_a_g[1] = &one_color;
-    rdp->combiner.rgbsub_a_b[0] = rdp->combiner.rgbsub_a_b[1] = &one_color;
-    rdp->combiner.rgbsub_b_r[0] = rdp->combiner.rgbsub_b_r[1] = &one_color;
-    rdp->combiner.rgbsub_b_g[0] = rdp->combiner.rgbsub_b_g[1] = &one_color;
-    rdp->combiner.rgbsub_b_b[0] = rdp->combiner.rgbsub_b_b[1] = &one_color;
-    rdp->combiner.rgbmul_r[0] = rdp->combiner.rgbmul_r[1] = &one_color;
-    rdp->combiner.rgbmul_g[0] = rdp->combiner.rgbmul_g[1] = &one_color;
-    rdp->combiner.rgbmul_b[0] = rdp->combiner.rgbmul_b[1] = &one_color;
-    rdp->combiner.rgbadd_r[0] = rdp->combiner.rgbadd_r[1] = &one_color;
-    rdp->combiner.rgbadd_g[0] = rdp->combiner.rgbadd_g[1] = &one_color;
-    rdp->combiner.rgbadd_b[0] = rdp->combiner.rgbadd_b[1] = &one_color;
-
-    rdp->combiner.alphasub_a[0] = rdp->combiner.alphasub_a[1] = &one_color;
-    rdp->combiner.alphasub_b[0] = rdp->combiner.alphasub_b[1] = &one_color;
-    rdp->combiner.alphamul[0] = rdp->combiner.alphamul[1] = &one_color;
-    rdp->combiner.alphaadd[0] = rdp->combiner.alphaadd[1] = &one_color;
-
-    memset(&rdp->prim_color, 0, sizeof(struct color));
-    memset(&rdp->env_color, 0, sizeof(struct color));
-    memset(&rdp->key_scale, 0, sizeof(struct color));
-    memset(&rdp->key_center, 0, sizeof(struct color));
-
     for(int i = 0; i < 0x200; i++)
     {
         switch((i >> 7) & 3)
@@ -502,6 +479,27 @@ static void combiner_init(struct rdp_state* rdp)
     {
         special_9bit_exttable[i] = ((i & 0x180) == 0x180) ? (i | ~0x1ff) : (i & 0x1ff);
     }
+}
+
+static void combiner_init(struct rdp_state* rdp)
+{
+    rdp->combiner.rgbsub_a_r[0] = rdp->combiner.rgbsub_a_r[1] = &one_color;
+    rdp->combiner.rgbsub_a_g[0] = rdp->combiner.rgbsub_a_g[1] = &one_color;
+    rdp->combiner.rgbsub_a_b[0] = rdp->combiner.rgbsub_a_b[1] = &one_color;
+    rdp->combiner.rgbsub_b_r[0] = rdp->combiner.rgbsub_b_r[1] = &one_color;
+    rdp->combiner.rgbsub_b_g[0] = rdp->combiner.rgbsub_b_g[1] = &one_color;
+    rdp->combiner.rgbsub_b_b[0] = rdp->combiner.rgbsub_b_b[1] = &one_color;
+    rdp->combiner.rgbmul_r[0] = rdp->combiner.rgbmul_r[1] = &one_color;
+    rdp->combiner.rgbmul_g[0] = rdp->combiner.rgbmul_g[1] = &one_color;
+    rdp->combiner.rgbmul_b[0] = rdp->combiner.rgbmul_b[1] = &one_color;
+    rdp->combiner.rgbadd_r[0] = rdp->combiner.rgbadd_r[1] = &one_color;
+    rdp->combiner.rgbadd_g[0] = rdp->combiner.rgbadd_g[1] = &one_color;
+    rdp->combiner.rgbadd_b[0] = rdp->combiner.rgbadd_b[1] = &one_color;
+
+    rdp->combiner.alphasub_a[0] = rdp->combiner.alphasub_a[1] = &one_color;
+    rdp->combiner.alphasub_b[0] = rdp->combiner.alphasub_b[1] = &one_color;
+    rdp->combiner.alphamul[0] = rdp->combiner.alphamul[1] = &one_color;
+    rdp->combiner.alphaadd[0] = rdp->combiner.alphaadd[1] = &one_color;
 }
 
 static void rdp_set_prim_color(struct rdp_state* rdp, const uint32_t* args)

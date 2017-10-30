@@ -1006,13 +1006,13 @@ static void rdp_set_convert(struct rdp_state* rdp, const uint32_t* args)
     rdp->k5 = args[1] & 0x1ff;
 }
 
+static void tex_init_lut(void)
+{
+    tmem_init_lut();
+    tcoord_init_lut();
+}
+
 static void tex_init(struct rdp_state* rdp)
 {
-    rdp->ti_format = FORMAT_RGBA;
-    rdp->ti_size = PIXEL_SIZE_4BIT;
-    rdp->ti_width = 0;
-    rdp->ti_address = 0;
-
-    tmem_init(rdp);
     tcoord_init(rdp);
 }

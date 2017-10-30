@@ -23,7 +23,7 @@ static STRICTINLINE uint32_t z_decompress(struct rdp_state* rdp, uint32_t zb)
     return z_complete_dec_table[(zb >> 2) & 0x3fff];
 }
 
-static INLINE void z_build_com_table(struct rdp_state* rdp)
+static INLINE void z_build_com_table(void)
 {
 
     uint16_t altmem = 0;
@@ -380,9 +380,9 @@ uint32_t rdp_get_zb_address(void)
     return rdp_states[0].zb_address;
 }
 
-void z_init(struct rdp_state* rdp)
+void z_init_lut(void)
 {
-    z_build_com_table(rdp);
+    z_build_com_table();
 
     uint32_t exponent;
     uint32_t mantissa;

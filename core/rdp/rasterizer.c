@@ -2117,12 +2117,8 @@ static void edgewalker_for_prims(struct rdp_state* rdp, int32_t* ewdata)
 
 static void rasterizer_init(struct rdp_state* rdp)
 {
-    rdp->clip.xl = 0;
-    rdp->clip.yl = 0;
     rdp->clip.xh = 0x2000;
     rdp->clip.yh = 0x2000;
-    rdp->scfield = 0;
-    rdp->sckeepodd = 0;
 }
 
 static void rdp_tri_noshade(struct rdp_state* rdp, const uint32_t* args)

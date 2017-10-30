@@ -1139,10 +1139,8 @@ static void tcdiv_persp(struct rdp_state* rdp, int32_t ss, int32_t st, int32_t s
     *sst = (tempt & 0x1ffff) | overunder_t;
 }
 
-static void tcoord_init(struct rdp_state* rdp)
+static void tcoord_init_lut(void)
 {
-    rdp->tcdiv_ptr = tcdiv_func[0];
-
     int i, k;
 
     log2table[0] = log2table[1] = 0;
@@ -1187,4 +1185,9 @@ static void tcoord_init(struct rdp_state* rdp)
     maskbits_table[0] = 0x3ff;
     for (i = 1; i < 16; i++)
         maskbits_table[i] = ((uint16_t)(0xffff) >> (16 - i)) & 0x3ff;
+}
+
+static void tcoord_init(struct rdp_state* rdp)
+{
+    rdp->tcdiv_ptr = tcdiv_func[0];
 }

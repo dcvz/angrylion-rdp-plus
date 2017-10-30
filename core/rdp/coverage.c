@@ -209,7 +209,7 @@ static STRICTINLINE void lookup_cvmask_derivatives(struct rdp_state* rdp, uint32
     *offy = cvarray[mask].yoff;
 }
 
-static INLINE void precalc_cvmask_derivatives(void)
+static void coverage_init_lut(void)
 {
     int i = 0, k = 0;
     uint16_t mask = 0, maskx = 0, masky = 0;

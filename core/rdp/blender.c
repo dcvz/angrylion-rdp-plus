@@ -307,7 +307,7 @@ static STRICTINLINE int blender_2cycle(struct rdp_state* rdp, uint32_t* fr, uint
     }
 }
 
-static void blender_init(struct rdp_state* rdp)
+static void blender_init_lut(void)
 {
     int d = 0, n = 0, temp = 0, res = 0, invd = 0, nbit = 0;
     int ps[9];

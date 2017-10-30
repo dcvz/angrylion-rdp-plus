@@ -161,6 +161,8 @@ struct other_modes
 static int32_t one_color = 0x100;
 static int32_t zero_color = 0x00;
 
+static bool init_lut;
+
 #define PIXELS_TO_BYTES(pix, siz) (((pix) << (siz)) >> 1)
 
 struct spansigs {
@@ -428,10 +430,7 @@ void rdp_init_worker(uint32_t worker_id)
         calculate_clamp_diffs(&rdp->tile[i]);
     }
 
-    z_init(rdp);
-    dither_init(rdp);
     fb_init(rdp);
-    blender_init(rdp);
     combiner_init(rdp);
     tex_init(rdp);
     rasterizer_init(rdp);
@@ -441,10 +440,19 @@ int rdp_init(struct core_config* _config)
 {
     config = _config;
 
+    // initialize static lookup tables, once is enough
+    if (!init_lut) {
+        blender_init_lut();
+        coverage_init_lut();
+        combiner_init_lut();
+        tex_init_lut();
+        z_init_lut();
+
+        init_lut = true;
+    }
+
     rdp_pipeline_crashed = 0;
     memset(&onetimewarnings, 0, sizeof(onetimewarnings));
-
-    precalc_cvmask_derivatives();
 
     if (config->parallel) {
         rdp_states = malloc(parallel_worker_num() * sizeof(struct rdp_state));
