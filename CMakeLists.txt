@@ -44,6 +44,19 @@ if ( NOT MINGW )
     set_target_properties(plugin-common PROPERTIES POSITION_INDEPENDENT_CODE ON)
 endif ( NOT MINGW )
 
+# Project64 GFX Plugin (Windows only)
+if (WIN32)
+    set(NAME_PLUGIN_ZILMAR ${CMAKE_PROJECT_NAME})
+    set(PATH_PLUGIN_ZILMAR "plugin-zilmar")
+
+    file(GLOB SOURCES_PLUGIN_ZILMAR "${PATH_PLUGIN_ZILMAR}/*.c")
+    add_library(${NAME_PLUGIN_ZILMAR} SHARED ${SOURCES_PLUGIN_ZILMAR})
+
+    set_target_properties(${NAME_PLUGIN_ZILMAR} PROPERTIES PREFIX "")
+
+    target_link_libraries(${NAME_PLUGIN_ZILMAR} core plugin-common shlwapi ${OPENGL_LIBRARIES})
+endif()
+
 # Mupen64Plus GFX plugin
 set(NAME_PLUGIN_M64P "mupen64plus-video-${CMAKE_PROJECT_NAME}")
 set(PATH_PLUGIN_M64P "plugin-mupen64plus")
