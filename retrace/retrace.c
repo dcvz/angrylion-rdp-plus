@@ -13,10 +13,6 @@
 #include <inttypes.h>
 #include <string.h>
 
-#ifdef _WIN32
-#include <Windows.h>
-#endif
-
 #ifdef RETRACE_SDL
 
 #ifdef _WIN32
