@@ -37,8 +37,7 @@ void screen_init(void)
         msg_error("Can't create main window: %s", SDL_GetError());
     }
 
-    renderer = SDL_CreateRenderer(window, -1,
-        SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 
     if (!renderer) {
         msg_error("Can't create renderer: %s", SDL_GetError());
