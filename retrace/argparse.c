@@ -348,10 +348,10 @@ argparse_usage(struct argparse *self)
             pos += fprintf(stdout, "=<str>");
         }
         if (pos <= usage_opts_width) {
-            pad = usage_opts_width - pos;
+            pad = (int)(usage_opts_width - pos);
         } else {
             fputc('\n', stdout);
-            pad = usage_opts_width;
+            pad = (int)(usage_opts_width);
         }
         fprintf(stdout, "%*s%s\n", pad + 2, "", options->help);
     }

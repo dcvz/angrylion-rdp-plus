@@ -36,7 +36,7 @@ static HWND dlg_edit_workers;
 
 static void config_dialog_update_multithread(void)
 {
-    LRESULT check = SendMessage(dlg_check_multithread, BM_GETCHECK, 0, 0);
+    BOOL check = (BOOL)SendMessage(dlg_check_multithread, BM_GETCHECK, 0, 0);
     EnableWindow(dlg_spin_workers, check);
     EnableWindow(dlg_edit_workers, check);
 }
