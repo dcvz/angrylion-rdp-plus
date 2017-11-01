@@ -1,4 +1,6 @@
 #include "plugin.h"
+#include "clock.h"
+#include "argparse.h"
 
 #include "core/core.h"
 #include "core/rdp.h"
@@ -12,16 +14,18 @@
 #include <string.h>
 
 #ifdef _WIN32
+#include <Windows.h>
+#endif
+
+#ifdef RETRACE_SDL
+
+#ifdef _WIN32
 #include <SDL.h>
 #else
 #include <SDL2/SDL.h>
 #endif
 
-#ifdef _WIN32
-#include <windows.h>
 #endif
-
-#include "argparse.h"
 
 static struct core_config config;
 
@@ -33,10 +37,9 @@ static uint32_t vi_frames;
 
 void retrace_stats(void)
 {
-    uint64_t freq = SDL_GetPerformanceFrequency();
-    uint64_t now = SDL_GetPerformanceCounter();
+    uint64_t now = millis();
 
-    float seconds_passed = (now - start) / (float)freq;
+    float seconds_passed = (now - start) / 1000.f;
     float dp_fps = dp_frames / seconds_passed;
     float vi_fps = vi_frames / seconds_passed;
 
@@ -44,7 +47,7 @@ void retrace_stats(void)
     printf("DP: %d frames, %.1f avg FPS\n", dp_frames, dp_fps);
     printf("VI: %d frames, %.1f avg FPS\n\n", vi_frames, vi_fps);
 
-    start = SDL_GetPerformanceCounter();
+    start = millis();
 }
 
 void retrace_reset(void)
@@ -103,11 +106,12 @@ void retrace_frames(void)
 {
     bool run = true;
     bool pause = false;
-    start = SDL_GetPerformanceCounter();
+    start = millis();
 
     while (run) {
         bool render = !pause;
 
+#ifdef RETRACE_SDL
         SDL_Event event;
         while (SDL_PollEvent(&event)) {
             switch (event.type) {
@@ -140,6 +144,7 @@ void retrace_frames(void)
                     break;
             }
         }
+#endif
 
         if (render) {
             if (!retrace_frame()) {
@@ -174,7 +179,7 @@ int main(int argc, char** argv)
 
     struct argparse argparse;
     argparse_init(&argparse, options, usages, 0);
-    argparse_describe(&argparse, "\nPlays back a recorded RDP trace file (*.dpt).", NULL);
+    argparse_describe(&argparse, "\nPlays back a recorded RDP trace file (*.dpt).", "\n");
     argc = argparse_parse(&argparse, argc, argv);
 
     if (argc < 1) {

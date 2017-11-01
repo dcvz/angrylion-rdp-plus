@@ -21,13 +21,16 @@
     <ClCompile Include="msg.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="screen.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="plugin.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="argparse.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="screen.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="clock.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -39,6 +42,9 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="argparse.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="clock.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
