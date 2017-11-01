@@ -420,16 +420,12 @@ void rdp_init_worker(uint32_t worker_id)
     uint32_t tmp[2] = {0};
     rdp_set_other_modes(rdp, tmp);
 
-    memset(&rdp->combined_color, 0, sizeof(struct color));
-    memset(&rdp->tile, 0, sizeof(rdp->tile));
-
     for (int i = 0; i < 8; i++)
     {
         calculate_tile_derivs(rdp, i);
         calculate_clamp_diffs(rdp, i);
     }
 
-    precalc_cvmask_derivatives(rdp);
     z_init(rdp);
     dither_init(rdp);
     fb_init(rdp);
@@ -445,6 +441,8 @@ int rdp_init(struct core_config* _config)
 
     rdp_pipeline_crashed = 0;
     memset(&onetimewarnings, 0, sizeof(onetimewarnings));
+
+    precalc_cvmask_derivatives();
 
     if (config->parallel) {
         rdp_states = malloc(parallel_worker_num() * sizeof(struct rdp_state));

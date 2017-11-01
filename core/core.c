@@ -84,15 +84,15 @@ void core_init(struct core_config* _config)
     plugin_init();
     rdram_init();
 
-    rdp_init(&config);
-    vi_init(&config);
-
     num_workers = config.num_workers;
     parallel = config.parallel;
 
     if (config.parallel) {
         parallel_init(num_workers);
     }
+
+    rdp_init(&config);
+    vi_init(&config);
 
     screenshot_index = 0;
     trace_index = 0;

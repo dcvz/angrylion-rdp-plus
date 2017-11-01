@@ -11,6 +11,8 @@ void parallel_init(uint32_t num)
         num = std::thread::hardware_concurrency();
     }
 
+    parallel = std::make_unique<Parallel>(num);
+
     worker_num = num;
 }
 
