@@ -4,6 +4,11 @@ project(angrylion-plus)
 
 set(CMAKE_CXX_STANDARD 14)
 
+# default to release build
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Release)
+endif(NOT CMAKE_BUILD_TYPE)
+
 find_package(Git REQUIRED)
 find_package(PythonInterp 3.2 REQUIRED)
 find_package(SDL2 REQUIRED)
