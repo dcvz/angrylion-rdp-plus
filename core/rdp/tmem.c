@@ -8,7 +8,7 @@ static uint8_t replicated_rgba[32];
 #define GET_MED_RGBA16_TMEM(x)  (replicated_rgba[((x) >> 6) & 0x1f])
 #define GET_HI_RGBA16_TMEM(x)   (replicated_rgba[(x) >> 11])
 
-static void sort_tmem_idx(struct rdp_state* rdp, uint32_t *idx, uint32_t idxa, uint32_t idxb, uint32_t idxc, uint32_t idxd, uint32_t bankno)
+static void sort_tmem_idx(uint32_t *idx, uint32_t idxa, uint32_t idxb, uint32_t idxc, uint32_t idxd, uint32_t bankno)
 {
     if ((idxa & 3) == bankno)
         *idx = idxa & 0x3ff;
@@ -22,7 +22,7 @@ static void sort_tmem_idx(struct rdp_state* rdp, uint32_t *idx, uint32_t idxa, u
         *idx = 0;
 }
 
-static void sort_tmem_shorts_lowhalf(struct rdp_state* rdp, uint32_t* bindshort, uint32_t short0, uint32_t short1, uint32_t short2, uint32_t short3, uint32_t bankno)
+static void sort_tmem_shorts_lowhalf(uint32_t* bindshort, uint32_t short0, uint32_t short1, uint32_t short2, uint32_t short3, uint32_t bankno)
 {
     switch(bankno)
     {
@@ -1895,10 +1895,10 @@ static void get_tmem_idx(struct rdp_state* rdp, int s, int t, uint32_t tilenum, 
     }
 
 
-    sort_tmem_idx(rdp, idx0, tidx_a, tidx_b, tidx_c, tidx_d, 0);
-    sort_tmem_idx(rdp, idx1, tidx_a, tidx_b, tidx_c, tidx_d, 1);
-    sort_tmem_idx(rdp, idx2, tidx_a, tidx_b, tidx_c, tidx_d, 2);
-    sort_tmem_idx(rdp, idx3, tidx_a, tidx_b, tidx_c, tidx_d, 3);
+    sort_tmem_idx(idx0, tidx_a, tidx_b, tidx_c, tidx_d, 0);
+    sort_tmem_idx(idx1, tidx_a, tidx_b, tidx_c, tidx_d, 1);
+    sort_tmem_idx(idx2, tidx_a, tidx_b, tidx_c, tidx_d, 2);
+    sort_tmem_idx(idx3, tidx_a, tidx_b, tidx_c, tidx_d, 3);
 }
 
 static void read_tmem_copy(struct rdp_state* rdp, int s, int s1, int s2, int s3, int t, uint32_t tilenum, uint32_t* sortshort, int* hibits, int* lowbits)
@@ -1993,10 +1993,10 @@ static void read_tmem_copy(struct rdp_state* rdp, int s, int s1, int s2, int s3,
     tidx_dhi >>= 2;
 
 
-    sort_tmem_idx(rdp, &sortidx[0], tidx_a, tidx_blow, tidx_c, tidx_dlow, 0);
-    sort_tmem_idx(rdp, &sortidx[1], tidx_a, tidx_blow, tidx_c, tidx_dlow, 1);
-    sort_tmem_idx(rdp, &sortidx[2], tidx_a, tidx_blow, tidx_c, tidx_dlow, 2);
-    sort_tmem_idx(rdp, &sortidx[3], tidx_a, tidx_blow, tidx_c, tidx_dlow, 3);
+    sort_tmem_idx(&sortidx[0], tidx_a, tidx_blow, tidx_c, tidx_dlow, 0);
+    sort_tmem_idx(&sortidx[1], tidx_a, tidx_blow, tidx_c, tidx_dlow, 1);
+    sort_tmem_idx(&sortidx[2], tidx_a, tidx_blow, tidx_c, tidx_dlow, 2);
+    sort_tmem_idx(&sortidx[3], tidx_a, tidx_blow, tidx_c, tidx_dlow, 3);
 
     short0 = tmem16[sortidx[0] ^ WORD_ADDR_XOR];
     short1 = tmem16[sortidx[1] ^ WORD_ADDR_XOR];
@@ -2004,10 +2004,10 @@ static void read_tmem_copy(struct rdp_state* rdp, int s, int s1, int s2, int s3,
     short3 = tmem16[sortidx[3] ^ WORD_ADDR_XOR];
 
 
-    sort_tmem_shorts_lowhalf(rdp, &sortshort[0], short0, short1, short2, short3, lowbits[0] >> 2);
-    sort_tmem_shorts_lowhalf(rdp, &sortshort[1], short0, short1, short2, short3, lowbits[1] >> 2);
-    sort_tmem_shorts_lowhalf(rdp, &sortshort[2], short0, short1, short2, short3, lowbits[3] >> 2);
-    sort_tmem_shorts_lowhalf(rdp, &sortshort[3], short0, short1, short2, short3, lowbits[4] >> 2);
+    sort_tmem_shorts_lowhalf(&sortshort[0], short0, short1, short2, short3, lowbits[0] >> 2);
+    sort_tmem_shorts_lowhalf(&sortshort[1], short0, short1, short2, short3, lowbits[1] >> 2);
+    sort_tmem_shorts_lowhalf(&sortshort[2], short0, short1, short2, short3, lowbits[3] >> 2);
+    sort_tmem_shorts_lowhalf(&sortshort[3], short0, short1, short2, short3, lowbits[4] >> 2);
 
     if (rdp->other_modes.en_tlut)
     {
@@ -2025,10 +2025,10 @@ static void read_tmem_copy(struct rdp_state* rdp, int s, int s1, int s2, int s3,
     }
     else
     {
-        sort_tmem_idx(rdp, &sortidx[4], tidx_a, tidx_bhi, tidx_c, tidx_dhi, 0);
-        sort_tmem_idx(rdp, &sortidx[5], tidx_a, tidx_bhi, tidx_c, tidx_dhi, 1);
-        sort_tmem_idx(rdp, &sortidx[6], tidx_a, tidx_bhi, tidx_c, tidx_dhi, 2);
-        sort_tmem_idx(rdp, &sortidx[7], tidx_a, tidx_bhi, tidx_c, tidx_dhi, 3);
+        sort_tmem_idx(&sortidx[4], tidx_a, tidx_bhi, tidx_c, tidx_dhi, 0);
+        sort_tmem_idx(&sortidx[5], tidx_a, tidx_bhi, tidx_c, tidx_dhi, 1);
+        sort_tmem_idx(&sortidx[6], tidx_a, tidx_bhi, tidx_c, tidx_dhi, 2);
+        sort_tmem_idx(&sortidx[7], tidx_a, tidx_bhi, tidx_c, tidx_dhi, 3);
     }
 
     short0 = tmem16[(sortidx[4] | 0x400) ^ WORD_ADDR_XOR];
@@ -2040,17 +2040,17 @@ static void read_tmem_copy(struct rdp_state* rdp, int s, int s1, int s2, int s3,
 
     if (rdp->other_modes.en_tlut)
     {
-        sort_tmem_shorts_lowhalf(rdp, &sortshort[4], short0, short1, short2, short3, 0);
-        sort_tmem_shorts_lowhalf(rdp, &sortshort[5], short0, short1, short2, short3, 1);
-        sort_tmem_shorts_lowhalf(rdp, &sortshort[6], short0, short1, short2, short3, 2);
-        sort_tmem_shorts_lowhalf(rdp, &sortshort[7], short0, short1, short2, short3, 3);
+        sort_tmem_shorts_lowhalf(&sortshort[4], short0, short1, short2, short3, 0);
+        sort_tmem_shorts_lowhalf(&sortshort[5], short0, short1, short2, short3, 1);
+        sort_tmem_shorts_lowhalf(&sortshort[6], short0, short1, short2, short3, 2);
+        sort_tmem_shorts_lowhalf(&sortshort[7], short0, short1, short2, short3, 3);
     }
     else
     {
-        sort_tmem_shorts_lowhalf(rdp, &sortshort[4], short0, short1, short2, short3, lowbits[0] >> 2);
-        sort_tmem_shorts_lowhalf(rdp, &sortshort[5], short0, short1, short2, short3, lowbits[2] >> 2);
-        sort_tmem_shorts_lowhalf(rdp, &sortshort[6], short0, short1, short2, short3, lowbits[3] >> 2);
-        sort_tmem_shorts_lowhalf(rdp, &sortshort[7], short0, short1, short2, short3, lowbits[5] >> 2);
+        sort_tmem_shorts_lowhalf(&sortshort[4], short0, short1, short2, short3, lowbits[0] >> 2);
+        sort_tmem_shorts_lowhalf(&sortshort[5], short0, short1, short2, short3, lowbits[2] >> 2);
+        sort_tmem_shorts_lowhalf(&sortshort[6], short0, short1, short2, short3, lowbits[3] >> 2);
+        sort_tmem_shorts_lowhalf(&sortshort[7], short0, short1, short2, short3, lowbits[5] >> 2);
     }
 }
 

@@ -18,7 +18,7 @@ static struct {uint32_t shift; uint32_t add;} z_dec_table[8] = {
      0, 0x3f800,
 };
 
-static STRICTINLINE uint32_t z_decompress(struct rdp_state* rdp, uint32_t zb)
+static STRICTINLINE uint32_t z_decompress(uint32_t zb)
 {
     return z_complete_dec_table[(zb >> 2) & 0x3fff];
 }
@@ -185,20 +185,20 @@ static INLINE void z_build_com_table(void)
     }
 }
 
-static STRICTINLINE void z_store(struct rdp_state* rdp, uint32_t zcurpixel, uint32_t z, int dzpixenc)
+static STRICTINLINE void z_store(uint32_t zcurpixel, uint32_t z, int dzpixenc)
 {
     uint16_t zval = z_com_table[z & 0x3ffff]|(dzpixenc >> 2);
     uint8_t hval = dzpixenc & 3;
     PAIRWRITE16(zcurpixel, zval, hval);
 }
 
-static STRICTINLINE uint32_t dz_decompress(struct rdp_state* rdp, uint32_t dz_compressed)
+static STRICTINLINE uint32_t dz_decompress(uint32_t dz_compressed)
 {
     return (1 << dz_compressed);
 }
 
 
-static STRICTINLINE uint32_t dz_compress(struct rdp_state* rdp, uint32_t value)
+static STRICTINLINE uint32_t dz_compress(uint32_t value)
 {
     int j = 0;
     if (value & 0xff00)
@@ -227,9 +227,9 @@ static STRICTINLINE uint32_t z_compare(struct rdp_state* rdp, uint32_t zcurpixel
     if (rdp->other_modes.z_compare_en)
     {
         PAIRREAD16(zval, hval, zcurpixel);
-        oz = z_decompress(rdp, zval);
+        oz = z_decompress(zval);
         rawdzmem = ((zval & 3) << 2) | hval;
-        dzmem = dz_decompress(rdp, rawdzmem);
+        dzmem = dz_decompress(rawdzmem);
 
 
 
@@ -318,7 +318,7 @@ static STRICTINLINE uint32_t z_compare(struct rdp_state* rdp, uint32_t zcurpixel
             }
             else
             {
-                dzenc = dz_compress(rdp, dznotshift & 0xffff);
+                dzenc = dz_compress(dznotshift & 0xffff);
                 cvgcoeff = ((oz >> dzenc) - (sz >> dzenc)) & 0xf;
                 *curpixel_cvg = ((cvgcoeff * (*curpixel_cvg)) >> 3) & 0xf;
                 return 1;

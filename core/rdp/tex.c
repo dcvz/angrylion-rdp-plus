@@ -155,7 +155,7 @@ static STRICTINLINE void get_texel1_1cycle(struct rdp_state* rdp, int32_t* s1, i
         nextsw = rdp->span[nextscan].w >> 16;
     }
 
-    rdp->tcdiv_ptr(rdp, nexts, nextt, nextsw, s1, t1);
+    rdp->tcdiv_ptr(nexts, nextt, nextsw, s1, t1);
 }
 
 static STRICTINLINE void get_nexttexel0_2cycle(struct rdp_state* rdp, int32_t* s1, int32_t* t1, int32_t s, int32_t t, int32_t w, int32_t dsinc, int32_t dtinc, int32_t dwinc)
@@ -167,7 +167,7 @@ static STRICTINLINE void get_nexttexel0_2cycle(struct rdp_state* rdp, int32_t* s
     nexts = (s + dsinc) >> 16;
     nextt = (t + dtinc) >> 16;
 
-    rdp->tcdiv_ptr(rdp, nexts, nextt, nextsw, s1, t1);
+    rdp->tcdiv_ptr(nexts, nextt, nextsw, s1, t1);
 }
 
 static STRICTINLINE void texture_pipeline_cycle(struct rdp_state* rdp, struct color* TEX, struct color* prev, int32_t SSS, int32_t SST, uint32_t tilenum, uint32_t cycle)

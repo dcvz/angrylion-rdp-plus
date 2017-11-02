@@ -15,7 +15,7 @@ static const uint8_t magic_matrix[16] =
      7,  1,  6, 0
 };
 
-static STRICTINLINE void rgb_dither(struct rdp_state* rdp, int* r, int* g, int* b, int dith)
+static STRICTINLINE void rgb_dither(int rgb_dither_sel, int* r, int* g, int* b, int dith)
 {
 
     int32_t newr = *r, newg = *g, newb = *b;
@@ -35,7 +35,7 @@ static STRICTINLINE void rgb_dither(struct rdp_state* rdp, int* r, int* g, int* 
     else
         newb = (newb & 0xf8) + 8;
 
-    if (rdp->other_modes.rgb_dither_sel != 2)
+    if (rgb_dither_sel != 2)
         rcomp = gcomp = bcomp = dith;
     else
     {

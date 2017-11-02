@@ -51,7 +51,7 @@ static void fbwrite_16(struct rdp_state* rdp, uint32_t curpixel, uint32_t r, uin
     uint8_t hval;
     fb = (rdp->fb_address >> 1) + curpixel;
 
-    int32_t finalcvg = finalize_spanalpha(rdp, blend_en, curpixel_cvg, curpixel_memcvg);
+    int32_t finalcvg = finalize_spanalpha(rdp->other_modes.cvg_dest, blend_en, curpixel_cvg, curpixel_memcvg);
     int16_t finalcolor;
 
     if (rdp->fb_format == FORMAT_RGBA)
@@ -75,7 +75,7 @@ static void fbwrite_32(struct rdp_state* rdp, uint32_t curpixel, uint32_t r, uin
     uint32_t fb = (rdp->fb_address >> 2) + curpixel;
 
     int32_t finalcolor;
-    int32_t finalcvg = finalize_spanalpha(rdp, blend_en, curpixel_cvg, curpixel_memcvg);
+    int32_t finalcvg = finalize_spanalpha(rdp->other_modes.cvg_dest, blend_en, curpixel_cvg, curpixel_memcvg);
 
     finalcolor = (r << 24) | (g << 16) | (b << 8);
     finalcolor |= (finalcvg << 5);

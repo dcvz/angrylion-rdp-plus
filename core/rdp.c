@@ -384,7 +384,7 @@ struct rdp_state
     uint16_t primitive_delta_z;
 
     // tcoord
-    void (*tcdiv_ptr)(struct rdp_state*, int32_t, int32_t, int32_t, int32_t*, int32_t*);
+    void (*tcdiv_ptr)(int32_t, int32_t, int32_t, int32_t*, int32_t*);
 
     // tex
     int ti_format;

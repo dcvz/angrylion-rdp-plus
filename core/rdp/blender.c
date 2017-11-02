@@ -229,7 +229,7 @@ static STRICTINLINE int blender_1cycle(struct rdp_state* rdp, uint32_t* fr, uint
             }
 
             if (rdp->other_modes.rgb_dither_sel != 3)
-                rgb_dither(rdp, &r, &g, &b, dith);
+                rgb_dither(rdp->other_modes.rgb_dither_sel, &r, &g, &b, dith);
 
             *fr = r;
             *fg = g;
@@ -288,7 +288,7 @@ static STRICTINLINE int blender_2cycle(struct rdp_state* rdp, uint32_t* fr, uint
 
 
             if (rdp->other_modes.rgb_dither_sel != 3)
-                rgb_dither(rdp, &r, &g, &b, dith);
+                rgb_dither(rdp->other_modes.rgb_dither_sel, &r, &g, &b, dith);
             *fr = r;
             *fg = g;
             *fb = b;

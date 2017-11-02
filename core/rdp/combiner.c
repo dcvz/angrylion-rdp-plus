@@ -112,7 +112,7 @@ static INLINE void set_mul_alpha_input(struct rdp_state* rdp, int32_t **input, i
     }
 }
 
-static STRICTINLINE int32_t color_combiner_equation(struct rdp_state* rdp, int32_t a, int32_t b, int32_t c, int32_t d)
+static STRICTINLINE int32_t color_combiner_equation(int32_t a, int32_t b, int32_t c, int32_t d)
 {
 
 
@@ -127,7 +127,7 @@ static STRICTINLINE int32_t color_combiner_equation(struct rdp_state* rdp, int32
     return (a & 0x1ffff);
 }
 
-static STRICTINLINE int32_t alpha_combiner_equation(struct rdp_state* rdp, int32_t a, int32_t b, int32_t c, int32_t d)
+static STRICTINLINE int32_t alpha_combiner_equation(int32_t a, int32_t b, int32_t c, int32_t d)
 {
     a = special_9bit_exttable[a];
     b = special_9bit_exttable[b];
@@ -204,9 +204,9 @@ static STRICTINLINE void combiner_1cycle(struct rdp_state* rdp, int adseed, uint
 
 
 
-        rdp->combined_color.r = color_combiner_equation(rdp, *rdp->combiner.rgbsub_a_r[1],*rdp->combiner.rgbsub_b_r[1],*rdp->combiner.rgbmul_r[1],*rdp->combiner.rgbadd_r[1]);
-        rdp->combined_color.g = color_combiner_equation(rdp, *rdp->combiner.rgbsub_a_g[1],*rdp->combiner.rgbsub_b_g[1],*rdp->combiner.rgbmul_g[1],*rdp->combiner.rgbadd_g[1]);
-        rdp->combined_color.b = color_combiner_equation(rdp, *rdp->combiner.rgbsub_a_b[1],*rdp->combiner.rgbsub_b_b[1],*rdp->combiner.rgbmul_b[1],*rdp->combiner.rgbadd_b[1]);
+        rdp->combined_color.r = color_combiner_equation(*rdp->combiner.rgbsub_a_r[1],*rdp->combiner.rgbsub_b_r[1],*rdp->combiner.rgbmul_r[1],*rdp->combiner.rgbadd_r[1]);
+        rdp->combined_color.g = color_combiner_equation(*rdp->combiner.rgbsub_a_g[1],*rdp->combiner.rgbsub_b_g[1],*rdp->combiner.rgbmul_g[1],*rdp->combiner.rgbadd_g[1]);
+        rdp->combined_color.b = color_combiner_equation(*rdp->combiner.rgbsub_a_b[1],*rdp->combiner.rgbsub_b_b[1],*rdp->combiner.rgbmul_b[1],*rdp->combiner.rgbadd_b[1]);
     }
     else
     {
@@ -216,7 +216,7 @@ static STRICTINLINE void combiner_1cycle(struct rdp_state* rdp, int adseed, uint
     }
 
     if (rdp->combiner.alphamul[1] != &zero_color)
-        rdp->combined_color.a = alpha_combiner_equation(rdp, *rdp->combiner.alphasub_a[1],*rdp->combiner.alphasub_b[1],*rdp->combiner.alphamul[1],*rdp->combiner.alphaadd[1]);
+        rdp->combined_color.a = alpha_combiner_equation(*rdp->combiner.alphasub_a[1],*rdp->combiner.alphasub_b[1],*rdp->combiner.alphamul[1],*rdp->combiner.alphaadd[1]);
     else
         rdp->combined_color.a = special_9bit_exttable[*rdp->combiner.alphaadd[1]] & 0x1ff;
 
@@ -290,9 +290,9 @@ static STRICTINLINE void combiner_2cycle(struct rdp_state* rdp, int adseed, uint
 
     if (rdp->combiner.rgbmul_r[0] != &zero_color)
     {
-        rdp->combined_color.r = color_combiner_equation(rdp, *rdp->combiner.rgbsub_a_r[0],*rdp->combiner.rgbsub_b_r[0],*rdp->combiner.rgbmul_r[0],*rdp->combiner.rgbadd_r[0]);
-        rdp->combined_color.g = color_combiner_equation(rdp, *rdp->combiner.rgbsub_a_g[0],*rdp->combiner.rgbsub_b_g[0],*rdp->combiner.rgbmul_g[0],*rdp->combiner.rgbadd_g[0]);
-        rdp->combined_color.b = color_combiner_equation(rdp, *rdp->combiner.rgbsub_a_b[0],*rdp->combiner.rgbsub_b_b[0],*rdp->combiner.rgbmul_b[0],*rdp->combiner.rgbadd_b[0]);
+        rdp->combined_color.r = color_combiner_equation(*rdp->combiner.rgbsub_a_r[0],*rdp->combiner.rgbsub_b_r[0],*rdp->combiner.rgbmul_r[0],*rdp->combiner.rgbadd_r[0]);
+        rdp->combined_color.g = color_combiner_equation(*rdp->combiner.rgbsub_a_g[0],*rdp->combiner.rgbsub_b_g[0],*rdp->combiner.rgbmul_g[0],*rdp->combiner.rgbadd_g[0]);
+        rdp->combined_color.b = color_combiner_equation(*rdp->combiner.rgbsub_a_b[0],*rdp->combiner.rgbsub_b_b[0],*rdp->combiner.rgbmul_b[0],*rdp->combiner.rgbadd_b[0]);
     }
     else
     {
@@ -302,7 +302,7 @@ static STRICTINLINE void combiner_2cycle(struct rdp_state* rdp, int adseed, uint
     }
 
     if (rdp->combiner.alphamul[0] != &zero_color)
-        rdp->combined_color.a = alpha_combiner_equation(rdp, *rdp->combiner.alphasub_a[0],*rdp->combiner.alphasub_b[0],*rdp->combiner.alphamul[0],*rdp->combiner.alphaadd[0]);
+        rdp->combined_color.a = alpha_combiner_equation(*rdp->combiner.alphasub_a[0],*rdp->combiner.alphasub_b[0],*rdp->combiner.alphamul[0],*rdp->combiner.alphaadd[0]);
     else
         rdp->combined_color.a = special_9bit_exttable[*rdp->combiner.alphaadd[0]] & 0x1ff;
 
@@ -373,9 +373,9 @@ static STRICTINLINE void combiner_2cycle(struct rdp_state* rdp, int adseed, uint
 
     if (rdp->combiner.rgbmul_r[1] != &zero_color)
     {
-        rdp->combined_color.r = color_combiner_equation(rdp, *rdp->combiner.rgbsub_a_r[1],*rdp->combiner.rgbsub_b_r[1],*rdp->combiner.rgbmul_r[1],*rdp->combiner.rgbadd_r[1]);
-        rdp->combined_color.g = color_combiner_equation(rdp, *rdp->combiner.rgbsub_a_g[1],*rdp->combiner.rgbsub_b_g[1],*rdp->combiner.rgbmul_g[1],*rdp->combiner.rgbadd_g[1]);
-        rdp->combined_color.b = color_combiner_equation(rdp, *rdp->combiner.rgbsub_a_b[1],*rdp->combiner.rgbsub_b_b[1],*rdp->combiner.rgbmul_b[1],*rdp->combiner.rgbadd_b[1]);
+        rdp->combined_color.r = color_combiner_equation(*rdp->combiner.rgbsub_a_r[1],*rdp->combiner.rgbsub_b_r[1],*rdp->combiner.rgbmul_r[1],*rdp->combiner.rgbadd_r[1]);
+        rdp->combined_color.g = color_combiner_equation(*rdp->combiner.rgbsub_a_g[1],*rdp->combiner.rgbsub_b_g[1],*rdp->combiner.rgbmul_g[1],*rdp->combiner.rgbadd_g[1]);
+        rdp->combined_color.b = color_combiner_equation(*rdp->combiner.rgbsub_a_b[1],*rdp->combiner.rgbsub_b_b[1],*rdp->combiner.rgbmul_b[1],*rdp->combiner.rgbadd_b[1]);
     }
     else
     {
@@ -385,7 +385,7 @@ static STRICTINLINE void combiner_2cycle(struct rdp_state* rdp, int adseed, uint
     }
 
     if (rdp->combiner.alphamul[1] != &zero_color)
-        rdp->combined_color.a = alpha_combiner_equation(rdp, *rdp->combiner.alphasub_a[1],*rdp->combiner.alphasub_b[1],*rdp->combiner.alphamul[1],*rdp->combiner.alphaadd[1]);
+        rdp->combined_color.a = alpha_combiner_equation(*rdp->combiner.alphasub_a[1],*rdp->combiner.alphasub_b[1],*rdp->combiner.alphamul[1],*rdp->combiner.alphaadd[1]);
     else
         rdp->combined_color.a = special_9bit_exttable[*rdp->combiner.alphaadd[1]] & 0x1ff;
 

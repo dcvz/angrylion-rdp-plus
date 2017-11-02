@@ -20,10 +20,10 @@ static const int32_t norm_slope_table[64] = {
     0xfb7, 0xfb8, 0xfb9, 0xfba, 0xfbc, 0xfbc, 0xfbe, 0xfbe
 };
 
-static void tcdiv_persp(struct rdp_state*, int32_t ss, int32_t st, int32_t sw, int32_t* sss, int32_t* sst);
-static void tcdiv_nopersp(struct rdp_state*, int32_t ss, int32_t st, int32_t sw, int32_t* sss, int32_t* sst);
+static void tcdiv_persp(int32_t ss, int32_t st, int32_t sw, int32_t* sss, int32_t* sst);
+static void tcdiv_nopersp(int32_t ss, int32_t st, int32_t sw, int32_t* sss, int32_t* sst);
 
-static void (*tcdiv_func[2])(struct rdp_state*, int32_t, int32_t, int32_t, int32_t*, int32_t*) =
+static void (*tcdiv_func[2])(int32_t, int32_t, int32_t, int32_t*, int32_t*) =
 {
     tcdiv_nopersp, tcdiv_persp
 };
@@ -231,7 +231,7 @@ static STRICTINLINE void tcshift_copy(struct rdp_state* rdp, int32_t* S, int32_t
 }
 
 
-static STRICTINLINE void tclod_4x17_to_15(struct rdp_state* rdp, int32_t scurr, int32_t snext, int32_t tcurr, int32_t tnext, int32_t previous, int32_t* lod)
+static STRICTINLINE void tclod_4x17_to_15(int32_t scurr, int32_t snext, int32_t tcurr, int32_t tnext, int32_t previous, int32_t* lod)
 {
 
 
@@ -251,7 +251,7 @@ static STRICTINLINE void tclod_4x17_to_15(struct rdp_state* rdp, int32_t scurr, 
         *lod |= 0x4000;
 }
 
-static STRICTINLINE void tclod_tcclamp(struct rdp_state* rdp, int32_t* sss, int32_t* sst)
+static STRICTINLINE void tclod_tcclamp(int32_t* sss, int32_t* sst)
 {
     int32_t tempanded, temps = *sss, tempt = *sst;
 
@@ -408,7 +408,7 @@ static STRICTINLINE void tclod_2cycle_current(struct rdp_state* rdp, int32_t* ss
     uint32_t distant = 0;
     int inits = *sss, initt = *sst;
 
-    tclod_tcclamp(rdp, sss, sst);
+    tclod_tcclamp(sss, sst);
 
     if (rdp->other_modes.f.dolod)
     {
@@ -422,7 +422,7 @@ static STRICTINLINE void tclod_2cycle_current(struct rdp_state* rdp, int32_t* ss
         nextyt = (t + rdp->spans.dtdy) >> 16;
         nextysw = (w + rdp->spans.dwdy) >> 16;
 
-        rdp->tcdiv_ptr(rdp, nextys, nextyt, nextysw, &nextys, &nextyt);
+        rdp->tcdiv_ptr(nextys, nextyt, nextysw, &nextys, &nextyt);
 
         lodclamp = (initt & 0x60000) || (nextt & 0x60000) || (inits & 0x60000) || (nexts & 0x60000) || (nextys & 0x60000) || (nextyt & 0x60000);
 
@@ -431,8 +431,8 @@ static STRICTINLINE void tclod_2cycle_current(struct rdp_state* rdp, int32_t* ss
 
         if (!lodclamp)
         {
-            tclod_4x17_to_15(rdp, inits, nexts, initt, nextt, 0, &lod);
-            tclod_4x17_to_15(rdp, inits, nextys, initt, nextyt, lod, &lod);
+            tclod_4x17_to_15(inits, nexts, initt, nextt, 0, &lod);
+            tclod_4x17_to_15(inits, nextys, initt, nextyt, lod, &lod);
         }
 
         lodfrac_lodtile_signals(rdp, lodclamp, lod, &l_tile, &magnify, &distant, &rdp->lod_frac);
@@ -477,7 +477,7 @@ static STRICTINLINE void tclod_2cycle_current_simple(struct rdp_state* rdp, int3
     uint32_t distant = 0;
     int inits = *sss, initt = *sst;
 
-    tclod_tcclamp(rdp, sss, sst);
+    tclod_tcclamp(sss, sst);
 
     if (rdp->other_modes.f.dolod)
     {
@@ -488,15 +488,15 @@ static STRICTINLINE void tclod_2cycle_current_simple(struct rdp_state* rdp, int3
         nextyt = (t + rdp->spans.dtdy) >> 16;
         nextysw = (w + rdp->spans.dwdy) >> 16;
 
-        rdp->tcdiv_ptr(rdp, nexts, nextt, nextsw, &nexts, &nextt);
-        rdp->tcdiv_ptr(rdp, nextys, nextyt, nextysw, &nextys, &nextyt);
+        rdp->tcdiv_ptr(nexts, nextt, nextsw, &nexts, &nextt);
+        rdp->tcdiv_ptr(nextys, nextyt, nextysw, &nextys, &nextyt);
 
         lodclamp = (initt & 0x60000) || (nextt & 0x60000) || (inits & 0x60000) || (nexts & 0x60000) || (nextys & 0x60000) || (nextyt & 0x60000);
 
         if (!lodclamp)
         {
-            tclod_4x17_to_15(rdp, inits, nexts, initt, nextt, 0, &lod);
-            tclod_4x17_to_15(rdp, inits, nextys, initt, nextyt, lod, &lod);
+            tclod_4x17_to_15(inits, nexts, initt, nextt, 0, &lod);
+            tclod_4x17_to_15(inits, nextys, initt, nextyt, lod, &lod);
         }
 
         lodfrac_lodtile_signals(rdp, lodclamp, lod, &l_tile, &magnify, &distant, &rdp->lod_frac);
@@ -540,7 +540,7 @@ static STRICTINLINE void tclod_2cycle_current_notexel1(struct rdp_state* rdp, in
     uint32_t distant = 0;
     int inits = *sss, initt = *sst;
 
-    tclod_tcclamp(rdp, sss, sst);
+    tclod_tcclamp(sss, sst);
 
     if (rdp->other_modes.f.dolod)
     {
@@ -551,15 +551,15 @@ static STRICTINLINE void tclod_2cycle_current_notexel1(struct rdp_state* rdp, in
         nextyt = (t + rdp->spans.dtdy) >> 16;
         nextysw = (w + rdp->spans.dwdy) >> 16;
 
-        rdp->tcdiv_ptr(rdp, nexts, nextt, nextsw, &nexts, &nextt);
-        rdp->tcdiv_ptr(rdp, nextys, nextyt, nextysw, &nextys, &nextyt);
+        rdp->tcdiv_ptr(nexts, nextt, nextsw, &nexts, &nextt);
+        rdp->tcdiv_ptr(nextys, nextyt, nextysw, &nextys, &nextyt);
 
         lodclamp = (initt & 0x60000) || (nextt & 0x60000) || (inits & 0x60000) || (nexts & 0x60000) || (nextys & 0x60000) || (nextyt & 0x60000);
 
         if (!lodclamp)
         {
-            tclod_4x17_to_15(rdp, inits, nexts, initt, nextt, 0, &lod);
-            tclod_4x17_to_15(rdp, inits, nextys, initt, nextyt, lod, &lod);
+            tclod_4x17_to_15(inits, nexts, initt, nextt, 0, &lod);
+            tclod_4x17_to_15(inits, nextys, initt, nextyt, lod, &lod);
         }
 
         lodfrac_lodtile_signals(rdp, lodclamp, lod, &l_tile, &magnify, &distant, &rdp->lod_frac);
@@ -587,7 +587,7 @@ static STRICTINLINE void tclod_2cycle_next(struct rdp_state* rdp, int32_t* sss, 
     uint32_t distant = 0;
     int inits = *sss, initt = *sst;
 
-    tclod_tcclamp(rdp, sss, sst);
+    tclod_tcclamp(sss, sst);
 
     if (rdp->other_modes.f.dolod)
     {
@@ -598,15 +598,15 @@ static STRICTINLINE void tclod_2cycle_next(struct rdp_state* rdp, int32_t* sss, 
         nextyt = (t + rdp->spans.dtdy) >> 16;
         nextysw = (w + rdp->spans.dwdy) >> 16;
 
-        rdp->tcdiv_ptr(rdp, nexts, nextt, nextsw, &nexts, &nextt);
-        rdp->tcdiv_ptr(rdp, nextys, nextyt, nextysw, &nextys, &nextyt);
+        rdp->tcdiv_ptr(nexts, nextt, nextsw, &nexts, &nextt);
+        rdp->tcdiv_ptr(nextys, nextyt, nextysw, &nextys, &nextyt);
 
         lodclamp = (initt & 0x60000) || (nextt & 0x60000) || (inits & 0x60000) || (nexts & 0x60000) || (nextys & 0x60000) || (nextyt & 0x60000);
 
         if (!lodclamp)
         {
-            tclod_4x17_to_15(rdp, inits, nexts, initt, nextt, 0, &lod);
-            tclod_4x17_to_15(rdp, inits, nextys, initt, nextyt, lod, &lod);
+            tclod_4x17_to_15(inits, nexts, initt, nextt, 0, &lod);
+            tclod_4x17_to_15(inits, nextys, initt, nextyt, lod, &lod);
         }
 
         lodfrac_lodtile_signals(rdp, lodclamp, lod, &l_tile, &magnify, &distant, prelodfrac);
@@ -655,7 +655,7 @@ static STRICTINLINE void tclod_1cycle_current(struct rdp_state* rdp, int32_t* ss
     int32_t lod = 0;
     uint32_t l_tile = 0, magnify = 0, distant = 0;
 
-    tclod_tcclamp(rdp, sss, sst);
+    tclod_tcclamp(sss, sst);
 
     if (rdp->other_modes.f.dolod)
     {
@@ -693,7 +693,7 @@ static STRICTINLINE void tclod_1cycle_current(struct rdp_state* rdp, int32_t* ss
             fart = (t + (dtinc << 1)) >> 16;
         }
 
-        rdp->tcdiv_ptr(rdp, fars, fart, farsw, &fars, &fart);
+        rdp->tcdiv_ptr(fars, fart, farsw, &fars, &fart);
 
         lodclamp = (fart & 0x60000) || (nextt & 0x60000) || (fars & 0x60000) || (nexts & 0x60000);
 
@@ -701,7 +701,7 @@ static STRICTINLINE void tclod_1cycle_current(struct rdp_state* rdp, int32_t* ss
 
 
         if (!lodclamp)
-            tclod_4x17_to_15(rdp, nexts, fars, nextt, fart, 0, &lod);
+            tclod_4x17_to_15(nexts, fars, nextt, fart, 0, &lod);
 
         lodfrac_lodtile_signals(rdp, lodclamp, lod, &l_tile, &magnify, &distant, &rdp->lod_frac);
 
@@ -729,7 +729,7 @@ static STRICTINLINE void tclod_1cycle_current_simple(struct rdp_state* rdp, int3
     int32_t lod = 0;
     uint32_t l_tile = 0, magnify = 0, distant = 0;
 
-    tclod_tcclamp(rdp, sss, sst);
+    tclod_tcclamp(sss, sst);
 
     if (rdp->other_modes.f.dolod)
     {
@@ -776,13 +776,13 @@ static STRICTINLINE void tclod_1cycle_current_simple(struct rdp_state* rdp, int3
             fart = (t + (dtinc << 1)) >> 16;
         }
 
-        rdp->tcdiv_ptr(rdp, nexts, nextt, nextsw, &nexts, &nextt);
-        rdp->tcdiv_ptr(rdp, fars, fart, farsw, &fars, &fart);
+        rdp->tcdiv_ptr(nexts, nextt, nextsw, &nexts, &nextt);
+        rdp->tcdiv_ptr(fars, fart, farsw, &fars, &fart);
 
         lodclamp = (fart & 0x60000) || (nextt & 0x60000) || (fars & 0x60000) || (nexts & 0x60000);
 
         if (!lodclamp)
-            tclod_4x17_to_15(rdp, nexts, fars, nextt, fart, 0, &lod);
+            tclod_4x17_to_15(nexts, fars, nextt, fart, 0, &lod);
 
         lodfrac_lodtile_signals(rdp, lodclamp, lod, &l_tile, &magnify, &distant, &rdp->lod_frac);
 
@@ -805,7 +805,7 @@ static STRICTINLINE void tclod_1cycle_next(struct rdp_state* rdp, int32_t* sss, 
     int32_t lod = 0;
     uint32_t l_tile = 0, magnify = 0, distant = 0;
 
-    tclod_tcclamp(rdp, sss, sst);
+    tclod_tcclamp(sss, sst);
 
     if (rdp->other_modes.f.dolod)
     {
@@ -908,15 +908,15 @@ static STRICTINLINE void tclod_1cycle_next(struct rdp_state* rdp, int32_t* sss, 
             fart = (t + (dtinc << 1)) >> 16;
         }
 
-        rdp->tcdiv_ptr(rdp, nexts, nextt, nextsw, &nexts, &nextt);
-        rdp->tcdiv_ptr(rdp, fars, fart, farsw, &fars, &fart);
+        rdp->tcdiv_ptr(nexts, nextt, nextsw, &nexts, &nextt);
+        rdp->tcdiv_ptr(fars, fart, farsw, &fars, &fart);
 
         lodclamp = (fart & 0x60000) || (nextt & 0x60000) || (fars & 0x60000) || (nexts & 0x60000);
 
 
 
         if (!lodclamp)
-            tclod_4x17_to_15(rdp, nexts, fars, nextt, fart, 0, &lod);
+            tclod_4x17_to_15(nexts, fars, nextt, fart, 0, &lod);
 
         lodfrac_lodtile_signals(rdp, lodclamp, lod, &l_tile, &magnify, &distant, prelodfrac);
 
@@ -943,7 +943,7 @@ static STRICTINLINE void tclod_copy(struct rdp_state* rdp, int32_t* sss, int32_t
     int32_t lod = 0;
     uint32_t l_tile = 0, magnify = 0, distant = 0;
 
-    tclod_tcclamp(rdp, sss, sst);
+    tclod_tcclamp(sss, sst);
 
     if (rdp->other_modes.tex_lod_en)
     {
@@ -957,13 +957,13 @@ static STRICTINLINE void tclod_copy(struct rdp_state* rdp, int32_t* sss, int32_t
         fars = (s + (dsinc << 1)) >> 16;
         fart = (t + (dtinc << 1)) >> 16;
 
-        rdp->tcdiv_ptr(rdp, nexts, nextt, nextsw, &nexts, &nextt);
-        rdp->tcdiv_ptr(rdp, fars, fart, farsw, &fars, &fart);
+        rdp->tcdiv_ptr(nexts, nextt, nextsw, &nexts, &nextt);
+        rdp->tcdiv_ptr(fars, fart, farsw, &fars, &fart);
 
         lodclamp = (fart & 0x60000) || (nextt & 0x60000) || (fars & 0x60000) || (nexts & 0x60000);
 
         if (!lodclamp)
-            tclod_4x17_to_15(rdp, nexts, fars, nextt, fart, 0, &lod);
+            tclod_4x17_to_15(nexts, fars, nextt, fart, 0, &lod);
 
         if ((lod & 0x4000) || lodclamp)
         {
@@ -1052,7 +1052,7 @@ static STRICTINLINE void tc_pipeline_load(struct rdp_state* rdp, int32_t* sss, i
     *sst = sst1;
 }
 
-static void tcdiv_nopersp(struct rdp_state* rdp, int32_t ss, int32_t st, int32_t sw, int32_t* sss, int32_t* sst)
+static void tcdiv_nopersp(int32_t ss, int32_t st, int32_t sw, int32_t* sss, int32_t* sst)
 {
 
 
@@ -1061,7 +1061,7 @@ static void tcdiv_nopersp(struct rdp_state* rdp, int32_t ss, int32_t st, int32_t
     *sst = (SIGN16(st)) & 0x1ffff;
 }
 
-static void tcdiv_persp(struct rdp_state* rdp, int32_t ss, int32_t st, int32_t sw, int32_t* sss, int32_t* sst)
+static void tcdiv_persp(int32_t ss, int32_t st, int32_t sw, int32_t* sss, int32_t* sst)
 {
 
 
