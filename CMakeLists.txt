@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 2.8)
 
 project(angrylion-plus)
 
+# C++14 is required for the Parallel utility class
 set(CMAKE_CXX_STANDARD 14)
 
 # default to release build
@@ -14,8 +15,7 @@ find_package(PythonInterp 3.2 REQUIRED)
 find_package(SDL2 REQUIRED)
 find_package(OpenGL REQUIRED)
 
-# RDP core library
-set(PATH_CORE "core")
+# run script to generate version.h
 set(PATH_VERSION_IN "${PATH_CORE}/version.h.in")
 set(PATH_VERSION_OUT "${PATH_CORE}/version.h")
 
@@ -29,24 +29,23 @@ add_custom_command(
     COMMENT "Generate Git version"
 )
 
-file(GLOB SOURCES_CORE "${PATH_CORE}/*.c" "${PATH_CORE}/*.cpp")
-add_library(core STATIC ${SOURCES_CORE} ${PATH_VERSION_OUT})
-
-if ( NOT MINGW )
-    set_target_properties(core PROPERTIES POSITION_INDEPENDENT_CODE ON)
-endif ( NOT MINGW )
-
-include_directories(${CMAKE_SOURCE_DIR})
-
-# OpenGL screen library
+# RDP core library and shared plugin library
+set(PATH_CORE "core")
 set(PATH_PLUGIN_COMMON "plugin-common")
 
+file(GLOB SOURCES_CORE "${PATH_CORE}/*.c" "${PATH_CORE}/*.cpp")
 file(GLOB SOURCES_PLUGIN_COMMON "${PATH_PLUGIN_COMMON}/*.c")
+
+add_library(core STATIC ${SOURCES_CORE} ${PATH_VERSION_OUT})
 add_library(plugin-common STATIC ${SOURCES_PLUGIN_COMMON})
 
-if ( NOT MINGW )
+# set PIC option for non-MinGW targets
+if(NOT MINGW)
+    set_target_properties(core PROPERTIES POSITION_INDEPENDENT_CODE ON)
     set_target_properties(plugin-common PROPERTIES POSITION_INDEPENDENT_CODE ON)
-endif ( NOT MINGW )
+endif(NOT MINGW)
+
+include_directories(${CMAKE_SOURCE_DIR})
 
 # Project64 GFX Plugin (Windows only)
 if (WIN32)
