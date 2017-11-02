@@ -5,8 +5,10 @@
 
 #ifdef _MSC_VER
 #define STRICTINLINE __forceinline
+#elif defined(__GNUC__)
+#define STRICTINLINE __attribute__((always_inline))
 #else
-#define STRICTINLINE INLINE
+#define STRICTINLINE inline
 #endif
 
 // thread-local storage
