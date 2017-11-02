@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 2.8)
 
+option(RETRACER "Set to ON to build the retracer tool" ${RETRACER})
+
 project(angrylion-plus)
 
 # C++14 is required for the Parallel utility class
@@ -12,7 +14,6 @@ endif(NOT CMAKE_BUILD_TYPE)
 
 find_package(Git REQUIRED)
 find_package(PythonInterp 3.2 REQUIRED)
-find_package(SDL2 REQUIRED)
 find_package(OpenGL REQUIRED)
 
 # run script to generate version.h
@@ -48,7 +49,7 @@ endif(NOT MINGW)
 include_directories(${CMAKE_SOURCE_DIR})
 
 # Project64 GFX Plugin (Windows only)
-if (WIN32)
+if(WIN32)
     set(NAME_PLUGIN_ZILMAR ${CMAKE_PROJECT_NAME})
     set(PATH_PLUGIN_ZILMAR "plugin-zilmar")
 
@@ -58,7 +59,7 @@ if (WIN32)
     set_target_properties(${NAME_PLUGIN_ZILMAR} PROPERTIES PREFIX "")
 
     target_link_libraries(${NAME_PLUGIN_ZILMAR} core plugin-common shlwapi ${OPENGL_LIBRARIES})
-endif()
+endif(WIN32)
 
 # Mupen64Plus GFX plugin
 set(NAME_PLUGIN_M64P "mupen64plus-video-${CMAKE_PROJECT_NAME}")
@@ -71,11 +72,21 @@ set_target_properties(${NAME_PLUGIN_M64P} PROPERTIES PREFIX "")
 
 target_link_libraries(${NAME_PLUGIN_M64P} core plugin-common ${OPENGL_LIBRARIES})
 
-# RDP retracer
-set(NAME_RETRACER "${CMAKE_PROJECT_NAME}-retrace")
-set(PATH_RETRACER "retrace")
+if(RETRACER)
+    # RDP retracer
+    set(NAME_RETRACER "${CMAKE_PROJECT_NAME}-retrace")
+    set(PATH_RETRACER "retrace")
+    set(LIB_RETRACER core pthread)
 
-file(GLOB SOURCES_RETRACE "${PATH_RETRACER}/*.c")
-add_executable(${NAME_RETRACER} ${SOURCES_RETRACE})
+    # optionally use SDL2 for visual output
+    find_package(SDL2)
+    if(SDL2_FOUND)
+        set(LIB_RETRACER ${LIB_RETRACER} SDL2)
+        add_definitions(-DRETRACE_SDL)
+    endif(SDL2_FOUND)
 
-target_link_libraries(${NAME_RETRACER} core pthread SDL2)
+    file(GLOB SOURCES_RETRACE "${PATH_RETRACER}/*.c")
+    add_executable(${NAME_RETRACER} ${SOURCES_RETRACE})
+
+    target_link_libraries(${NAME_RETRACER} ${LIB_RETRACER})
+endif(RETRACER)
