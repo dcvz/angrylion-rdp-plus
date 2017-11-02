@@ -37,13 +37,13 @@ set(PATH_PLUGIN_COMMON "plugin-common")
 file(GLOB SOURCES_CORE "${PATH_CORE}/*.c" "${PATH_CORE}/*.cpp")
 file(GLOB SOURCES_PLUGIN_COMMON "${PATH_PLUGIN_COMMON}/*.c")
 
-add_library(core STATIC ${SOURCES_CORE} ${PATH_VERSION_OUT})
-add_library(plugin-common STATIC ${SOURCES_PLUGIN_COMMON})
+add_library(alp-core STATIC ${SOURCES_CORE} ${PATH_VERSION_OUT})
+add_library(alp-plugin-common STATIC ${SOURCES_PLUGIN_COMMON})
 
 # set PIC option for non-MinGW targets
 if(NOT MINGW)
-    set_target_properties(core PROPERTIES POSITION_INDEPENDENT_CODE ON)
-    set_target_properties(plugin-common PROPERTIES POSITION_INDEPENDENT_CODE ON)
+    set_target_properties(alp-core PROPERTIES POSITION_INDEPENDENT_CODE ON)
+    set_target_properties(alp-plugin-common PROPERTIES POSITION_INDEPENDENT_CODE ON)
 endif(NOT MINGW)
 
 include_directories(${CMAKE_SOURCE_DIR})
@@ -58,7 +58,7 @@ if(WIN32)
 
     set_target_properties(${NAME_PLUGIN_ZILMAR} PROPERTIES PREFIX "")
 
-    target_link_libraries(${NAME_PLUGIN_ZILMAR} core plugin-common shlwapi ${OPENGL_LIBRARIES})
+    target_link_libraries(${NAME_PLUGIN_ZILMAR} alp-core alp-plugin-common shlwapi ${OPENGL_LIBRARIES})
 endif(WIN32)
 
 # Mupen64Plus GFX plugin
@@ -70,13 +70,13 @@ add_library(${NAME_PLUGIN_M64P} SHARED ${SOURCES_PLUGIN_M64P})
 
 set_target_properties(${NAME_PLUGIN_M64P} PROPERTIES PREFIX "")
 
-target_link_libraries(${NAME_PLUGIN_M64P} core plugin-common ${OPENGL_LIBRARIES})
+target_link_libraries(${NAME_PLUGIN_M64P} alp-core alp-plugin-common ${OPENGL_LIBRARIES})
 
 if(RETRACER)
     # RDP retracer
     set(NAME_RETRACER "${CMAKE_PROJECT_NAME}-retrace")
     set(PATH_RETRACER "retrace")
-    set(LIB_RETRACER core pthread)
+    set(LIB_RETRACER alp-core pthread)
 
     # optionally use SDL2 for visual output
     find_package(SDL2)
