@@ -2,6 +2,17 @@ cmake_minimum_required(VERSION 2.8)
 
 option(RETRACER "Set to ON to build the retracer tool" ${RETRACER})
 
+# check for INTERPROCEDURAL_OPTIMIZATION support
+if((${CMAKE_VERSION} VERSION_EQUAL 3.9) OR (${CMAKE_VERSION} VERSION_GREATER 3.9))
+    cmake_policy(SET CMP0069 NEW)
+
+    include(CheckIPOSupported)
+    check_ipo_supported(RESULT IPO_SUPPORTED)
+    if(ENABLE_IPO)
+        message("Interprocedural optimizations enabled")
+    endif(ENABLE_IPO)
+endif()
+
 project(angrylion-plus)
 
 # C++14 is required for the Parallel utility class
@@ -45,6 +56,11 @@ if(NOT MINGW)
     set_target_properties(alp-core PROPERTIES POSITION_INDEPENDENT_CODE ON)
     set_target_properties(alp-plugin-common PROPERTIES POSITION_INDEPENDENT_CODE ON)
 endif(NOT MINGW)
+
+# set IPO option, if supported
+if(ENABLE_IPO AND (CMAKE_BUILD_TYPE STREQUAL "Release"))
+    set_target_properties(alp-core PROPERTIES INTERPROCEDURAL_OPTIMIZATION ON)
+endif()
 
 include_directories(${CMAKE_SOURCE_DIR})
 
