@@ -3,7 +3,6 @@ cmake_minimum_required(VERSION 2.8)
 project(angrylion-plus)
 
 set(CMAKE_CXX_STANDARD 14)
-set(COMPILE_DEFINITIONS -O3 -Wall -Wextra -Winline)
 
 find_package(Git REQUIRED)
 find_package(PythonInterp 3.2 REQUIRED)
