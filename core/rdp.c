@@ -1,7 +1,6 @@
 #include "rdp.h"
 #include "common.h"
 #include "plugin.h"
-#include "rdram.h"
 #include "trace_write.h"
 #include "msg.h"
 #include "irand.h"
@@ -407,6 +406,7 @@ struct rdp_state* rdp_states;
 
 static void deduce_derivatives(struct rdp_state* rdp);
 
+#include "rdp/rdram.c"
 #include "rdp/cmd.c"
 #include "rdp/dither.c"
 #include "rdp/blender.c"
@@ -455,6 +455,7 @@ int rdp_init(struct core_config* _config)
         init_lut = true;
     }
 
+    rdram_init();
     vi_init();
 
     rdp_pipeline_crashed = 0;

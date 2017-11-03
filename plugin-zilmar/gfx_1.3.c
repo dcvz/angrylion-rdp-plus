@@ -7,7 +7,6 @@
 #include "core/version.h"
 #include "core/parallel_c.hpp"
 #include "core/msg.h"
-#include "core/rdram.h"
 #include "core/plugin.h"
 #include "core/file.h"
 

@@ -1,7 +1,8 @@
 #include "gfx_1.3.h"
 
 #include "core/plugin.h"
-#include "core/rdram.h"
+
+#include <stdbool.h>
 
 #define SP_INTERRUPT    0x1
 #define SI_INTERRUPT    0x2

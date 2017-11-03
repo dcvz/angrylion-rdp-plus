@@ -197,6 +197,12 @@
     <ClCompile Include="core.c" />
     <ClCompile Include="file.c" />
     <ClCompile Include="irand.c" />
+    <ClCompile Include="rdp\rdram.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="vi\divot.c">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
@@ -309,7 +315,6 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="rdram.c" />
     <ClCompile Include="screen.c" />
     <ClCompile Include="trace_read.c" />
     <ClCompile Include="trace_write.c" />
@@ -323,7 +328,6 @@
     <ClInclude Include="parallel.hpp" />
     <ClInclude Include="parallel_c.hpp" />
     <ClInclude Include="plugin.h" />
-    <ClInclude Include="rdram.h" />
     <ClInclude Include="rdp.h" />
     <ClInclude Include="screen.h" />
     <ClInclude Include="trace.h" />

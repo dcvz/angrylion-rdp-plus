@@ -1,7 +1,7 @@
 #include "core.h"
 
 #include "rdp.h"
-#include "rdram.h"
+#include "common.h"
 #include "file.h"
 #include "msg.h"
 #include "plugin.h"
@@ -81,7 +81,6 @@ void core_init(struct core_config* _config)
 
     screen_init();
     plugin_init();
-    rdram_init();
 
     num_workers = config.num_workers;
     parallel = config.parallel;

@@ -1,7 +1,5 @@
 #include "gfx_m64p.h"
 
-#include "core/rdram.h"
-
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
