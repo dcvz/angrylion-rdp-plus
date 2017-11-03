@@ -1,22 +1,3 @@
-#include "vi.h"
-#include "rdp.h"
-#include "common.h"
-#include "plugin.h"
-#include "screen.h"
-#include "rdram.h"
-#include "trace_write.h"
-#include "msg.h"
-#include "irand.h"
-#include "file.h"
-#include "bitmap.h"
-#include "parallel_c.hpp"
-
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
-#include <memory.h>
-#include <assert.h>
-
 // anamorphic NTSC resolution
 #define H_RES_NTSC 640
 #define V_RES_NTSC 480
@@ -73,15 +54,12 @@ struct ccvg
     uint8_t r, g, b, cvg;
 };
 
-#include "vi/gamma.c"
-#include "vi/lerp.c"
-#include "vi/divot.c"
-#include "vi/video.c"
-#include "vi/restore.c"
-#include "vi/fetch.c"
-
-// config
-static struct core_config* config;
+#include "gamma.c"
+#include "lerp.c"
+#include "divot.c"
+#include "video.c"
+#include "restore.c"
+#include "fetch.c"
 
 // states
 static uint32_t prevvicurrent;
@@ -169,10 +147,8 @@ static void vi_screenshot_write(char* path, int32_t* buffer, int32_t width, int3
     fclose(fp);
 }
 
-void vi_init(struct core_config* _config)
+static void vi_init(void)
 {
-    config = _config;
-
     vi_gamma_init();
     vi_restore_init();
 
@@ -715,7 +691,7 @@ static void vi_process_end_fast(void)
     }
 }
 
-void vi_update(void)
+void rdp_vi_update(void)
 {
     // clear buffer after switching VI modes to make sure that black borders are
     // actually black and don't contain garbage
@@ -831,11 +807,11 @@ void vi_update(void)
     screen_swap();
 }
 
-void vi_screenshot(char* path)
+void rdp_screenshot(char* path)
 {
     strcpy(screenshot_path, path);
 }
 
-void vi_close(void)
+static void vi_close(void)
 {
 }

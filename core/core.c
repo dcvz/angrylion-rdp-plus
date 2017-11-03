@@ -1,7 +1,6 @@
 #include "core.h"
 
 #include "rdp.h"
-#include "vi.h"
 #include "rdram.h"
 #include "file.h"
 #include "msg.h"
@@ -92,7 +91,6 @@ void core_init(struct core_config* _config)
     }
 
     rdp_init(&config);
-    vi_init(&config);
 
     screenshot_index = 0;
     trace_index = 0;
@@ -173,12 +171,12 @@ void core_config_defaults(struct core_config* config)
 
 void core_dp_update(void)
 {
-    rdp_update();
+    rdp_cmd_update();
 }
 
 void core_vi_update(void)
 {
-    vi_update();
+    rdp_vi_update();
 }
 
 void core_screenshot(char* directory)
@@ -192,7 +190,7 @@ void core_screenshot(char* directory)
     // generate and find an unused file path
     char path[FILE_MAX_PATH];
     if (file_path_indexed(path, sizeof(path), directory, rom_name, "bmp", &screenshot_index)) {
-        vi_screenshot(path);
+        rdp_screenshot(path);
     } else {
         msg_warning("Ran out of screenshot indices!");
     }
@@ -202,7 +200,6 @@ void core_close(void)
 {
     parallel_close();
     rdp_close();
-    vi_close();
     plugin_close();
     screen_close();
     if (trace_write_is_open()) {

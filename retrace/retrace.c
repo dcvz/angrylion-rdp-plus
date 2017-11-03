@@ -4,7 +4,6 @@
 
 #include "core/core.h"
 #include "core/rdp.h"
-#include "core/vi.h"
 #include "core/trace_read.h"
 #include "core/screen.h"
 
@@ -91,7 +90,7 @@ bool retrace_frame(void)
 
             case TRACE_VI:
                 trace_read_vi(plugin_get_vi_registers());
-                vi_update();
+                core_vi_update();
                 vi_frames++;
                 break;
         }

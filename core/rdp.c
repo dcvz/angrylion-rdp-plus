@@ -1,5 +1,4 @@
 #include "rdp.h"
-#include "vi.h"
 #include "common.h"
 #include "plugin.h"
 #include "rdram.h"
@@ -7,11 +6,15 @@
 #include "msg.h"
 #include "irand.h"
 #include "file.h"
+#include "bitmap.h"
+#include "screen.h"
 #include "parallel_c.hpp"
 
 #include <memory.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
+#include <assert.h>
 
 #define SIGN16(x)   ((int16_t)(x))
 #define SIGN8(x)    ((int8_t)(x))
@@ -413,6 +416,7 @@ static void deduce_derivatives(struct rdp_state* rdp);
 #include "rdp/fbuffer.c"
 #include "rdp/tex.c"
 #include "rdp/rasterizer.c"
+#include "vi/vi.c"
 
 void rdp_init_worker(uint32_t worker_id)
 {
@@ -450,6 +454,8 @@ int rdp_init(struct core_config* _config)
 
         init_lut = true;
     }
+
+    vi_init();
 
     rdp_pipeline_crashed = 0;
     memset(&onetimewarnings, 0, sizeof(onetimewarnings));
@@ -628,6 +634,8 @@ static void deduce_derivatives(struct rdp_state* rdp)
 
 void rdp_close(void)
 {
+    vi_close();
+
     if (rdp_states) {
         free(rdp_states);
         rdp_states = NULL;

@@ -181,7 +181,7 @@ void rdp_cmd(const uint32_t* arg, uint32_t length)
     }
 }
 
-void rdp_update(void)
+void rdp_cmd_update(void)
 {
     uint32_t** dp_reg = plugin_get_dp_registers();
     uint32_t dp_current_al = *dp_reg[DP_CURRENT] & ~7;

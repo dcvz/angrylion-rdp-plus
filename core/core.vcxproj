@@ -227,6 +227,12 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="vi\vi.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="vi\video.c">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
@@ -307,7 +313,6 @@
     <ClCompile Include="screen.c" />
     <ClCompile Include="trace_read.c" />
     <ClCompile Include="trace_write.c" />
-    <ClCompile Include="vi.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="bitmap.h" />
@@ -324,7 +329,6 @@
     <ClInclude Include="trace.h" />
     <ClInclude Include="trace_read.h" />
     <ClInclude Include="trace_write.h" />
-    <ClInclude Include="vi.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="version.h.in" />
