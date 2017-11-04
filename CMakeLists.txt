@@ -51,11 +51,14 @@ file(GLOB SOURCES_PLUGIN_COMMON "${PATH_PLUGIN_COMMON}/*.c")
 add_library(alp-core STATIC ${SOURCES_CORE} ${PATH_VERSION_OUT})
 add_library(alp-plugin-common STATIC ${SOURCES_PLUGIN_COMMON})
 
-# set PIC option for non-MinGW targets
-if(NOT MINGW)
+if(MINGW)
+    # link libgcc/libstdc++ statically, fixes cryptic "_ZNSt13runtime_errorC1EPKc" error
+    set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -static-libgcc -static-libstdc++")
+else(MINGW)
+    # set PIC option for non-MinGW targets
     set_target_properties(alp-core PROPERTIES POSITION_INDEPENDENT_CODE ON)
     set_target_properties(alp-plugin-common PROPERTIES POSITION_INDEPENDENT_CODE ON)
-endif(NOT MINGW)
+endif(MINGW)
 
 # set IPO option, if supported
 if(ENABLE_IPO AND (CMAKE_BUILD_TYPE STREQUAL "Release"))
