@@ -26,9 +26,6 @@
     <ClCompile Include="parallel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="parallel_c.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="core.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -103,12 +100,6 @@
     <ClInclude Include="common.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="parallel.hpp">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="parallel_c.hpp">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="rdp.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -128,6 +119,9 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="screen.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="parallel.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

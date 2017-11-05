@@ -5,7 +5,7 @@
 #include "file.h"
 #include "bitmap.h"
 #include "screen.h"
-#include "parallel_c.hpp"
+#include "parallel.h"
 
 #include <memory.h>
 #include <string.h>

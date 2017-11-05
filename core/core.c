@@ -6,7 +6,7 @@
 #include "msg.h"
 #include "plugin.h"
 #include "screen.h"
-#include "parallel_c.hpp"
+#include "parallel.h"
 
 #include <stdio.h>
 #include <string.h>

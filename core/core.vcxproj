@@ -203,7 +203,6 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="parallel.cpp" />
-    <ClCompile Include="parallel_c.cpp" />
     <ClCompile Include="rdp.c" />
     <ClCompile Include="rdp\blender.c">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
@@ -327,8 +326,7 @@
     <ClInclude Include="core.h" />
     <ClInclude Include="file.h" />
     <ClInclude Include="msg.h" />
-    <ClInclude Include="parallel.hpp" />
-    <ClInclude Include="parallel_c.hpp" />
+    <ClInclude Include="parallel.h" />
     <ClInclude Include="plugin.h" />
     <ClInclude Include="rdp.h" />
     <ClInclude Include="screen.h" />
