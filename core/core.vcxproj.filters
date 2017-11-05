@@ -35,9 +35,6 @@
     <ClCompile Include="file.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="irand.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="rdp\cmd.c">
       <Filter>Source Files\rdp</Filter>
     </ClCompile>
@@ -125,9 +122,6 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="bitmap.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="irand.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="plugin.h">

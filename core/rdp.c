@@ -2,7 +2,6 @@
 #include "common.h"
 #include "plugin.h"
 #include "msg.h"
-#include "irand.h"
 #include "file.h"
 #include "bitmap.h"
 #include "screen.h"
@@ -193,6 +192,13 @@ static STRICTINLINE int32_t clamp(int32_t value,int32_t min,int32_t max)
         return value;
 }
 
+static STRICTINLINE int32_t irand(int32_t* seed)
+{
+    *seed *= 0x343fd;
+    *seed += 0x269ec3;
+    return ((*seed >> 16) & 0x7fff);
+}
+
 struct tile
 {
     int format;
@@ -291,7 +297,8 @@ struct rdp_state
     int32_t min_level;
 
     // irand
-    int32_t iseed;
+    int32_t seed_dp;
+    int32_t seed_vi;
 
     // blender
     struct
@@ -423,6 +430,7 @@ void rdp_init_worker(uint32_t worker_id)
     memset(rdp, 0, sizeof(*rdp));
 
     rdp->worker_id = worker_id;
+    rdp->seed_dp = rdp->seed_vi = 3;
 
     uint32_t tmp[2] = {0};
     rdp_set_other_modes(rdp, tmp);

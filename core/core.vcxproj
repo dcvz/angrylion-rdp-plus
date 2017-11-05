@@ -196,14 +196,12 @@
   <ItemGroup>
     <ClCompile Include="core.c" />
     <ClCompile Include="file.c" />
-    <ClCompile Include="irand.c" />
     <ClCompile Include="rdp\rdram.c">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClInclude Include="irand.h" />
     <ClCompile Include="parallel.cpp" />
     <ClCompile Include="parallel_c.cpp" />
     <ClCompile Include="rdp.c" />

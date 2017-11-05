@@ -375,6 +375,8 @@ static void vi_process(uint32_t worker_id)
 
     pixels = 0;
 
+    int32_t* seed = &rdp_states[worker_id].seed_vi;
+
     int32_t y_begin = 0;
     int32_t y_end = vres;
     int32_t y_inc = 1;
@@ -514,7 +516,7 @@ static void vi_process(uint32_t worker_id)
             g = color.g;
             b = color.b;
 
-            gamma_filters(&r, &g, &b, ctrl);
+            gamma_filters(&r, &g, &b, ctrl, seed);
 
             if (x >= minhpass && x < maxhpass) {
                 d[x] = (r << 16) | (g << 8) | b;
@@ -667,7 +669,7 @@ static void vi_process_fast(uint32_t worker_id)
                     assert(false);
             }
 
-            gamma_filters(&r, &g, &b, ctrl);
+            gamma_filters(&r, &g, &b, ctrl, &rdp_states[worker_id].seed_vi);
 
             dst[x] = (r << 16) | (g << 8) | b;
         }
