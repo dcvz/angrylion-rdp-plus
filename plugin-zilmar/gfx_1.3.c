@@ -5,10 +5,8 @@
 #include "core/core.h"
 #include "core/screen.h"
 #include "core/version.h"
-#include "core/parallel_c.hpp"
 #include "core/msg.h"
 #include "core/plugin.h"
-#include "core/file.h"
 
 #include <stdio.h>
 
