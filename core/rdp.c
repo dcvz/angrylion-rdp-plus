@@ -415,7 +415,7 @@ static void deduce_derivatives(struct rdp_state* rdp);
 #include "rdp/fbuffer.c"
 #include "rdp/tex.c"
 #include "rdp/rasterizer.c"
-#include "vi/vi.c"
+#include "rdp/vi.c"
 
 void rdp_init_worker(uint32_t worker_id)
 {

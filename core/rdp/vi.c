@@ -54,12 +54,12 @@ struct ccvg
     uint8_t r, g, b, cvg;
 };
 
-#include "gamma.c"
-#include "lerp.c"
-#include "divot.c"
-#include "video.c"
-#include "restore.c"
-#include "fetch.c"
+#include "vi/gamma.c"
+#include "vi/lerp.c"
+#include "vi/divot.c"
+#include "vi/video.c"
+#include "vi/restore.c"
+#include "vi/fetch.c"
 
 // states
 static uint32_t prevvicurrent;
