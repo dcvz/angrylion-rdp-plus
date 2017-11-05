@@ -197,7 +197,7 @@ static void rdp_cmd_push(const uint32_t* arg, uint32_t length)
     }
 }
 
-void rdp_cmd(const uint32_t* arg, uint32_t length)
+static void rdp_cmd(const uint32_t* arg, uint32_t length)
 {
     uint32_t cmd_id = CMD_ID(arg);
 
