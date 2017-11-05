@@ -547,10 +547,6 @@ static void loading_pipeline(struct rdp_state* rdp, int start, int end, int tile
 
         length = (xstart - xend + 1) & 0xfff;
 
-        if (trace_write_is_open()) {
-            trace_write_rdram((tiptr >> 2), length);
-        }
-
         for (j = 0; j < length; j+= spanadvance)
         {
             ss = s >> 16;

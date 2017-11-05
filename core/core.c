@@ -6,7 +6,6 @@
 #include "msg.h"
 #include "plugin.h"
 #include "screen.h"
-#include "trace_write.h"
 #include "parallel_c.hpp"
 
 #include <stdio.h>
@@ -17,7 +16,6 @@ static uint32_t screenshot_index;
 static uint32_t trace_index;
 static uint32_t num_workers;
 static bool parallel;
-static bool parallel_tmp;
 
 static struct core_config* config_new;
 static struct core_config config;
@@ -102,36 +100,6 @@ void core_dp_sync(void)
         config = *config_new;
         config_new = NULL;
 
-        // open trace file when tracing has been enabled with no file open
-        if (config.dp.trace_record && !trace_write_is_open()) {
-            // get ROM name from plugin and use placeholder if empty
-            char rom_name[32];
-            if (!get_rom_name(rom_name, sizeof(rom_name))) {
-                strcpy(rom_name, "trace");
-            }
-
-            // generate trace path
-            char trace_path[FILE_MAX_PATH];
-            file_path_indexed(trace_path, sizeof(trace_path), ".", rom_name,
-                "dpt", &trace_index);
-
-            trace_write_open(trace_path);
-            trace_write_header(plugin_get_rdram_size());
-            trace_write_reset();
-
-            // multithreading is not allowed during tracing, disable it temporarily
-            parallel_tmp = config.parallel;
-            config.parallel = false;
-        }
-
-        // close trace file when tracing has been disabled
-        if (!config.dp.trace_record && trace_write_is_open()) {
-            trace_write_close();
-
-            // restore multithreading option
-            config.parallel = parallel_tmp;
-        }
-
         // enable/disable multithreading or update number of workers
         if (config.parallel != parallel || config.num_workers != num_workers) {
             // close RDP
@@ -201,7 +169,4 @@ void core_close(void)
     rdp_close();
     plugin_close();
     screen_close();
-    if (trace_write_is_open()) {
-        trace_write_close();
-    }
 }

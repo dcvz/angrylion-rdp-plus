@@ -1,7 +1,6 @@
 #include "rdp.h"
 #include "common.h"
 #include "plugin.h"
-#include "trace_write.h"
 #include "msg.h"
 #include "irand.h"
 #include "file.h"

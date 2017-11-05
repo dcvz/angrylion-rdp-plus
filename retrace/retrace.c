@@ -4,7 +4,6 @@
 
 #include "core/core.h"
 #include "core/rdp.h"
-#include "core/trace_read.h"
 #include "core/screen.h"
 
 #include <stdlib.h>
@@ -49,52 +48,53 @@ void retrace_reset(void)
 {
     dp_frames = 0;
     vi_frames = 0;
-    trace_read_reset();
+    //trace_read_reset();
 }
 
 bool retrace_frame(void)
 {
-    while (1) {
-        char id = trace_read_id();
+    //while (1) {
+    //    char id = trace_read_id();
 
-        switch (id) {
-            case TRACE_EOF:
-                if (benchmark) {
-                    retrace_stats();
-                }
+    //    switch (id) {
+    //        case TRACE_EOF:
+    //            if (benchmark) {
+    //                retrace_stats();
+    //            }
 
-                if (loop) {
-                    retrace_reset();
-                }
+    //            if (loop) {
+    //                retrace_reset();
+    //            }
 
-                return loop;
+    //            return loop;
 
-            case TRACE_CMD: {
-                uint32_t cmd[CMD_MAX_INTS];
-                uint32_t length;
-                trace_read_cmd(cmd, &length);
+    //        case TRACE_CMD: {
+    //            uint32_t cmd[CMD_MAX_INTS];
+    //            uint32_t length;
+    //            trace_read_cmd(cmd, &length);
 
-                rdp_cmd(cmd, length);
+    //            rdp_cmd(cmd, length);
 
-                if (CMD_ID(cmd) == CMD_ID_SYNC_FULL) {
-                    dp_frames++;
-                    return true;
-                }
+    //            if (CMD_ID(cmd) == CMD_ID_SYNC_FULL) {
+    //                dp_frames++;
+    //                return true;
+    //            }
 
-                break;
-            }
+    //            break;
+    //        }
 
-            case TRACE_RDRAM:
-                trace_read_rdram();
-                break;
+    //        case TRACE_RDRAM:
+    //            trace_read_rdram();
+    //            break;
 
-            case TRACE_VI:
-                trace_read_vi(plugin_get_vi_registers());
-                core_vi_update();
-                vi_frames++;
-                break;
-        }
-    }
+    //        case TRACE_VI:
+    //            trace_read_vi(plugin_get_vi_registers());
+    //            core_vi_update();
+    //            vi_frames++;
+    //            break;
+    //    }
+    //}
+    return false;
 }
 
 void retrace_frames(void)
@@ -184,19 +184,19 @@ int main(int argc, char** argv)
 
     char* trace_path = argv[argc - 1];
 
-    if (!trace_read_open(trace_path)) {
-        fprintf(stderr, "Can't open trace file '%s'.\n", trace_path);
-        return EXIT_FAILURE;
-    }
+    //if (!trace_read_open(trace_path)) {
+    //    fprintf(stderr, "Can't open trace file '%s'.\n", trace_path);
+    //    return EXIT_FAILURE;
+    //}
 
-    uint32_t rdram_size;
-    trace_read_header(&rdram_size);
-    plugin_set_rdram_size(rdram_size);
+    //uint32_t rdram_size;
+    //trace_read_header(&rdram_size);
+    //plugin_set_rdram_size(rdram_size);
 
     core_init(&config);
     retrace_frames();
     core_close();
-    trace_read_close();
+    //trace_read_close();
 
     return EXIT_SUCCESS;
 }

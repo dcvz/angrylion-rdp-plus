@@ -316,8 +316,6 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="screen.c" />
-    <ClCompile Include="trace_read.c" />
-    <ClCompile Include="trace_write.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="bitmap.h" />
@@ -330,9 +328,6 @@
     <ClInclude Include="plugin.h" />
     <ClInclude Include="rdp.h" />
     <ClInclude Include="screen.h" />
-    <ClInclude Include="trace.h" />
-    <ClInclude Include="trace_read.h" />
-    <ClInclude Include="trace_write.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="version.h.in" />

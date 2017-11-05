@@ -700,11 +700,6 @@ void rdp_vi_update(void)
         vi_mode = config->vi.mode;
     }
 
-    // write changed VI registers to opened trace file
-    if (trace_write_is_open()) {
-        trace_write_vi(plugin_get_vi_registers());
-    }
-
     // check for configuration errors
     if (config->vi.mode >= VI_MODE_NUM) {
         msg_error("Invalid VI mode: %d", config->vi.mode);
