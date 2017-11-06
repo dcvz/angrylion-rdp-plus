@@ -220,6 +220,38 @@ struct tile
     } f;
 };
 
+struct span
+{
+    int lx, rx;
+    int unscrx;
+    int validline;
+    int32_t r, g, b, a, s, t, w, z;
+    int32_t majorx[4];
+    int32_t minorx[4];
+    int32_t invalyscan[4];
+};
+
+struct combiner_inputs
+{
+    int sub_a_rgb0;
+    int sub_b_rgb0;
+    int mul_rgb0;
+    int add_rgb0;
+    int sub_a_a0;
+    int sub_b_a0;
+    int mul_a0;
+    int add_a0;
+
+    int sub_a_rgb1;
+    int sub_b_rgb1;
+    int mul_rgb1;
+    int add_rgb1;
+    int sub_a_a1;
+    int sub_b_a1;
+    int mul_a1;
+    int add_a1;
+};
+
 struct rdp_state
 {
     uint32_t worker_id;
@@ -229,16 +261,7 @@ struct rdp_state
     int pastblshifta;
     int pastblshiftb;
 
-    struct
-    {
-        int lx, rx;
-        int unscrx;
-        int validline;
-        int32_t r, g, b, a, s, t, w, z;
-        int32_t majorx[4];
-        int32_t minorx[4];
-        int32_t invalyscan[4];
-    } span[1024];
+    struct span span[1024];
 
     // span states
     int spans_ds;
@@ -313,26 +336,7 @@ struct rdp_state
     struct color blended_pixel_color;
 
     // combiner
-    struct
-    {
-        int sub_a_rgb0;
-        int sub_b_rgb0;
-        int mul_rgb0;
-        int add_rgb0;
-        int sub_a_a0;
-        int sub_b_a0;
-        int mul_a0;
-        int add_a0;
-
-        int sub_a_rgb1;
-        int sub_b_rgb1;
-        int mul_rgb1;
-        int add_rgb1;
-        int sub_a_a1;
-        int sub_b_a1;
-        int mul_a1;
-        int add_a1;
-    } combine;
+    struct combiner_inputs combine;
 
     int32_t *combiner_rgbsub_a_r[2];
     int32_t *combiner_rgbsub_a_g[2];
