@@ -23,6 +23,22 @@
 
 #define PIXELS_TO_BYTES(pix, siz) (((pix) << (siz)) >> 1)
 
+// RGBA5551 to RGBA8888 helper
+#define GET_LOW(x)  (((x) & 0x3e) << 2)
+#define GET_MED(x)  (((x) & 0x7c0) >> 3)
+#define GET_HI(x)   (((x) >> 8) & 0xf8)
+
+// inlining
+#define INLINE inline
+
+#ifdef _MSC_VER
+#define STRICTINLINE __forceinline
+#elif defined(__GNUC__)
+#define STRICTINLINE __attribute__((always_inline))
+#else
+#define STRICTINLINE inline
+#endif
+
 // bit constants for DP_STATUS
 #define DP_STATUS_XBUS_DMA      0x001   // DMEM DMA mode is set
 #define DP_STATUS_FREEZE        0x002   // Freeze has been set
