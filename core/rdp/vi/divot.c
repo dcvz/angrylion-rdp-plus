@@ -1,37 +1,24 @@
-static STRICTINLINE void divot_filter(struct ccvg* final, struct ccvg centercolor, struct ccvg leftcolor, struct ccvg rightcolor)
+static STRICTINLINE void divot_filter(struct ccvg* final, struct ccvg center, struct ccvg left, struct ccvg right)
 {
-    uint32_t leftr, leftg, leftb, rightr, rightg, rightb, centerr, centerg, centerb;
+    *final = center;
 
-    *final = centercolor;
-
-    if ((centercolor.cvg & leftcolor.cvg & rightcolor.cvg) == 7)
+    if ((center.cvg & left.cvg & right.cvg) == 7)
     {
         return;
     }
 
-    leftr = leftcolor.r;
-    leftg = leftcolor.g;
-    leftb = leftcolor.b;
-    rightr = rightcolor.r;
-    rightg = rightcolor.g;
-    rightb = rightcolor.b;
-    centerr = centercolor.r;
-    centerg = centercolor.g;
-    centerb = centercolor.b;
+    if ((left.r >= center.r && right.r >= left.r) || (left.r >= right.r && center.r >= left.r))
+        final->r = left.r;
+    else if ((right.r >= center.r && left.r >= right.r) || (right.r >= left.r && center.r >= right.r))
+        final->r = right.r;
 
+    if ((left.g >= center.g && right.g >= left.g) || (left.g >= right.g && center.g >= left.g))
+        final->g = left.g;
+    else if ((right.g >= center.g && left.g >= right.g) || (right.g >= left.g && center.g >= right.g))
+        final->g = right.g;
 
-    if ((leftr >= centerr && rightr >= leftr) || (leftr >= rightr && centerr >= leftr))
-        final->r = leftr;
-    else if ((rightr >= centerr && leftr >= rightr) || (rightr >= leftr && centerr >= rightr))
-        final->r = rightr;
-
-    if ((leftg >= centerg && rightg >= leftg) || (leftg >= rightg && centerg >= leftg))
-        final->g = leftg;
-    else if ((rightg >= centerg && leftg >= rightg) || (rightg >= leftg && centerg >= rightg))
-        final->g = rightg;
-
-    if ((leftb >= centerb && rightb >= leftb) || (leftb >= rightb && centerb >= leftb))
-        final->b = leftb;
-    else if ((rightb >= centerb && leftb >= rightb) || (rightb >= leftb && centerb >= rightb))
-        final->b = rightb;
+    if ((left.b >= center.b && right.b >= left.b) || (left.b >= right.b && center.b >= left.b))
+        final->b = left.b;
+    else if ((right.b >= center.b && left.b >= right.b) || (right.b >= left.b && center.b >= right.b))
+        final->b = right.b;
 }
