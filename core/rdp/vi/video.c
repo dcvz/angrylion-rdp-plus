@@ -1,26 +1,3 @@
-#define VI_ANDER(x) {                                                   \
-            PAIRREAD16(pix, hidval, (x));                                   \
-            if (hidval == 3 && (pix & 1))                               \
-            {                                                           \
-                backr[numoffull] = GET_HI(pix);                         \
-                backg[numoffull] = GET_MED(pix);                        \
-                backb[numoffull] = GET_LOW(pix);                        \
-                numoffull++;                                            \
-            }                                                           \
-}
-
-#define VI_ANDER32(x) {                                                 \
-            RREADIDX32(pix, (x));                                       \
-            pixcvg = (pix >> 5) & 7;                                    \
-            if (pixcvg == 7)                                            \
-            {                                                           \
-                backr[numoffull] = (pix >> 24) & 0xff;                  \
-                backg[numoffull] = (pix >> 16) & 0xff;                  \
-                backb[numoffull] = (pix >> 8) & 0xff;                   \
-                numoffull++;                                            \
-            }                                                           \
-}
-
 static STRICTINLINE void video_max_optimized(uint32_t* pixels, uint32_t* penumin, uint32_t* penumax, int numofels)
 {
     int i;
@@ -102,12 +79,19 @@ static STRICTINLINE void video_filter16(int* endr, int* endg, int* endb, uint32_
         rightdown = toright;
     }
 
-    VI_ANDER(leftup);
-    VI_ANDER(rightup);
-    VI_ANDER(toleft);
-    VI_ANDER(toright);
-    VI_ANDER(leftdown);
-    VI_ANDER(rightdown);
+    const uint32_t dirs[] = {leftup, rightup, toleft, toright, leftdown, rightdown};
+
+    for (int i = 0; i < 6; i++)
+    {
+        rdram_read_pair16(&pix, &hidval, dirs[i]);
+        if (hidval == 3 && (pix & 1))
+        {
+            backr[numoffull] = GET_HI(pix);
+            backg[numoffull] = GET_MED(pix);
+            backb[numoffull] = GET_LOW(pix);
+            numoffull++;
+        }
+    }
 
     uint32_t colr, colg, colb;
 
@@ -166,12 +150,20 @@ static STRICTINLINE void video_filter32(int* endr, int* endg, int* endb, uint32_
         rightdown = toright;
     }
 
-    VI_ANDER32(leftup);
-    VI_ANDER32(rightup);
-    VI_ANDER32(toleft);
-    VI_ANDER32(toright);
-    VI_ANDER32(leftdown);
-    VI_ANDER32(rightdown);
+    const uint32_t dirs[] = {leftup, rightup, toleft, toright, leftdown, rightdown};
+
+    for (int i = 0; i < 6; i++)
+    {
+        pix = rdram_read_idx32(dirs[i]);
+        pixcvg = (pix >> 5) & 7;
+        if (pixcvg == 7)
+        {
+            backr[numoffull] = (pix >> 24) & 0xff;
+            backg[numoffull] = (pix >> 16) & 0xff;
+            backb[numoffull] = (pix >> 8) & 0xff;
+            numoffull++;
+        }
+    }
 
     uint32_t colr, colg, colb;
 

@@ -1,49 +1,3 @@
-#define VI_COMPARE(x)                                               \
-{                                                                   \
-    addr = (x);                                                     \
-    RREADIDX16(pix, addr);                                          \
-    tempr = (pix >> 11) & 0x1f;                                     \
-    tempg = (pix >> 6) & 0x1f;                                      \
-    tempb = (pix >> 1) & 0x1f;                                      \
-    rend += redptr[tempr];                                          \
-    gend += greenptr[tempg];                                        \
-    bend += blueptr[tempb];                                         \
-}
-
-#define VI_COMPARE_OPT(x)                                           \
-{                                                                   \
-    pix = rdram_read_idx16_fast((x));                               \
-    tempr = (pix >> 11) & 0x1f;                                     \
-    tempg = (pix >> 6) & 0x1f;                                      \
-    tempb = (pix >> 1) & 0x1f;                                      \
-    rend += redptr[tempr];                                          \
-    gend += greenptr[tempg];                                        \
-    bend += blueptr[tempb];                                         \
-}
-
-#define VI_COMPARE32(x)                                                 \
-{                                                                       \
-    addr = (x);                                                         \
-    RREADIDX32(pix, addr);                                              \
-    tempr = (pix >> 27) & 0x1f;                                         \
-    tempg = (pix >> 19) & 0x1f;                                         \
-    tempb = (pix >> 11) & 0x1f;                                         \
-    rend += redptr[tempr];                                              \
-    gend += greenptr[tempg];                                            \
-    bend += blueptr[tempb];                                             \
-}
-
-#define VI_COMPARE32_OPT(x)                                             \
-{                                                                       \
-    pix = rdram_read_idx32_fast((x));                                   \
-    tempr = (pix >> 27) & 0x1f;                                         \
-    tempg = (pix >> 19) & 0x1f;                                         \
-    tempb = (pix >> 11) & 0x1f;                                         \
-    rend += redptr[tempr];                                              \
-    gend += greenptr[tempg];                                            \
-    bend += blueptr[tempb];                                             \
-}
-
 static int vi_restore_table[0x400];
 
 static STRICTINLINE void restore_filter16(int* r, int* g, int* b, uint32_t fboffset, uint32_t num, uint32_t hres, uint32_t fetchbugstate)
@@ -76,29 +30,38 @@ static STRICTINLINE void restore_filter16(int* r, int* g, int* b, uint32_t fboff
 
     uint32_t tempr, tempg, tempb;
     uint16_t pix;
-    uint32_t addr;
+
+    const uint32_t dirs[] =
+    {
+        leftuppix, leftuppix + 1, leftuppix + 2, leftdownpix,
+        leftdownpix + 1, maxpix, toleftpix, toleftpix + 2
+    };
 
     if (rdram_valid_idx16(maxpix) && rdram_valid_idx16(leftuppix))
     {
-        VI_COMPARE_OPT(leftuppix);
-        VI_COMPARE_OPT(leftuppix + 1);
-        VI_COMPARE_OPT(leftuppix + 2);
-        VI_COMPARE_OPT(leftdownpix);
-        VI_COMPARE_OPT(leftdownpix + 1);
-        VI_COMPARE_OPT(maxpix);
-        VI_COMPARE_OPT(toleftpix);
-        VI_COMPARE_OPT(toleftpix + 2);
+        for (int i = 0; i < 8; i++)
+        {
+            pix = rdram_read_idx16_fast(dirs[i]);
+            tempr = (pix >> 11) & 0x1f;
+            tempg = (pix >> 6) & 0x1f;
+            tempb = (pix >> 1) & 0x1f;
+            rend += redptr[tempr];
+            gend += greenptr[tempg];
+            bend += blueptr[tempb];
+        }
     }
     else
     {
-        VI_COMPARE(leftuppix);
-        VI_COMPARE(leftuppix + 1);
-        VI_COMPARE(leftuppix + 2);
-        VI_COMPARE(leftdownpix);
-        VI_COMPARE(leftdownpix + 1);
-        VI_COMPARE(maxpix);
-        VI_COMPARE(toleftpix);
-        VI_COMPARE(toleftpix + 2);
+        for (int i = 0; i < 8; i++)
+        {
+            pix = rdram_read_idx16(dirs[i]);
+            tempr = (pix >> 11) & 0x1f;
+            tempg = (pix >> 6) & 0x1f;
+            tempb = (pix >> 1) & 0x1f;
+            rend += redptr[tempr];
+            gend += greenptr[tempg];
+            bend += blueptr[tempb];
+        }
     }
 
 
@@ -136,29 +99,39 @@ static STRICTINLINE void restore_filter32(int* r, int* g, int* b, uint32_t fboff
     const int* blueptr = &vi_restore_table[(bend << 2) & 0x3e0];
 
     uint32_t tempr, tempg, tempb;
-    uint32_t pix, addr;
+    uint32_t pix;
+
+    const uint32_t dirs[] =
+    {
+        leftuppix, leftuppix + 1, leftuppix + 2, leftdownpix,
+        leftdownpix + 1, maxpix, toleftpix, toleftpix + 2
+    };
 
     if (rdram_valid_idx32(maxpix) && rdram_valid_idx32(leftuppix))
     {
-        VI_COMPARE32_OPT(leftuppix);
-        VI_COMPARE32_OPT(leftuppix + 1);
-        VI_COMPARE32_OPT(leftuppix + 2);
-        VI_COMPARE32_OPT(leftdownpix);
-        VI_COMPARE32_OPT(leftdownpix + 1);
-        VI_COMPARE32_OPT(maxpix);
-        VI_COMPARE32_OPT(toleftpix);
-        VI_COMPARE32_OPT(toleftpix + 2);
+        for (int i = 0; i < 8; i++)
+        {
+            pix = rdram_read_idx32_fast(dirs[i]);
+            tempr = (pix >> 27) & 0x1f;
+            tempg = (pix >> 19) & 0x1f;
+            tempb = (pix >> 11) & 0x1f;
+            rend += redptr[tempr];
+            gend += greenptr[tempg];
+            bend += blueptr[tempb];
+        }
     }
     else
     {
-        VI_COMPARE32(leftuppix);
-        VI_COMPARE32(leftuppix + 1);
-        VI_COMPARE32(leftuppix + 2);
-        VI_COMPARE32(leftdownpix);
-        VI_COMPARE32(leftdownpix + 1);
-        VI_COMPARE32(maxpix);
-        VI_COMPARE32(toleftpix);
-        VI_COMPARE32(toleftpix + 2);
+        for (int i = 0; i < 8; i++)
+        {
+            pix = rdram_read_idx32(dirs[i]);
+            tempr = (pix >> 27) & 0x1f;
+            tempg = (pix >> 19) & 0x1f;
+            tempb = (pix >> 11) & 0x1f;
+            rend += redptr[tempr];
+            gend += greenptr[tempg];
+            bend += blueptr[tempb];
+        }
     }
 
     *r = rend;
