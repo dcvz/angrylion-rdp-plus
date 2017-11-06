@@ -71,9 +71,6 @@
     <ClCompile Include="rdp\vi\fetch.c">
       <Filter>Source Files\rdp\vi</Filter>
     </ClCompile>
-    <ClCompile Include="rdp\vi\filter.c">
-      <Filter>Source Files\rdp\vi</Filter>
-    </ClCompile>
     <ClCompile Include="rdp\vi\gamma.c">
       <Filter>Source Files\rdp\vi</Filter>
     </ClCompile>
