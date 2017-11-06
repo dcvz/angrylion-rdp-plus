@@ -16,14 +16,12 @@
 #define SIGN16(x)   ((int16_t)(x))
 #define SIGN8(x)    ((int8_t)(x))
 
-
 #define SIGN(x, numb)   (((x) & ((1 << numb) - 1)) | -((x) & (1 << (numb - 1))))
 #define SIGNF(x, numb)  ((x) | -((x) & (1 << (numb - 1))))
 
 #define TRELATIVE(x, y)     ((x) - ((y) << 3))
 
-
-
+#define PIXELS_TO_BYTES(pix, siz) (((pix) << (siz)) >> 1)
 
 // bit constants for DP_STATUS
 #define DP_STATUS_XBUS_DMA      0x001   // DMEM DMA mode is set
@@ -38,8 +36,44 @@
 #define DP_STATUS_END_VALID     0x200   // Unknown
 #define DP_STATUS_START_VALID   0x400   // Unknown
 
-static struct core_config* config;
-static struct plugin_api* plugin;
+#define PIXEL_SIZE_4BIT         0
+#define PIXEL_SIZE_8BIT         1
+#define PIXEL_SIZE_16BIT        2
+#define PIXEL_SIZE_32BIT        3
+
+#define CYCLE_TYPE_1            0
+#define CYCLE_TYPE_2            1
+#define CYCLE_TYPE_COPY         2
+#define CYCLE_TYPE_FILL         3
+
+
+#define FORMAT_RGBA             0
+#define FORMAT_YUV              1
+#define FORMAT_CI               2
+#define FORMAT_IA               3
+#define FORMAT_I                4
+
+
+#define TEXEL_RGBA4             0
+#define TEXEL_RGBA8             1
+#define TEXEL_RGBA16            2
+#define TEXEL_RGBA32            3
+#define TEXEL_YUV4              4
+#define TEXEL_YUV8              5
+#define TEXEL_YUV16             6
+#define TEXEL_YUV32             7
+#define TEXEL_CI4               8
+#define TEXEL_CI8               9
+#define TEXEL_CI16              0xa
+#define TEXEL_CI32              0xb
+#define TEXEL_IA4               0xc
+#define TEXEL_IA8               0xd
+#define TEXEL_IA16              0xe
+#define TEXEL_IA32              0xf
+#define TEXEL_I4                0x10
+#define TEXEL_I8                0x11
+#define TEXEL_I16               0x12
+#define TEXEL_I32               0x13
 
 struct color
 {
@@ -103,7 +137,9 @@ struct other_modes
     int z_source_sel;
     int dither_alpha_en;
     int alpha_compare_en;
-    struct {
+
+    struct
+    {
         int stalederivs;
         int dolod;
         int partialreject_1cycle;
@@ -117,55 +153,8 @@ struct other_modes
     } f;
 };
 
-
-
-#define PIXEL_SIZE_4BIT         0
-#define PIXEL_SIZE_8BIT         1
-#define PIXEL_SIZE_16BIT        2
-#define PIXEL_SIZE_32BIT        3
-
-#define CYCLE_TYPE_1            0
-#define CYCLE_TYPE_2            1
-#define CYCLE_TYPE_COPY         2
-#define CYCLE_TYPE_FILL         3
-
-
-#define FORMAT_RGBA             0
-#define FORMAT_YUV              1
-#define FORMAT_CI               2
-#define FORMAT_IA               3
-#define FORMAT_I                4
-
-
-#define TEXEL_RGBA4             0
-#define TEXEL_RGBA8             1
-#define TEXEL_RGBA16            2
-#define TEXEL_RGBA32            3
-#define TEXEL_YUV4              4
-#define TEXEL_YUV8              5
-#define TEXEL_YUV16             6
-#define TEXEL_YUV32             7
-#define TEXEL_CI4               8
-#define TEXEL_CI8               9
-#define TEXEL_CI16              0xa
-#define TEXEL_CI32              0xb
-#define TEXEL_IA4               0xc
-#define TEXEL_IA8               0xd
-#define TEXEL_IA16              0xe
-#define TEXEL_IA32              0xf
-#define TEXEL_I4                0x10
-#define TEXEL_I8                0x11
-#define TEXEL_I16               0x12
-#define TEXEL_I32               0x13
-
-static int32_t one_color = 0x100;
-static int32_t zero_color = 0x00;
-
-static bool init_lut;
-
-#define PIXELS_TO_BYTES(pix, siz) (((pix) << (siz)) >> 1)
-
-struct spansigs {
+struct spansigs
+{
     int startspan;
     int endspan;
     int preendspan;
@@ -174,30 +163,6 @@ struct spansigs {
     int longspan;
     int onelessthanmid;
 };
-
-static struct
-{
-    int copymstrangecrashes, fillmcrashes, fillmbitcrashes, syncfullcrash;
-} onetimewarnings;
-
-static int rdp_pipeline_crashed = 0;
-
-static STRICTINLINE int32_t clamp(int32_t value,int32_t min,int32_t max)
-{
-    if (value < min)
-        return min;
-    else if (value > max)
-        return max;
-    else
-        return value;
-}
-
-static STRICTINLINE int32_t irand(int32_t* seed)
-{
-    *seed *= 0x343fd;
-    *seed += 0x269ec3;
-    return ((*seed >> 16) & 0x7fff);
-}
 
 struct tile
 {
@@ -364,8 +329,8 @@ struct rdp_state
 
     int32_t keyalpha;
 
-    // coverage
-    uint8_t cvgbuf[1024];
+    // tcoord
+    void (*tcdiv_ptr)(int32_t, int32_t, int32_t, int32_t*, int32_t*);
 
     // fbuffer
     void (*fbread1_ptr)(struct rdp_state*, uint32_t, uint32_t*);
@@ -386,14 +351,14 @@ struct rdp_state
     uint32_t primitive_z;
     uint16_t primitive_delta_z;
 
-    // tcoord
-    void (*tcdiv_ptr)(int32_t, int32_t, int32_t, int32_t*, int32_t*);
-
     // tex
     int ti_format;
     int ti_size;
     int ti_width;
     uint32_t ti_address;
+
+    // coverage
+    uint8_t cvgbuf[1024];
 
     // tmem
     uint8_t tmem[0x1000];
@@ -403,7 +368,39 @@ struct rdp_state
     int32_t pastrawdzmem;
 };
 
-struct rdp_state* rdp_states;
+
+static struct rdp_state* rdp_states;
+static struct core_config* config;
+static struct plugin_api* plugin;
+
+static int32_t one_color = 0x100;
+static int32_t zero_color = 0x00;
+
+static bool init_lut;
+
+static struct
+{
+    int copymstrangecrashes, fillmcrashes, fillmbitcrashes, syncfullcrash;
+} onetimewarnings;
+
+static int rdp_pipeline_crashed = 0;
+
+static STRICTINLINE int32_t clamp(int32_t value, int32_t min, int32_t max)
+{
+    if (value < min)
+        return min;
+    else if (value > max)
+        return max;
+    else
+        return value;
+}
+
+static STRICTINLINE int32_t irand(int32_t* seed)
+{
+    *seed *= 0x343fd;
+    *seed += 0x269ec3;
+    return ((*seed >> 16) & 0x7fff);
+}
 
 static void deduce_derivatives(struct rdp_state* rdp);
 
