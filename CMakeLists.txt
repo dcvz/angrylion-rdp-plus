@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 2.8)
 
 option(RETRACER "Set to ON to build the retracer tool" ${RETRACER})
 
+project(angrylion-plus)
+
 # check for INTERPROCEDURAL_OPTIMIZATION support
 if((${CMAKE_VERSION} VERSION_EQUAL 3.9) OR (${CMAKE_VERSION} VERSION_GREATER 3.9))
     cmake_policy(SET CMP0069 NEW)
@@ -12,8 +14,6 @@ if((${CMAKE_VERSION} VERSION_EQUAL 3.9) OR (${CMAKE_VERSION} VERSION_GREATER 3.9
         message("Interprocedural optimizations enabled")
     endif(ENABLE_IPO)
 endif()
-
-project(angrylion-plus)
 
 # C++14 is required for the Parallel utility class
 set(CMAKE_CXX_STANDARD 14)
