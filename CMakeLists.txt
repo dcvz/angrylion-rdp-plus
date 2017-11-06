@@ -27,6 +27,10 @@ find_package(Git REQUIRED)
 find_package(PythonInterp 3.2 REQUIRED)
 find_package(OpenGL REQUIRED)
 
+# RDP core library and shared plugin library
+set(PATH_CORE "core")
+set(PATH_PLUGIN_COMMON "plugin-common")
+
 # run script to generate version.h
 set(PATH_VERSION_IN "${PATH_CORE}/version.h.in")
 set(PATH_VERSION_OUT "${PATH_CORE}/version.h")
@@ -40,10 +44,6 @@ add_custom_command(
         "${CMAKE_SOURCE_DIR}/${PATH_VERSION_OUT}"
     COMMENT "Generate Git version"
 )
-
-# RDP core library and shared plugin library
-set(PATH_CORE "core")
-set(PATH_PLUGIN_COMMON "plugin-common")
 
 file(GLOB SOURCES_CORE "${PATH_CORE}/*.c" "${PATH_CORE}/*.cpp")
 file(GLOB SOURCES_PLUGIN_COMMON "${PATH_PLUGIN_COMMON}/*.c")
