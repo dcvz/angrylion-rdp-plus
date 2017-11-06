@@ -91,14 +91,14 @@ static STRICTINLINE void blender_equation_cycle0(struct rdp_state* rdp, int* r, 
 {
     int blend1a, blend2a;
     int blr, blg, blb, sum;
-    blend1a = *rdp->blender.i1b_a[0] >> 3;
-    blend2a = *rdp->blender.i2b_a[0] >> 3;
+    blend1a = *rdp->blender1b_a[0] >> 3;
+    blend2a = *rdp->blender2b_a[0] >> 3;
 
     int mulb;
 
 
 
-    if (rdp->blender.i2b_a[0] == &rdp->memory_color.a)
+    if (rdp->blender2b_a[0] == &rdp->memory_color.a)
     {
         blend1a = (blend1a >> rdp->blshifta) & 0x3C;
         blend2a = (blend2a >> rdp->blshiftb) | 3;
@@ -107,9 +107,9 @@ static STRICTINLINE void blender_equation_cycle0(struct rdp_state* rdp, int* r, 
     mulb = blend2a + 1;
 
 
-    blr = (*rdp->blender.i1a_r[0]) * blend1a + (*rdp->blender.i2a_r[0]) * mulb;
-    blg = (*rdp->blender.i1a_g[0]) * blend1a + (*rdp->blender.i2a_g[0]) * mulb;
-    blb = (*rdp->blender.i1a_b[0]) * blend1a + (*rdp->blender.i2a_b[0]) * mulb;
+    blr = (*rdp->blender1a_r[0]) * blend1a + (*rdp->blender2a_r[0]) * mulb;
+    blg = (*rdp->blender1a_g[0]) * blend1a + (*rdp->blender2a_g[0]) * mulb;
+    blb = (*rdp->blender1a_b[0]) * blend1a + (*rdp->blender2a_b[0]) * mulb;
 
 
 
@@ -136,39 +136,39 @@ static STRICTINLINE void blender_equation_cycle0(struct rdp_state* rdp, int* r, 
 static STRICTINLINE void blender_equation_cycle0_2(struct rdp_state* rdp, int* r, int* g, int* b)
 {
     int blend1a, blend2a;
-    blend1a = *rdp->blender.i1b_a[0] >> 3;
-    blend2a = *rdp->blender.i2b_a[0] >> 3;
+    blend1a = *rdp->blender1b_a[0] >> 3;
+    blend2a = *rdp->blender2b_a[0] >> 3;
 
-    if (rdp->blender.i2b_a[0] == &rdp->memory_color.a)
+    if (rdp->blender2b_a[0] == &rdp->memory_color.a)
     {
         blend1a = (blend1a >> rdp->pastblshifta) & 0x3C;
         blend2a = (blend2a >> rdp->pastblshiftb) | 3;
     }
 
     blend2a += 1;
-    *r = (((*rdp->blender.i1a_r[0]) * blend1a + (*rdp->blender.i2a_r[0]) * blend2a) >> 5) & 0xff;
-    *g = (((*rdp->blender.i1a_g[0]) * blend1a + (*rdp->blender.i2a_g[0]) * blend2a) >> 5) & 0xff;
-    *b = (((*rdp->blender.i1a_b[0]) * blend1a + (*rdp->blender.i2a_b[0]) * blend2a) >> 5) & 0xff;
+    *r = (((*rdp->blender1a_r[0]) * blend1a + (*rdp->blender2a_r[0]) * blend2a) >> 5) & 0xff;
+    *g = (((*rdp->blender1a_g[0]) * blend1a + (*rdp->blender2a_g[0]) * blend2a) >> 5) & 0xff;
+    *b = (((*rdp->blender1a_b[0]) * blend1a + (*rdp->blender2a_b[0]) * blend2a) >> 5) & 0xff;
 }
 
 static STRICTINLINE void blender_equation_cycle1(struct rdp_state* rdp, int* r, int* g, int* b)
 {
     int blend1a, blend2a;
     int blr, blg, blb, sum;
-    blend1a = *rdp->blender.i1b_a[1] >> 3;
-    blend2a = *rdp->blender.i2b_a[1] >> 3;
+    blend1a = *rdp->blender1b_a[1] >> 3;
+    blend2a = *rdp->blender2b_a[1] >> 3;
 
     int mulb;
-    if (rdp->blender.i2b_a[1] == &rdp->memory_color.a)
+    if (rdp->blender2b_a[1] == &rdp->memory_color.a)
     {
         blend1a = (blend1a >> rdp->blshifta) & 0x3C;
         blend2a = (blend2a >> rdp->blshiftb) | 3;
     }
 
     mulb = blend2a + 1;
-    blr = (*rdp->blender.i1a_r[1]) * blend1a + (*rdp->blender.i2a_r[1]) * mulb;
-    blg = (*rdp->blender.i1a_g[1]) * blend1a + (*rdp->blender.i2a_g[1]) * mulb;
-    blb = (*rdp->blender.i1a_b[1]) * blend1a + (*rdp->blender.i2a_b[1]) * mulb;
+    blr = (*rdp->blender1a_r[1]) * blend1a + (*rdp->blender2a_r[1]) * mulb;
+    blg = (*rdp->blender1a_g[1]) * blend1a + (*rdp->blender2a_g[1]) * mulb;
+    blb = (*rdp->blender1a_b[1]) * blend1a + (*rdp->blender2a_b[1]) * mulb;
 
     if (!rdp->other_modes.force_blend)
     {
@@ -206,13 +206,13 @@ static STRICTINLINE int blender_1cycle(struct rdp_state* rdp, uint32_t* fr, uint
                 dontblend = (rdp->other_modes.f.partialreject_1cycle && rdp->pixel_color.a >= 0xff);
                 if (!blend_en || dontblend)
                 {
-                    r = *rdp->blender.i1a_r[0];
-                    g = *rdp->blender.i1a_g[0];
-                    b = *rdp->blender.i1a_b[0];
+                    r = *rdp->blender1a_r[0];
+                    g = *rdp->blender1a_g[0];
+                    b = *rdp->blender1a_b[0];
                 }
                 else
                 {
-                    rdp->inv_pixel_color.a =  (~(*rdp->blender.i1b_a[0])) & 0xff;
+                    rdp->inv_pixel_color.a =  (~(*rdp->blender1b_a[0])) & 0xff;
 
 
 
@@ -223,9 +223,9 @@ static STRICTINLINE int blender_1cycle(struct rdp_state* rdp, uint32_t* fr, uint
             }
             else
             {
-                r = *rdp->blender.i2a_r[0];
-                g = *rdp->blender.i2a_g[0];
-                b = *rdp->blender.i2a_b[0];
+                r = *rdp->blender2a_r[0];
+                g = *rdp->blender2a_g[0];
+                b = *rdp->blender2a_b[0];
             }
 
             if (rdp->other_modes.rgb_dither_sel != 3)
@@ -253,7 +253,7 @@ static STRICTINLINE int blender_2cycle(struct rdp_state* rdp, uint32_t* fr, uint
         if (rdp->other_modes.antialias_en ? (curpixel_cvg) : (curpixel_cvbit))
         {
 
-            rdp->inv_pixel_color.a =  (~(*rdp->blender.i1b_a[0])) & 0xff;
+            rdp->inv_pixel_color.a =  (~(*rdp->blender1b_a[0])) & 0xff;
             blender_equation_cycle0_2(rdp, &r, &g, &b);
 
 
@@ -269,21 +269,21 @@ static STRICTINLINE int blender_2cycle(struct rdp_state* rdp, uint32_t* fr, uint
                 dontblend = (rdp->other_modes.f.partialreject_2cycle && rdp->pixel_color.a >= 0xff);
                 if (!blend_en || dontblend)
                 {
-                    r = *rdp->blender.i1a_r[1];
-                    g = *rdp->blender.i1a_g[1];
-                    b = *rdp->blender.i1a_b[1];
+                    r = *rdp->blender1a_r[1];
+                    g = *rdp->blender1a_g[1];
+                    b = *rdp->blender1a_b[1];
                 }
                 else
                 {
-                    rdp->inv_pixel_color.a =  (~(*rdp->blender.i1b_a[1])) & 0xff;
+                    rdp->inv_pixel_color.a =  (~(*rdp->blender1b_a[1])) & 0xff;
                     blender_equation_cycle1(rdp, &r, &g, &b);
                 }
             }
             else
             {
-                r = *rdp->blender.i2a_r[1];
-                g = *rdp->blender.i2a_g[1];
-                b = *rdp->blender.i2a_b[1];
+                r = *rdp->blender2a_r[1];
+                g = *rdp->blender2a_g[1];
+                b = *rdp->blender2a_b[1];
             }
 
 

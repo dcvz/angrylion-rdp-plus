@@ -176,9 +176,9 @@ static STRICTINLINE void combiner_1cycle(struct rdp_state* rdp, int adseed, uint
 
     if (rdp->other_modes.key_en)
     {
-        chromabypass.r = *rdp->combiner.rgbsub_a_r[1];
-        chromabypass.g = *rdp->combiner.rgbsub_a_g[1];
-        chromabypass.b = *rdp->combiner.rgbsub_a_b[1];
+        chromabypass.r = *rdp->combiner_rgbsub_a_r[1];
+        chromabypass.g = *rdp->combiner_rgbsub_a_g[1];
+        chromabypass.b = *rdp->combiner_rgbsub_a_b[1];
     }
 
 
@@ -186,7 +186,7 @@ static STRICTINLINE void combiner_1cycle(struct rdp_state* rdp, int adseed, uint
 
 
 
-    if (rdp->combiner.rgbmul_r[1] != &zero_color)
+    if (rdp->combiner_rgbmul_r[1] != &zero_color)
     {
 
 
@@ -204,21 +204,21 @@ static STRICTINLINE void combiner_1cycle(struct rdp_state* rdp, int adseed, uint
 
 
 
-        rdp->combined_color.r = color_combiner_equation(*rdp->combiner.rgbsub_a_r[1],*rdp->combiner.rgbsub_b_r[1],*rdp->combiner.rgbmul_r[1],*rdp->combiner.rgbadd_r[1]);
-        rdp->combined_color.g = color_combiner_equation(*rdp->combiner.rgbsub_a_g[1],*rdp->combiner.rgbsub_b_g[1],*rdp->combiner.rgbmul_g[1],*rdp->combiner.rgbadd_g[1]);
-        rdp->combined_color.b = color_combiner_equation(*rdp->combiner.rgbsub_a_b[1],*rdp->combiner.rgbsub_b_b[1],*rdp->combiner.rgbmul_b[1],*rdp->combiner.rgbadd_b[1]);
+        rdp->combined_color.r = color_combiner_equation(*rdp->combiner_rgbsub_a_r[1],*rdp->combiner_rgbsub_b_r[1],*rdp->combiner_rgbmul_r[1],*rdp->combiner_rgbadd_r[1]);
+        rdp->combined_color.g = color_combiner_equation(*rdp->combiner_rgbsub_a_g[1],*rdp->combiner_rgbsub_b_g[1],*rdp->combiner_rgbmul_g[1],*rdp->combiner_rgbadd_g[1]);
+        rdp->combined_color.b = color_combiner_equation(*rdp->combiner_rgbsub_a_b[1],*rdp->combiner_rgbsub_b_b[1],*rdp->combiner_rgbmul_b[1],*rdp->combiner_rgbadd_b[1]);
     }
     else
     {
-        rdp->combined_color.r = ((special_9bit_exttable[*rdp->combiner.rgbadd_r[1]] << 8) + 0x80) & 0x1ffff;
-        rdp->combined_color.g = ((special_9bit_exttable[*rdp->combiner.rgbadd_g[1]] << 8) + 0x80) & 0x1ffff;
-        rdp->combined_color.b = ((special_9bit_exttable[*rdp->combiner.rgbadd_b[1]] << 8) + 0x80) & 0x1ffff;
+        rdp->combined_color.r = ((special_9bit_exttable[*rdp->combiner_rgbadd_r[1]] << 8) + 0x80) & 0x1ffff;
+        rdp->combined_color.g = ((special_9bit_exttable[*rdp->combiner_rgbadd_g[1]] << 8) + 0x80) & 0x1ffff;
+        rdp->combined_color.b = ((special_9bit_exttable[*rdp->combiner_rgbadd_b[1]] << 8) + 0x80) & 0x1ffff;
     }
 
-    if (rdp->combiner.alphamul[1] != &zero_color)
-        rdp->combined_color.a = alpha_combiner_equation(*rdp->combiner.alphasub_a[1],*rdp->combiner.alphasub_b[1],*rdp->combiner.alphamul[1],*rdp->combiner.alphaadd[1]);
+    if (rdp->combiner_alphamul[1] != &zero_color)
+        rdp->combined_color.a = alpha_combiner_equation(*rdp->combiner_alphasub_a[1],*rdp->combiner_alphasub_b[1],*rdp->combiner_alphamul[1],*rdp->combiner_alphaadd[1]);
     else
-        rdp->combined_color.a = special_9bit_exttable[*rdp->combiner.alphaadd[1]] & 0x1ff;
+        rdp->combined_color.a = special_9bit_exttable[*rdp->combiner_alphaadd[1]] & 0x1ff;
 
     rdp->pixel_color.a = special_9bit_clamptable[rdp->combined_color.a];
     if (rdp->pixel_color.a == 0xff)
@@ -288,23 +288,23 @@ static STRICTINLINE void combiner_2cycle(struct rdp_state* rdp, int adseed, uint
     int32_t keyalpha, temp;
     struct color chromabypass;
 
-    if (rdp->combiner.rgbmul_r[0] != &zero_color)
+    if (rdp->combiner_rgbmul_r[0] != &zero_color)
     {
-        rdp->combined_color.r = color_combiner_equation(*rdp->combiner.rgbsub_a_r[0],*rdp->combiner.rgbsub_b_r[0],*rdp->combiner.rgbmul_r[0],*rdp->combiner.rgbadd_r[0]);
-        rdp->combined_color.g = color_combiner_equation(*rdp->combiner.rgbsub_a_g[0],*rdp->combiner.rgbsub_b_g[0],*rdp->combiner.rgbmul_g[0],*rdp->combiner.rgbadd_g[0]);
-        rdp->combined_color.b = color_combiner_equation(*rdp->combiner.rgbsub_a_b[0],*rdp->combiner.rgbsub_b_b[0],*rdp->combiner.rgbmul_b[0],*rdp->combiner.rgbadd_b[0]);
+        rdp->combined_color.r = color_combiner_equation(*rdp->combiner_rgbsub_a_r[0],*rdp->combiner_rgbsub_b_r[0],*rdp->combiner_rgbmul_r[0],*rdp->combiner_rgbadd_r[0]);
+        rdp->combined_color.g = color_combiner_equation(*rdp->combiner_rgbsub_a_g[0],*rdp->combiner_rgbsub_b_g[0],*rdp->combiner_rgbmul_g[0],*rdp->combiner_rgbadd_g[0]);
+        rdp->combined_color.b = color_combiner_equation(*rdp->combiner_rgbsub_a_b[0],*rdp->combiner_rgbsub_b_b[0],*rdp->combiner_rgbmul_b[0],*rdp->combiner_rgbadd_b[0]);
     }
     else
     {
-        rdp->combined_color.r = ((special_9bit_exttable[*rdp->combiner.rgbadd_r[0]] << 8) + 0x80) & 0x1ffff;
-        rdp->combined_color.g = ((special_9bit_exttable[*rdp->combiner.rgbadd_g[0]] << 8) + 0x80) & 0x1ffff;
-        rdp->combined_color.b = ((special_9bit_exttable[*rdp->combiner.rgbadd_b[0]] << 8) + 0x80) & 0x1ffff;
+        rdp->combined_color.r = ((special_9bit_exttable[*rdp->combiner_rgbadd_r[0]] << 8) + 0x80) & 0x1ffff;
+        rdp->combined_color.g = ((special_9bit_exttable[*rdp->combiner_rgbadd_g[0]] << 8) + 0x80) & 0x1ffff;
+        rdp->combined_color.b = ((special_9bit_exttable[*rdp->combiner_rgbadd_b[0]] << 8) + 0x80) & 0x1ffff;
     }
 
-    if (rdp->combiner.alphamul[0] != &zero_color)
-        rdp->combined_color.a = alpha_combiner_equation(*rdp->combiner.alphasub_a[0],*rdp->combiner.alphasub_b[0],*rdp->combiner.alphamul[0],*rdp->combiner.alphaadd[0]);
+    if (rdp->combiner_alphamul[0] != &zero_color)
+        rdp->combined_color.a = alpha_combiner_equation(*rdp->combiner_alphasub_a[0],*rdp->combiner_alphasub_b[0],*rdp->combiner_alphamul[0],*rdp->combiner_alphaadd[0]);
     else
-        rdp->combined_color.a = special_9bit_exttable[*rdp->combiner.alphaadd[0]] & 0x1ff;
+        rdp->combined_color.a = special_9bit_exttable[*rdp->combiner_alphaadd[0]] & 0x1ff;
 
 
 
@@ -366,28 +366,28 @@ static STRICTINLINE void combiner_2cycle(struct rdp_state* rdp, int adseed, uint
 
     if (rdp->other_modes.key_en)
     {
-        chromabypass.r = *rdp->combiner.rgbsub_a_r[1];
-        chromabypass.g = *rdp->combiner.rgbsub_a_g[1];
-        chromabypass.b = *rdp->combiner.rgbsub_a_b[1];
+        chromabypass.r = *rdp->combiner_rgbsub_a_r[1];
+        chromabypass.g = *rdp->combiner_rgbsub_a_g[1];
+        chromabypass.b = *rdp->combiner_rgbsub_a_b[1];
     }
 
-    if (rdp->combiner.rgbmul_r[1] != &zero_color)
+    if (rdp->combiner_rgbmul_r[1] != &zero_color)
     {
-        rdp->combined_color.r = color_combiner_equation(*rdp->combiner.rgbsub_a_r[1],*rdp->combiner.rgbsub_b_r[1],*rdp->combiner.rgbmul_r[1],*rdp->combiner.rgbadd_r[1]);
-        rdp->combined_color.g = color_combiner_equation(*rdp->combiner.rgbsub_a_g[1],*rdp->combiner.rgbsub_b_g[1],*rdp->combiner.rgbmul_g[1],*rdp->combiner.rgbadd_g[1]);
-        rdp->combined_color.b = color_combiner_equation(*rdp->combiner.rgbsub_a_b[1],*rdp->combiner.rgbsub_b_b[1],*rdp->combiner.rgbmul_b[1],*rdp->combiner.rgbadd_b[1]);
+        rdp->combined_color.r = color_combiner_equation(*rdp->combiner_rgbsub_a_r[1],*rdp->combiner_rgbsub_b_r[1],*rdp->combiner_rgbmul_r[1],*rdp->combiner_rgbadd_r[1]);
+        rdp->combined_color.g = color_combiner_equation(*rdp->combiner_rgbsub_a_g[1],*rdp->combiner_rgbsub_b_g[1],*rdp->combiner_rgbmul_g[1],*rdp->combiner_rgbadd_g[1]);
+        rdp->combined_color.b = color_combiner_equation(*rdp->combiner_rgbsub_a_b[1],*rdp->combiner_rgbsub_b_b[1],*rdp->combiner_rgbmul_b[1],*rdp->combiner_rgbadd_b[1]);
     }
     else
     {
-        rdp->combined_color.r = ((special_9bit_exttable[*rdp->combiner.rgbadd_r[1]] << 8) + 0x80) & 0x1ffff;
-        rdp->combined_color.g = ((special_9bit_exttable[*rdp->combiner.rgbadd_g[1]] << 8) + 0x80) & 0x1ffff;
-        rdp->combined_color.b = ((special_9bit_exttable[*rdp->combiner.rgbadd_b[1]] << 8) + 0x80) & 0x1ffff;
+        rdp->combined_color.r = ((special_9bit_exttable[*rdp->combiner_rgbadd_r[1]] << 8) + 0x80) & 0x1ffff;
+        rdp->combined_color.g = ((special_9bit_exttable[*rdp->combiner_rgbadd_g[1]] << 8) + 0x80) & 0x1ffff;
+        rdp->combined_color.b = ((special_9bit_exttable[*rdp->combiner_rgbadd_b[1]] << 8) + 0x80) & 0x1ffff;
     }
 
-    if (rdp->combiner.alphamul[1] != &zero_color)
-        rdp->combined_color.a = alpha_combiner_equation(*rdp->combiner.alphasub_a[1],*rdp->combiner.alphasub_b[1],*rdp->combiner.alphamul[1],*rdp->combiner.alphaadd[1]);
+    if (rdp->combiner_alphamul[1] != &zero_color)
+        rdp->combined_color.a = alpha_combiner_equation(*rdp->combiner_alphasub_a[1],*rdp->combiner_alphasub_b[1],*rdp->combiner_alphamul[1],*rdp->combiner_alphaadd[1]);
     else
-        rdp->combined_color.a = special_9bit_exttable[*rdp->combiner.alphaadd[1]] & 0x1ff;
+        rdp->combined_color.a = special_9bit_exttable[*rdp->combiner_alphaadd[1]] & 0x1ff;
 
     if (!rdp->other_modes.key_en)
     {
@@ -483,23 +483,23 @@ static void combiner_init_lut(void)
 
 static void combiner_init(struct rdp_state* rdp)
 {
-    rdp->combiner.rgbsub_a_r[0] = rdp->combiner.rgbsub_a_r[1] = &one_color;
-    rdp->combiner.rgbsub_a_g[0] = rdp->combiner.rgbsub_a_g[1] = &one_color;
-    rdp->combiner.rgbsub_a_b[0] = rdp->combiner.rgbsub_a_b[1] = &one_color;
-    rdp->combiner.rgbsub_b_r[0] = rdp->combiner.rgbsub_b_r[1] = &one_color;
-    rdp->combiner.rgbsub_b_g[0] = rdp->combiner.rgbsub_b_g[1] = &one_color;
-    rdp->combiner.rgbsub_b_b[0] = rdp->combiner.rgbsub_b_b[1] = &one_color;
-    rdp->combiner.rgbmul_r[0] = rdp->combiner.rgbmul_r[1] = &one_color;
-    rdp->combiner.rgbmul_g[0] = rdp->combiner.rgbmul_g[1] = &one_color;
-    rdp->combiner.rgbmul_b[0] = rdp->combiner.rgbmul_b[1] = &one_color;
-    rdp->combiner.rgbadd_r[0] = rdp->combiner.rgbadd_r[1] = &one_color;
-    rdp->combiner.rgbadd_g[0] = rdp->combiner.rgbadd_g[1] = &one_color;
-    rdp->combiner.rgbadd_b[0] = rdp->combiner.rgbadd_b[1] = &one_color;
+    rdp->combiner_rgbsub_a_r[0] = rdp->combiner_rgbsub_a_r[1] = &one_color;
+    rdp->combiner_rgbsub_a_g[0] = rdp->combiner_rgbsub_a_g[1] = &one_color;
+    rdp->combiner_rgbsub_a_b[0] = rdp->combiner_rgbsub_a_b[1] = &one_color;
+    rdp->combiner_rgbsub_b_r[0] = rdp->combiner_rgbsub_b_r[1] = &one_color;
+    rdp->combiner_rgbsub_b_g[0] = rdp->combiner_rgbsub_b_g[1] = &one_color;
+    rdp->combiner_rgbsub_b_b[0] = rdp->combiner_rgbsub_b_b[1] = &one_color;
+    rdp->combiner_rgbmul_r[0] = rdp->combiner_rgbmul_r[1] = &one_color;
+    rdp->combiner_rgbmul_g[0] = rdp->combiner_rgbmul_g[1] = &one_color;
+    rdp->combiner_rgbmul_b[0] = rdp->combiner_rgbmul_b[1] = &one_color;
+    rdp->combiner_rgbadd_r[0] = rdp->combiner_rgbadd_r[1] = &one_color;
+    rdp->combiner_rgbadd_g[0] = rdp->combiner_rgbadd_g[1] = &one_color;
+    rdp->combiner_rgbadd_b[0] = rdp->combiner_rgbadd_b[1] = &one_color;
 
-    rdp->combiner.alphasub_a[0] = rdp->combiner.alphasub_a[1] = &one_color;
-    rdp->combiner.alphasub_b[0] = rdp->combiner.alphasub_b[1] = &one_color;
-    rdp->combiner.alphamul[0] = rdp->combiner.alphamul[1] = &one_color;
-    rdp->combiner.alphaadd[0] = rdp->combiner.alphaadd[1] = &one_color;
+    rdp->combiner_alphasub_a[0] = rdp->combiner_alphasub_a[1] = &one_color;
+    rdp->combiner_alphasub_b[0] = rdp->combiner_alphasub_b[1] = &one_color;
+    rdp->combiner_alphamul[0] = rdp->combiner_alphamul[1] = &one_color;
+    rdp->combiner_alphaadd[0] = rdp->combiner_alphaadd[1] = &one_color;
 }
 
 static void rdp_set_prim_color(struct rdp_state* rdp, const uint32_t* args)
@@ -541,23 +541,23 @@ static void rdp_set_combine(struct rdp_state* rdp, const uint32_t* args)
     rdp->combine.add_a1      = (args[1] >>  0) & 0x7;
 
 
-    set_suba_rgb_input(rdp, &rdp->combiner.rgbsub_a_r[0], &rdp->combiner.rgbsub_a_g[0], &rdp->combiner.rgbsub_a_b[0], rdp->combine.sub_a_rgb0);
-    set_subb_rgb_input(rdp, &rdp->combiner.rgbsub_b_r[0], &rdp->combiner.rgbsub_b_g[0], &rdp->combiner.rgbsub_b_b[0], rdp->combine.sub_b_rgb0);
-    set_mul_rgb_input(rdp, &rdp->combiner.rgbmul_r[0], &rdp->combiner.rgbmul_g[0], &rdp->combiner.rgbmul_b[0], rdp->combine.mul_rgb0);
-    set_add_rgb_input(rdp, &rdp->combiner.rgbadd_r[0], &rdp->combiner.rgbadd_g[0], &rdp->combiner.rgbadd_b[0], rdp->combine.add_rgb0);
-    set_sub_alpha_input(rdp, &rdp->combiner.alphasub_a[0], rdp->combine.sub_a_a0);
-    set_sub_alpha_input(rdp, &rdp->combiner.alphasub_b[0], rdp->combine.sub_b_a0);
-    set_mul_alpha_input(rdp, &rdp->combiner.alphamul[0], rdp->combine.mul_a0);
-    set_sub_alpha_input(rdp, &rdp->combiner.alphaadd[0], rdp->combine.add_a0);
+    set_suba_rgb_input(rdp, &rdp->combiner_rgbsub_a_r[0], &rdp->combiner_rgbsub_a_g[0], &rdp->combiner_rgbsub_a_b[0], rdp->combine.sub_a_rgb0);
+    set_subb_rgb_input(rdp, &rdp->combiner_rgbsub_b_r[0], &rdp->combiner_rgbsub_b_g[0], &rdp->combiner_rgbsub_b_b[0], rdp->combine.sub_b_rgb0);
+    set_mul_rgb_input(rdp, &rdp->combiner_rgbmul_r[0], &rdp->combiner_rgbmul_g[0], &rdp->combiner_rgbmul_b[0], rdp->combine.mul_rgb0);
+    set_add_rgb_input(rdp, &rdp->combiner_rgbadd_r[0], &rdp->combiner_rgbadd_g[0], &rdp->combiner_rgbadd_b[0], rdp->combine.add_rgb0);
+    set_sub_alpha_input(rdp, &rdp->combiner_alphasub_a[0], rdp->combine.sub_a_a0);
+    set_sub_alpha_input(rdp, &rdp->combiner_alphasub_b[0], rdp->combine.sub_b_a0);
+    set_mul_alpha_input(rdp, &rdp->combiner_alphamul[0], rdp->combine.mul_a0);
+    set_sub_alpha_input(rdp, &rdp->combiner_alphaadd[0], rdp->combine.add_a0);
 
-    set_suba_rgb_input(rdp, &rdp->combiner.rgbsub_a_r[1], &rdp->combiner.rgbsub_a_g[1], &rdp->combiner.rgbsub_a_b[1], rdp->combine.sub_a_rgb1);
-    set_subb_rgb_input(rdp, &rdp->combiner.rgbsub_b_r[1], &rdp->combiner.rgbsub_b_g[1], &rdp->combiner.rgbsub_b_b[1], rdp->combine.sub_b_rgb1);
-    set_mul_rgb_input(rdp, &rdp->combiner.rgbmul_r[1], &rdp->combiner.rgbmul_g[1], &rdp->combiner.rgbmul_b[1], rdp->combine.mul_rgb1);
-    set_add_rgb_input(rdp, &rdp->combiner.rgbadd_r[1], &rdp->combiner.rgbadd_g[1], &rdp->combiner.rgbadd_b[1], rdp->combine.add_rgb1);
-    set_sub_alpha_input(rdp, &rdp->combiner.alphasub_a[1], rdp->combine.sub_a_a1);
-    set_sub_alpha_input(rdp, &rdp->combiner.alphasub_b[1], rdp->combine.sub_b_a1);
-    set_mul_alpha_input(rdp, &rdp->combiner.alphamul[1], rdp->combine.mul_a1);
-    set_sub_alpha_input(rdp, &rdp->combiner.alphaadd[1], rdp->combine.add_a1);
+    set_suba_rgb_input(rdp, &rdp->combiner_rgbsub_a_r[1], &rdp->combiner_rgbsub_a_g[1], &rdp->combiner_rgbsub_a_b[1], rdp->combine.sub_a_rgb1);
+    set_subb_rgb_input(rdp, &rdp->combiner_rgbsub_b_r[1], &rdp->combiner_rgbsub_b_g[1], &rdp->combiner_rgbsub_b_b[1], rdp->combine.sub_b_rgb1);
+    set_mul_rgb_input(rdp, &rdp->combiner_rgbmul_r[1], &rdp->combiner_rgbmul_g[1], &rdp->combiner_rgbmul_b[1], rdp->combine.mul_rgb1);
+    set_add_rgb_input(rdp, &rdp->combiner_rgbadd_r[1], &rdp->combiner_rgbadd_g[1], &rdp->combiner_rgbadd_b[1], rdp->combine.add_rgb1);
+    set_sub_alpha_input(rdp, &rdp->combiner_alphasub_a[1], rdp->combine.sub_a_a1);
+    set_sub_alpha_input(rdp, &rdp->combiner_alphasub_b[1], rdp->combine.sub_b_a1);
+    set_mul_alpha_input(rdp, &rdp->combiner_alphamul[1], rdp->combine.mul_a1);
+    set_sub_alpha_input(rdp, &rdp->combiner_alphaadd[1], rdp->combine.add_a1);
 
     rdp->other_modes.f.stalederivs = 1;
 }

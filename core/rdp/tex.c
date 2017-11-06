@@ -473,8 +473,8 @@ static void loading_pipeline(struct rdp_state* rdp, int start, int end, int tile
     int i, j;
 
     int dsinc, dtinc;
-    dsinc = rdp->spans.ds;
-    dtinc = rdp->spans.dt;
+    dsinc = rdp->spans_ds;
+    dtinc = rdp->spans_dt;
 
     int s, t;
     int ss, st;
@@ -762,9 +762,9 @@ static void edgewalker_for_loads(struct rdp_state* rdp, int32_t* lewdata)
     dsdy = 0;
     dtdy = (lewdata[8] & 0xffff) << 16;
 
-    rdp->spans.ds = dsdx & ~0x1f;
-    rdp->spans.dt = dtdx & ~0x1f;
-    rdp->spans.dw = 0;
+    rdp->spans_ds = dsdx & ~0x1f;
+    rdp->spans_dt = dtdx & ~0x1f;
+    rdp->spans_dw = 0;
 
 
 

@@ -418,9 +418,9 @@ static STRICTINLINE void tclod_2cycle_current(struct rdp_state* rdp, int32_t* ss
 
 
 
-        nextys = (s + rdp->spans.dsdy) >> 16;
-        nextyt = (t + rdp->spans.dtdy) >> 16;
-        nextysw = (w + rdp->spans.dwdy) >> 16;
+        nextys = (s + rdp->spans_dsdy) >> 16;
+        nextyt = (t + rdp->spans_dtdy) >> 16;
+        nextysw = (w + rdp->spans_dwdy) >> 16;
 
         rdp->tcdiv_ptr(nextys, nextyt, nextysw, &nextys, &nextyt);
 
@@ -484,9 +484,9 @@ static STRICTINLINE void tclod_2cycle_current_simple(struct rdp_state* rdp, int3
         nextsw = (w + dwinc) >> 16;
         nexts = (s + dsinc) >> 16;
         nextt = (t + dtinc) >> 16;
-        nextys = (s + rdp->spans.dsdy) >> 16;
-        nextyt = (t + rdp->spans.dtdy) >> 16;
-        nextysw = (w + rdp->spans.dwdy) >> 16;
+        nextys = (s + rdp->spans_dsdy) >> 16;
+        nextyt = (t + rdp->spans_dtdy) >> 16;
+        nextysw = (w + rdp->spans_dwdy) >> 16;
 
         rdp->tcdiv_ptr(nexts, nextt, nextsw, &nexts, &nextt);
         rdp->tcdiv_ptr(nextys, nextyt, nextysw, &nextys, &nextyt);
@@ -547,9 +547,9 @@ static STRICTINLINE void tclod_2cycle_current_notexel1(struct rdp_state* rdp, in
         nextsw = (w + dwinc) >> 16;
         nexts = (s + dsinc) >> 16;
         nextt = (t + dtinc) >> 16;
-        nextys = (s + rdp->spans.dsdy) >> 16;
-        nextyt = (t + rdp->spans.dtdy) >> 16;
-        nextysw = (w + rdp->spans.dwdy) >> 16;
+        nextys = (s + rdp->spans_dsdy) >> 16;
+        nextyt = (t + rdp->spans_dtdy) >> 16;
+        nextysw = (w + rdp->spans_dwdy) >> 16;
 
         rdp->tcdiv_ptr(nexts, nextt, nextsw, &nexts, &nextt);
         rdp->tcdiv_ptr(nextys, nextyt, nextysw, &nextys, &nextyt);
@@ -594,9 +594,9 @@ static STRICTINLINE void tclod_2cycle_next(struct rdp_state* rdp, int32_t* sss, 
         nextsw = (w + dwinc) >> 16;
         nexts = (s + dsinc) >> 16;
         nextt = (t + dtinc) >> 16;
-        nextys = (s + rdp->spans.dsdy) >> 16;
-        nextyt = (t + rdp->spans.dtdy) >> 16;
-        nextysw = (w + rdp->spans.dwdy) >> 16;
+        nextys = (s + rdp->spans_dsdy) >> 16;
+        nextyt = (t + rdp->spans_dtdy) >> 16;
+        nextysw = (w + rdp->spans_dwdy) >> 16;
 
         rdp->tcdiv_ptr(nexts, nextt, nextsw, &nexts, &nextt);
         rdp->tcdiv_ptr(nextys, nextyt, nextysw, &nextys, &nextyt);

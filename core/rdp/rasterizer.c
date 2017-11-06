@@ -139,11 +139,11 @@ static STRICTINLINE void rgbaz_correct_clip(struct rdp_state* rdp, int offx, int
     }
     else
     {
-        summand_r = offx * rdp->spans.cdr + offy * rdp->spans.drdy;
-        summand_g = offx * rdp->spans.cdg + offy * rdp->spans.dgdy;
-        summand_b = offx * rdp->spans.cdb + offy * rdp->spans.dbdy;
-        summand_a = offx * rdp->spans.cda + offy * rdp->spans.dady;
-        summand_z = offx * rdp->spans.cdz + offy * rdp->spans.dzdy;
+        summand_r = offx * rdp->spans_cdr + offy * rdp->spans_drdy;
+        summand_g = offx * rdp->spans_cdg + offy * rdp->spans_dgdy;
+        summand_b = offx * rdp->spans_cdb + offy * rdp->spans_dbdy;
+        summand_a = offx * rdp->spans_cda + offy * rdp->spans_dady;
+        summand_z = offx * rdp->spans_cdz + offy * rdp->spans_dzdy;
 
         r = ((r << 2) + summand_r) >> 4;
         g = ((g << 2) + summand_g) >> 4;
@@ -194,36 +194,36 @@ static void render_spans_1cycle_complete(struct rdp_state* rdp, int start, int e
 
     if (flip)
     {
-        drinc = rdp->spans.dr;
-        dginc = rdp->spans.dg;
-        dbinc = rdp->spans.db;
-        dainc = rdp->spans.da;
-        dzinc = rdp->spans.dz;
-        dsinc = rdp->spans.ds;
-        dtinc = rdp->spans.dt;
-        dwinc = rdp->spans.dw;
+        drinc = rdp->spans_dr;
+        dginc = rdp->spans_dg;
+        dbinc = rdp->spans_db;
+        dainc = rdp->spans_da;
+        dzinc = rdp->spans_dz;
+        dsinc = rdp->spans_ds;
+        dtinc = rdp->spans_dt;
+        dwinc = rdp->spans_dw;
         xinc = 1;
     }
     else
     {
-        drinc = -rdp->spans.dr;
-        dginc = -rdp->spans.dg;
-        dbinc = -rdp->spans.db;
-        dainc = -rdp->spans.da;
-        dzinc = -rdp->spans.dz;
-        dsinc = -rdp->spans.ds;
-        dtinc = -rdp->spans.dt;
-        dwinc = -rdp->spans.dw;
+        drinc = -rdp->spans_dr;
+        dginc = -rdp->spans_dg;
+        dbinc = -rdp->spans_db;
+        dainc = -rdp->spans_da;
+        dzinc = -rdp->spans_dz;
+        dsinc = -rdp->spans_ds;
+        dtinc = -rdp->spans_dt;
+        dwinc = -rdp->spans_dw;
         xinc = -1;
     }
 
     int dzpix;
     if (!rdp->other_modes.z_source_sel)
-        dzpix = rdp->spans.dzpix;
+        dzpix = rdp->spans_dzpix;
     else
     {
         dzpix = rdp->primitive_delta_z;
-        dzinc = rdp->spans.cdz = rdp->spans.dzdy = 0;
+        dzinc = rdp->spans_cdz = rdp->spans_dzdy = 0;
     }
     int dzpixenc = dz_compress(dzpix);
 
@@ -406,36 +406,36 @@ static void render_spans_1cycle_notexel1(struct rdp_state* rdp, int start, int e
     int xinc;
     if (flip)
     {
-        drinc = rdp->spans.dr;
-        dginc = rdp->spans.dg;
-        dbinc = rdp->spans.db;
-        dainc = rdp->spans.da;
-        dzinc = rdp->spans.dz;
-        dsinc = rdp->spans.ds;
-        dtinc = rdp->spans.dt;
-        dwinc = rdp->spans.dw;
+        drinc = rdp->spans_dr;
+        dginc = rdp->spans_dg;
+        dbinc = rdp->spans_db;
+        dainc = rdp->spans_da;
+        dzinc = rdp->spans_dz;
+        dsinc = rdp->spans_ds;
+        dtinc = rdp->spans_dt;
+        dwinc = rdp->spans_dw;
         xinc = 1;
     }
     else
     {
-        drinc = -rdp->spans.dr;
-        dginc = -rdp->spans.dg;
-        dbinc = -rdp->spans.db;
-        dainc = -rdp->spans.da;
-        dzinc = -rdp->spans.dz;
-        dsinc = -rdp->spans.ds;
-        dtinc = -rdp->spans.dt;
-        dwinc = -rdp->spans.dw;
+        drinc = -rdp->spans_dr;
+        dginc = -rdp->spans_dg;
+        dbinc = -rdp->spans_db;
+        dainc = -rdp->spans_da;
+        dzinc = -rdp->spans_dz;
+        dsinc = -rdp->spans_ds;
+        dtinc = -rdp->spans_dt;
+        dwinc = -rdp->spans_dw;
         xinc = -1;
     }
 
     int dzpix;
     if (!rdp->other_modes.z_source_sel)
-        dzpix = rdp->spans.dzpix;
+        dzpix = rdp->spans_dzpix;
     else
     {
         dzpix = rdp->primitive_delta_z;
-        dzinc = rdp->spans.cdz = rdp->spans.dzdy = 0;
+        dzinc = rdp->spans_cdz = rdp->spans_dzdy = 0;
     }
     int dzpixenc = dz_compress(dzpix);
 
@@ -574,30 +574,30 @@ static void render_spans_1cycle_notex(struct rdp_state* rdp, int start, int end,
 
     if (flip)
     {
-        drinc = rdp->spans.dr;
-        dginc = rdp->spans.dg;
-        dbinc = rdp->spans.db;
-        dainc = rdp->spans.da;
-        dzinc = rdp->spans.dz;
+        drinc = rdp->spans_dr;
+        dginc = rdp->spans_dg;
+        dbinc = rdp->spans_db;
+        dainc = rdp->spans_da;
+        dzinc = rdp->spans_dz;
         xinc = 1;
     }
     else
     {
-        drinc = -rdp->spans.dr;
-        dginc = -rdp->spans.dg;
-        dbinc = -rdp->spans.db;
-        dainc = -rdp->spans.da;
-        dzinc = -rdp->spans.dz;
+        drinc = -rdp->spans_dr;
+        dginc = -rdp->spans_dg;
+        dbinc = -rdp->spans_db;
+        dainc = -rdp->spans_da;
+        dzinc = -rdp->spans_dz;
         xinc = -1;
     }
 
     int dzpix;
     if (!rdp->other_modes.z_source_sel)
-        dzpix = rdp->spans.dzpix;
+        dzpix = rdp->spans_dzpix;
     else
     {
         dzpix = rdp->primitive_delta_z;
-        dzinc = rdp->spans.cdz = rdp->spans.dzdy = 0;
+        dzinc = rdp->spans_cdz = rdp->spans_dzdy = 0;
     }
     int dzpixenc = dz_compress(dzpix);
 
@@ -720,36 +720,36 @@ static void render_spans_2cycle_complete(struct rdp_state* rdp, int start, int e
     int xinc;
     if (flip)
     {
-        drinc = rdp->spans.dr;
-        dginc = rdp->spans.dg;
-        dbinc = rdp->spans.db;
-        dainc = rdp->spans.da;
-        dzinc = rdp->spans.dz;
-        dsinc = rdp->spans.ds;
-        dtinc = rdp->spans.dt;
-        dwinc = rdp->spans.dw;
+        drinc = rdp->spans_dr;
+        dginc = rdp->spans_dg;
+        dbinc = rdp->spans_db;
+        dainc = rdp->spans_da;
+        dzinc = rdp->spans_dz;
+        dsinc = rdp->spans_ds;
+        dtinc = rdp->spans_dt;
+        dwinc = rdp->spans_dw;
         xinc = 1;
     }
     else
     {
-        drinc = -rdp->spans.dr;
-        dginc = -rdp->spans.dg;
-        dbinc = -rdp->spans.db;
-        dainc = -rdp->spans.da;
-        dzinc = -rdp->spans.dz;
-        dsinc = -rdp->spans.ds;
-        dtinc = -rdp->spans.dt;
-        dwinc = -rdp->spans.dw;
+        drinc = -rdp->spans_dr;
+        dginc = -rdp->spans_dg;
+        dbinc = -rdp->spans_db;
+        dainc = -rdp->spans_da;
+        dzinc = -rdp->spans_dz;
+        dsinc = -rdp->spans_ds;
+        dtinc = -rdp->spans_dt;
+        dwinc = -rdp->spans_dw;
         xinc = -1;
     }
 
     int dzpix;
     if (!rdp->other_modes.z_source_sel)
-        dzpix = rdp->spans.dzpix;
+        dzpix = rdp->spans_dzpix;
     else
     {
         dzpix = rdp->primitive_delta_z;
-        dzinc = rdp->spans.cdz = rdp->spans.dzdy = 0;
+        dzinc = rdp->spans_cdz = rdp->spans_dzdy = 0;
     }
     int dzpixenc = dz_compress(dzpix);
 
@@ -929,36 +929,36 @@ static void render_spans_2cycle_notexelnext(struct rdp_state* rdp, int start, in
     int xinc;
     if (flip)
     {
-        drinc = rdp->spans.dr;
-        dginc = rdp->spans.dg;
-        dbinc = rdp->spans.db;
-        dainc = rdp->spans.da;
-        dzinc = rdp->spans.dz;
-        dsinc = rdp->spans.ds;
-        dtinc = rdp->spans.dt;
-        dwinc = rdp->spans.dw;
+        drinc = rdp->spans_dr;
+        dginc = rdp->spans_dg;
+        dbinc = rdp->spans_db;
+        dainc = rdp->spans_da;
+        dzinc = rdp->spans_dz;
+        dsinc = rdp->spans_ds;
+        dtinc = rdp->spans_dt;
+        dwinc = rdp->spans_dw;
         xinc = 1;
     }
     else
     {
-        drinc = -rdp->spans.dr;
-        dginc = -rdp->spans.dg;
-        dbinc = -rdp->spans.db;
-        dainc = -rdp->spans.da;
-        dzinc = -rdp->spans.dz;
-        dsinc = -rdp->spans.ds;
-        dtinc = -rdp->spans.dt;
-        dwinc = -rdp->spans.dw;
+        drinc = -rdp->spans_dr;
+        dginc = -rdp->spans_dg;
+        dbinc = -rdp->spans_db;
+        dainc = -rdp->spans_da;
+        dzinc = -rdp->spans_dz;
+        dsinc = -rdp->spans_ds;
+        dtinc = -rdp->spans_dt;
+        dwinc = -rdp->spans_dw;
         xinc = -1;
     }
 
     int dzpix;
     if (!rdp->other_modes.z_source_sel)
-        dzpix = rdp->spans.dzpix;
+        dzpix = rdp->spans_dzpix;
     else
     {
         dzpix = rdp->primitive_delta_z;
-        dzinc = rdp->spans.cdz = rdp->spans.dzdy = 0;
+        dzinc = rdp->spans_cdz = rdp->spans_dzdy = 0;
     }
     int dzpixenc = dz_compress(dzpix);
 
@@ -1100,36 +1100,36 @@ static void render_spans_2cycle_notexel1(struct rdp_state* rdp, int start, int e
     int xinc;
     if (flip)
     {
-        drinc = rdp->spans.dr;
-        dginc = rdp->spans.dg;
-        dbinc = rdp->spans.db;
-        dainc = rdp->spans.da;
-        dzinc = rdp->spans.dz;
-        dsinc = rdp->spans.ds;
-        dtinc = rdp->spans.dt;
-        dwinc = rdp->spans.dw;
+        drinc = rdp->spans_dr;
+        dginc = rdp->spans_dg;
+        dbinc = rdp->spans_db;
+        dainc = rdp->spans_da;
+        dzinc = rdp->spans_dz;
+        dsinc = rdp->spans_ds;
+        dtinc = rdp->spans_dt;
+        dwinc = rdp->spans_dw;
         xinc = 1;
     }
     else
     {
-        drinc = -rdp->spans.dr;
-        dginc = -rdp->spans.dg;
-        dbinc = -rdp->spans.db;
-        dainc = -rdp->spans.da;
-        dzinc = -rdp->spans.dz;
-        dsinc = -rdp->spans.ds;
-        dtinc = -rdp->spans.dt;
-        dwinc = -rdp->spans.dw;
+        drinc = -rdp->spans_dr;
+        dginc = -rdp->spans_dg;
+        dbinc = -rdp->spans_db;
+        dainc = -rdp->spans_da;
+        dzinc = -rdp->spans_dz;
+        dsinc = -rdp->spans_ds;
+        dtinc = -rdp->spans_dt;
+        dwinc = -rdp->spans_dw;
         xinc = -1;
     }
 
     int dzpix;
     if (!rdp->other_modes.z_source_sel)
-        dzpix = rdp->spans.dzpix;
+        dzpix = rdp->spans_dzpix;
     else
     {
         dzpix = rdp->primitive_delta_z;
-        dzinc = rdp->spans.cdz = rdp->spans.dzdy = 0;
+        dzinc = rdp->spans_cdz = rdp->spans_dzdy = 0;
     }
     int dzpixenc = dz_compress(dzpix);
 
@@ -1265,30 +1265,30 @@ static void render_spans_2cycle_notex(struct rdp_state* rdp, int start, int end,
     int xinc;
     if (flip)
     {
-        drinc = rdp->spans.dr;
-        dginc = rdp->spans.dg;
-        dbinc = rdp->spans.db;
-        dainc = rdp->spans.da;
-        dzinc = rdp->spans.dz;
+        drinc = rdp->spans_dr;
+        dginc = rdp->spans_dg;
+        dbinc = rdp->spans_db;
+        dainc = rdp->spans_da;
+        dzinc = rdp->spans_dz;
         xinc = 1;
     }
     else
     {
-        drinc = -rdp->spans.dr;
-        dginc = -rdp->spans.dg;
-        dbinc = -rdp->spans.db;
-        dainc = -rdp->spans.da;
-        dzinc = -rdp->spans.dz;
+        drinc = -rdp->spans_dr;
+        dginc = -rdp->spans_dg;
+        dbinc = -rdp->spans_db;
+        dainc = -rdp->spans_da;
+        dzinc = -rdp->spans_dz;
         xinc = -1;
     }
 
     int dzpix;
     if (!rdp->other_modes.z_source_sel)
-        dzpix = rdp->spans.dzpix;
+        dzpix = rdp->spans_dzpix;
     else
     {
         dzpix = rdp->primitive_delta_z;
-        dzinc = rdp->spans.cdz = rdp->spans.dzdy = 0;
+        dzinc = rdp->spans_cdz = rdp->spans_dzdy = 0;
     }
     int dzpixenc = dz_compress(dzpix);
 
@@ -1489,16 +1489,16 @@ static void render_spans_copy(struct rdp_state* rdp, int start, int end, int til
     int xinc;
     if (flip)
     {
-        dsinc = rdp->spans.ds;
-        dtinc = rdp->spans.dt;
-        dwinc = rdp->spans.dw;
+        dsinc = rdp->spans_ds;
+        dtinc = rdp->spans_dt;
+        dwinc = rdp->spans_dw;
         xinc = 1;
     }
     else
     {
-        dsinc = -rdp->spans.ds;
-        dtinc = -rdp->spans.dt;
-        dwinc = -rdp->spans.dw;
+        dsinc = -rdp->spans_ds;
+        dtinc = -rdp->spans_dt;
+        dwinc = -rdp->spans_dw;
         xinc = -1;
     }
 
@@ -1712,47 +1712,47 @@ static void edgewalker_for_prims(struct rdp_state* rdp, int32_t* ewdata)
 
 
 
-    rdp->spans.ds = dsdx & ~0x1f;
-    rdp->spans.dt = dtdx & ~0x1f;
-    rdp->spans.dw = dwdx & ~0x1f;
-    rdp->spans.dr = drdx & ~0x1f;
-    rdp->spans.dg = dgdx & ~0x1f;
-    rdp->spans.db = dbdx & ~0x1f;
-    rdp->spans.da = dadx & ~0x1f;
-    rdp->spans.dz = dzdx;
+    rdp->spans_ds = dsdx & ~0x1f;
+    rdp->spans_dt = dtdx & ~0x1f;
+    rdp->spans_dw = dwdx & ~0x1f;
+    rdp->spans_dr = drdx & ~0x1f;
+    rdp->spans_dg = dgdx & ~0x1f;
+    rdp->spans_db = dbdx & ~0x1f;
+    rdp->spans_da = dadx & ~0x1f;
+    rdp->spans_dz = dzdx;
 
 
-    rdp->spans.drdy = drdy >> 14;
-    rdp->spans.dgdy = dgdy >> 14;
-    rdp->spans.dbdy = dbdy >> 14;
-    rdp->spans.dady = dady >> 14;
-    rdp->spans.dzdy = dzdy >> 10;
-    rdp->spans.drdy = SIGN(rdp->spans.drdy, 13);
-    rdp->spans.dgdy = SIGN(rdp->spans.dgdy, 13);
-    rdp->spans.dbdy = SIGN(rdp->spans.dbdy, 13);
-    rdp->spans.dady = SIGN(rdp->spans.dady, 13);
-    rdp->spans.dzdy = SIGN(rdp->spans.dzdy, 22);
-    rdp->spans.cdr = rdp->spans.dr >> 14;
-    rdp->spans.cdr = SIGN(rdp->spans.cdr, 13);
-    rdp->spans.cdg = rdp->spans.dg >> 14;
-    rdp->spans.cdg = SIGN(rdp->spans.cdg, 13);
-    rdp->spans.cdb = rdp->spans.db >> 14;
-    rdp->spans.cdb = SIGN(rdp->spans.cdb, 13);
-    rdp->spans.cda = rdp->spans.da >> 14;
-    rdp->spans.cda = SIGN(rdp->spans.cda, 13);
-    rdp->spans.cdz = rdp->spans.dz >> 10;
-    rdp->spans.cdz = SIGN(rdp->spans.cdz, 22);
+    rdp->spans_drdy = drdy >> 14;
+    rdp->spans_dgdy = dgdy >> 14;
+    rdp->spans_dbdy = dbdy >> 14;
+    rdp->spans_dady = dady >> 14;
+    rdp->spans_dzdy = dzdy >> 10;
+    rdp->spans_drdy = SIGN(rdp->spans_drdy, 13);
+    rdp->spans_dgdy = SIGN(rdp->spans_dgdy, 13);
+    rdp->spans_dbdy = SIGN(rdp->spans_dbdy, 13);
+    rdp->spans_dady = SIGN(rdp->spans_dady, 13);
+    rdp->spans_dzdy = SIGN(rdp->spans_dzdy, 22);
+    rdp->spans_cdr = rdp->spans_dr >> 14;
+    rdp->spans_cdr = SIGN(rdp->spans_cdr, 13);
+    rdp->spans_cdg = rdp->spans_dg >> 14;
+    rdp->spans_cdg = SIGN(rdp->spans_cdg, 13);
+    rdp->spans_cdb = rdp->spans_db >> 14;
+    rdp->spans_cdb = SIGN(rdp->spans_cdb, 13);
+    rdp->spans_cda = rdp->spans_da >> 14;
+    rdp->spans_cda = SIGN(rdp->spans_cda, 13);
+    rdp->spans_cdz = rdp->spans_dz >> 10;
+    rdp->spans_cdz = SIGN(rdp->spans_cdz, 22);
 
-    rdp->spans.dsdy = dsdy & ~0x7fff;
-    rdp->spans.dtdy = dtdy & ~0x7fff;
-    rdp->spans.dwdy = dwdy & ~0x7fff;
+    rdp->spans_dsdy = dsdy & ~0x7fff;
+    rdp->spans_dtdy = dtdy & ~0x7fff;
+    rdp->spans_dwdy = dwdy & ~0x7fff;
 
 
     int dzdy_dz = (dzdy >> 16) & 0xffff;
     int dzdx_dz = (dzdx >> 16) & 0xffff;
 
-    rdp->spans.dzpix = ((dzdy_dz & 0x8000) ? ((~dzdy_dz) & 0x7fff) : dzdy_dz) + ((dzdx_dz & 0x8000) ? ((~dzdx_dz) & 0x7fff) : dzdx_dz);
-    rdp->spans.dzpix = normalize_dzpix(rdp->spans.dzpix & 0xffff) & 0xffff;
+    rdp->spans_dzpix = ((dzdy_dz & 0x8000) ? ((~dzdy_dz) & 0x7fff) : dzdy_dz) + ((dzdx_dz & 0x8000) ? ((~dzdx_dz) & 0x7fff) : dzdx_dz);
+    rdp->spans_dzpix = normalize_dzpix(rdp->spans_dzpix & 0xffff) & 0xffff;
 
 
 
