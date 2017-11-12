@@ -202,7 +202,7 @@ static void rdp_cmd(const uint32_t* arg, uint32_t length)
     uint32_t cmd_id = CMD_ID(arg);
 
     // check if parallel processing is enabled
-    if (config->parallel) {
+    if (config.parallel) {
         // flush pending commands if the next command requires it
         if (rdp_commands[cmd_id].sync) {
             rdp_cmd_flush();
@@ -223,7 +223,7 @@ static void rdp_cmd(const uint32_t* arg, uint32_t length)
     }
 }
 
-void rdp_cmd_update(void)
+void rdp_update(void)
 {
     uint32_t** dp_reg = plugin_get_dp_registers();
     uint32_t dp_current_al = *dp_reg[DP_CURRENT] & ~7;

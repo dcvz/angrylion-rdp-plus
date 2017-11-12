@@ -2,7 +2,6 @@
 #include "clock.h"
 #include "argparse.h"
 
-#include "core/core.h"
 #include "core/rdp.h"
 #include "core/screen.h"
 
@@ -21,7 +20,7 @@
 
 #endif
 
-static struct core_config config;
+static struct rdp_config config;
 
 static bool loop;
 static bool benchmark;
@@ -193,9 +192,9 @@ int main(int argc, char** argv)
     //trace_read_header(&rdram_size);
     //plugin_set_rdram_size(rdram_size);
 
-    core_init(&config);
+    rdp_init(&config);
     retrace_frames();
-    core_close();
+    rdp_close();
     //trace_read_close();
 
     return EXIT_SUCCESS;

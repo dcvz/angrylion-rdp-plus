@@ -23,7 +23,7 @@
 #define CONFIG_FILE_NAME CORE_SIMPLE_NAME "-config.ini"
 
 static HINSTANCE inst;
-static struct core_config config;
+static struct rdp_config config;
 static char config_path[MAX_PATH + 1];
 
 static HWND dlg_combo_vi_mode;
@@ -70,7 +70,7 @@ INT_PTR CALLBACK config_dialog_proc(HWND hwnd, UINT iMessage, WPARAM wParam, LPA
             SendMessage(dlg_combo_vi_mode, CB_SETCURSEL, (WPARAM)config.vi.mode, 0);
 
             dlg_check_trace = GetDlgItem(hwnd, IDC_CHECK_TRACE);
-            SendMessage(dlg_check_trace, BM_SETCHECK, (WPARAM)config.dp.trace_record, 0);
+            SendMessage(dlg_check_trace, BM_SETCHECK, (WPARAM)config.trace_record, 0);
 
             dlg_check_multithread = GetDlgItem(hwnd, IDC_CHECK_MULTITHREAD);
             SendMessage(dlg_check_multithread, BM_SETCHECK, (WPARAM)config.parallel, 0);
@@ -117,11 +117,11 @@ INT_PTR CALLBACK config_dialog_proc(HWND hwnd, UINT iMessage, WPARAM wParam, LPA
                     config.vi.mode = SendMessage(dlg_combo_vi_mode, CB_GETCURSEL, 0, 0);
                     config.vi.widescreen = SendMessage(dlg_check_vi_widescreen, BM_GETCHECK, 0, 0);
                     config.vi.overscan = SendMessage(dlg_check_vi_overscan, BM_GETCHECK, 0, 0);
-                    config.dp.trace_record = SendMessage(dlg_check_trace, BM_GETCHECK, 0, 0);
+                    config.trace_record = SendMessage(dlg_check_trace, BM_GETCHECK, 0, 0);
                     config.parallel = SendMessage(dlg_check_multithread, BM_GETCHECK, 0, 0);
                     config.num_workers = GetDlgItemInt(hwnd, IDC_EDIT_WORKERS, FALSE, FALSE);
 
-                    core_config_update(&config);
+                    rdp_update_config(&config);
                     config_save();
 
                     // don't close dialog if "Apply" was pressed
@@ -165,8 +165,6 @@ void config_init(HINSTANCE hInst)
     inst = hInst;
     config_path[0] = 0;
 
-    core_config_defaults(&config);
-
     // create path to config file relative to the DLL path
     GetModuleFileName(inst, config_path, sizeof(config_path));
     PathRemoveFileSpec(config_path);
@@ -178,7 +176,7 @@ void config_dialog(HWND hParent)
     DialogBox(inst, MAKEINTRESOURCE(IDD_DIALOG1), hParent, config_dialog_proc);
 }
 
-struct core_config* config_get(void)
+struct rdp_config* config_get(void)
 {
     return &config;
 }

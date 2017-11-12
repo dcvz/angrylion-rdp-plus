@@ -26,9 +26,6 @@
     <ClCompile Include="parallel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="core.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="file.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -101,9 +98,6 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="msg.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="core.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="file.h">

@@ -11,6 +11,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <ctype.h>
 #include <assert.h>
 
 #define SIGN16(x)   ((int16_t)(x))
@@ -386,13 +387,15 @@ struct rdp_state
 
 
 static struct rdp_state* rdp_states;
-static struct core_config* config;
+static struct rdp_config config;
+static struct rdp_config config_new;
 static struct plugin_api* plugin;
 
 static int32_t one_color = 0x100;
 static int32_t zero_color = 0x00;
 
 static bool init_lut;
+static bool config_update;
 
 static struct
 {
@@ -416,6 +419,59 @@ static STRICTINLINE int32_t irand(int32_t* seed)
     *seed *= 0x343fd;
     *seed += 0x269ec3;
     return ((*seed >> 16) & 0x7fff);
+}
+
+static char filter_char(char c)
+{
+    if (isalnum(c) || c == '_' || c == '-' || c == '.') {
+        return c;
+    } else {
+        return ' ';
+    }
+}
+
+static uint32_t get_rom_name(char* name, uint32_t name_size)
+{
+    if (name_size < 21) {
+        // buffer too small
+        return 0;
+    }
+
+    uint8_t* rom_header = plugin_get_rom_header();
+    if (!rom_header) {
+        // not available
+        return 0;
+    }
+
+    // copy game name from ROM header, which is encoded in Shift_JIS.
+    // most games just use the ASCII subset, so filter out the rest.
+    int i = 0;
+    for (; i < 20; i++) {
+        name[i] = filter_char(rom_header[(32 + i) ^ BYTE_ADDR_XOR]);
+    }
+
+    // make sure there's at least one whitespace that will terminate the string
+    // below
+    name[i] = ' ';
+
+    // trim trailing whitespaces
+    for (; i > 0; i--) {
+        if (name[i] != ' ') {
+            break;
+        }
+        name[i] = 0;
+    }
+
+    // game title is empty or invalid, use safe fallback using the four-character
+    // game ID
+    if (i == 0) {
+        for (; i < 4; i++) {
+            name[i] = filter_char(rom_header[(59 + i) ^ BYTE_ADDR_XOR]);
+        }
+        name[i] = 0;
+    }
+
+    return i;
 }
 
 static void deduce_derivatives(struct rdp_state* rdp);
@@ -455,9 +511,11 @@ void rdp_init_worker(uint32_t worker_id)
     rasterizer_init(rdp);
 }
 
-int rdp_init(struct core_config* _config)
+int rdp_init(struct rdp_config* _config)
 {
-    config = _config;
+    if (_config) {
+        config = *_config;
+    }
 
     // initialize static lookup tables, once is enough
     if (!init_lut) {
@@ -470,13 +528,19 @@ int rdp_init(struct core_config* _config)
         init_lut = true;
     }
 
+    // init externals
+    screen_init();
+    plugin_init();
+
+    // init internals
     rdram_init();
     vi_init();
 
     rdp_pipeline_crashed = 0;
     memset(&onetimewarnings, 0, sizeof(onetimewarnings));
 
-    if (config->parallel) {
+    if (config.parallel) {
+        parallel_init(config.num_workers);
         rdp_states = malloc(parallel_worker_num() * sizeof(struct rdp_state));
         parallel_run(rdp_init_worker);
     } else {
@@ -485,6 +549,14 @@ int rdp_init(struct core_config* _config)
     }
 
     return 0;
+}
+
+void rdp_update_config(struct rdp_config* config)
+{
+    // updating the config directly would be dangerous and can cause crashes,
+    // so wait for the next sync_full before applying it
+    config_new = *config;
+    config_update = true;
 }
 
 static void rdp_invalid(struct rdp_state* rdp, const uint32_t* args)
@@ -509,7 +581,16 @@ static void rdp_sync_tile(struct rdp_state* rdp, const uint32_t* args)
 
 static void rdp_sync_full(struct rdp_state* rdp, const uint32_t* args)
 {
-    core_dp_sync();
+    // update config if set
+    if (config_update) {
+        rdp_close();
+        rdp_init(&config_new);
+
+        config_update = false;
+    }
+
+    // signal plugin to handle interrupts
+    plugin_sync_dp();
 }
 
 static void rdp_set_other_modes(struct rdp_state* rdp, const uint32_t* args)
@@ -651,6 +732,9 @@ static void deduce_derivatives(struct rdp_state* rdp)
 void rdp_close(void)
 {
     vi_close();
+    parallel_close();
+    plugin_close();
+    screen_close();
 
     if (rdp_states) {
         free(rdp_states);

@@ -57,7 +57,7 @@ static bool warn_hle;
 static bool plugin_initialized;
 void (*debug_callback)(void *, int, const char *);
 void *debug_call_context;
-static struct core_config config;
+static struct rdp_config config;
 
 m64p_dynlib_handle CoreLibHandle;
 GFX_INFO gfx;
@@ -79,9 +79,6 @@ EXPORT m64p_error CALL PluginStartup(m64p_dynlib_handle _CoreLibHandle, void *Co
     /* first thing is to set the callback function for debug info */
     debug_callback = DebugCallback;
     debug_call_context = Context;
-
-    // load low-level config defaults, which are applied on the API defaults
-    core_config_defaults(&config);
 
     CoreLibHandle = _CoreLibHandle;
 
@@ -173,7 +170,7 @@ EXPORT void CALL ProcessDList(void)
 
 EXPORT void CALL ProcessRDPList(void)
 {
-    core_dp_update();
+    rdp_update();
 }
 
 EXPORT int CALL RomOpen (void)
@@ -188,13 +185,13 @@ EXPORT int CALL RomOpen (void)
     config.vi.widescreen = ConfigGetParamBool(configVideoAngrylionPlus, KEY_VI_WIDESCREEN);
     config.vi.overscan = ConfigGetParamBool(configVideoAngrylionPlus, KEY_VI_OVERSCAN);
 
-    core_init(&config);
+    rdp_init(&config);
     return 1;
 }
 
 EXPORT void CALL RomClosed (void)
 {
-    core_close();
+    rdp_close();
 }
 
 EXPORT void CALL ShowCFB (void)
@@ -203,7 +200,7 @@ EXPORT void CALL ShowCFB (void)
 
 EXPORT void CALL UpdateScreen (void)
 {
-    core_vi_update();
+    rdp_update_vi();
 }
 
 EXPORT void CALL ViStatusChanged (void)

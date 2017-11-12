@@ -1,6 +1,6 @@
 #include "plugin.h"
 
-#include "core/core.h"
+#include "core/rdp.h"
 
 #include <memory.h>
 

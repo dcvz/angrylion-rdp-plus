@@ -2,7 +2,7 @@
 #include "config.h"
 #include "resource.h"
 
-#include "core/core.h"
+#include "core/rdp.h"
 #include "core/screen.h"
 #include "core/version.h"
 #include "core/msg.h"
@@ -27,7 +27,6 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 
 EXPORT void CALL CaptureScreen(char* directory)
 {
-    core_screenshot(directory);
 }
 
 EXPORT void CALL ChangeWindow(void)
@@ -96,18 +95,18 @@ EXPORT void CALL ProcessDList(void)
 
 EXPORT void CALL ProcessRDPList(void)
 {
-    core_dp_update();
+    rdp_update();
 }
 
 EXPORT void CALL RomClosed(void)
 {
-    core_close();
+    rdp_close();
 }
 
 EXPORT void CALL RomOpen(void)
 {
     config_load();
-    core_init(config_get());
+    rdp_init(config_get());
 }
 
 EXPORT void CALL ShowCFB(void)
@@ -116,7 +115,7 @@ EXPORT void CALL ShowCFB(void)
 
 EXPORT void CALL UpdateScreen(void)
 {
-    core_vi_update();
+    rdp_update_vi();
 }
 
 EXPORT void CALL ViStatusChanged(void)

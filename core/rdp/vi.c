@@ -381,7 +381,7 @@ static void vi_process(uint32_t worker_id)
     int32_t y_end = vres;
     int32_t y_inc = 1;
 
-    if (config->parallel) {
+    if (config.parallel) {
         y_begin = worker_id;
         y_inc = parallel_worker_num();
     }
@@ -554,7 +554,7 @@ static void vi_process_end(void)
     int32_t output_height;
     int32_t* buffer = prescale;
 
-    if (config->vi.overscan) {
+    if (config.vi.overscan) {
         // use entire prescale buffer
         width = PRESCALE_WIDTH;
         height = (ispal ? V_RES_PAL : V_RES_NTSC) >> !ctrl.serrate;
@@ -569,7 +569,7 @@ static void vi_process_end(void)
         buffer += x + y * pitch;
     }
 
-    if (config->vi.widescreen) {
+    if (config.vi.widescreen) {
         output_height = output_height * 9 / 16;
     }
 
@@ -615,7 +615,7 @@ static void vi_process_fast(uint32_t worker_id)
     int32_t y_end = vres_raw;
     int32_t y_inc = 1;
 
-    if (config->parallel) {
+    if (config.parallel) {
         y_begin = worker_id;
         y_inc = parallel_worker_num();
     }
@@ -627,7 +627,7 @@ static void vi_process_fast(uint32_t worker_id)
         for (int32_t x = 0; x < hres_raw; x++) {
             uint32_t r, g, b;
 
-            switch (config->vi.mode) {
+            switch (config.vi.mode) {
                 case VI_MODE_COLOR:
                     switch (ctrl.type) {
                         case VI_TYPE_RGBA5551: {
@@ -681,7 +681,7 @@ static void vi_process_end_fast(void)
     int32_t filtered_height = (vres << 1) * V_SYNC_NTSC / v_sync;
     int32_t output_height = hres_raw * filtered_height / hres;
 
-    if (config->vi.widescreen) {
+    if (config.vi.widescreen) {
         output_height = output_height * 9 / 16;
     }
 
@@ -693,18 +693,18 @@ static void vi_process_end_fast(void)
     }
 }
 
-void rdp_vi_update(void)
+void rdp_update_vi(void)
 {
     // clear buffer after switching VI modes to make sure that black borders are
     // actually black and don't contain garbage
-    if (config->vi.mode != vi_mode) {
+    if (config.vi.mode != vi_mode) {
         memset(prescale, 0, sizeof(prescale));
-        vi_mode = config->vi.mode;
+        vi_mode = config.vi.mode;
     }
 
     // check for configuration errors
-    if (config->vi.mode >= VI_MODE_NUM) {
-        msg_error("Invalid VI mode: %d", config->vi.mode);
+    if (config.vi.mode >= VI_MODE_NUM) {
+        msg_error("Invalid VI mode: %d", config.vi.mode);
     }
 
     // parse and check some common registers
@@ -775,7 +775,7 @@ void rdp_vi_update(void)
     void (*vi_process_ptr)(uint32_t);
     void (*vi_process_end_ptr)(void);
 
-    if (config->vi.mode == VI_MODE_NORMAL) {
+    if (config.vi.mode == VI_MODE_NORMAL) {
         vi_process_start_ptr = vi_process_start;
         vi_process_ptr = vi_process;
         vi_process_end_ptr = vi_process_end;
@@ -791,7 +791,7 @@ void rdp_vi_update(void)
     }
 
     // run filter update in parallel if enabled
-    if (config->parallel) {
+    if (config.parallel) {
         parallel_run(vi_process_ptr);
     } else {
         vi_process_ptr(0);
