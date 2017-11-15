@@ -20,8 +20,22 @@ static int32_t tex_display_height;
 
 static void gl_check_errors(void)
 {
+#ifdef _DEBUG
     GLenum err;
+    static int32_t invalid_op_count = 0;
     while ((err = glGetError()) != GL_NO_ERROR) {
+        // if gl_check_errors is called from a thread with no valid
+        // GL context, it would be stuck in an infinite loop here, since
+        // glGetError itself causes GL_INVALID_OPERATION, so check for a few
+        // cycles and abort if there are too many errors of that kind
+        if (err == GL_INVALID_OPERATION) {
+            if (++invalid_op_count >= 100) {
+                msg_error("gl_check_errors: invalid OpenGL context!");
+            }
+        } else {
+            invalid_op_count = 0;
+        }
+
         char* err_str;
         switch (err) {
             case GL_INVALID_OPERATION:
@@ -42,8 +56,9 @@ static void gl_check_errors(void)
             default:
                 err_str = "unknown";
         }
-        msg_debug("OpenGL error: %d (%s)", err, err_str);
+        msg_debug("gl_check_errors: %d (%s)", err, err_str);
     }
+#endif
 }
 
 static GLuint gl_shader_compile(GLenum type, const GLchar* source)
