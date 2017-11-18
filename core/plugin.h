@@ -11,4 +11,5 @@ uint8_t* plugin_get_rdram_hidden(void);
 uint32_t plugin_get_rdram_size(void);
 uint8_t* plugin_get_dmem(void);
 uint8_t* plugin_get_rom_header(void);
+uint32_t plugin_get_rom_name(char* name, uint32_t name_size);
 void plugin_close(void);

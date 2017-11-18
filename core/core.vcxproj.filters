@@ -86,6 +86,9 @@
     <ClCompile Include="rdp\vi.c">
       <Filter>Source Files\rdp</Filter>
     </ClCompile>
+    <ClCompile Include="plugin.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="common.h">
