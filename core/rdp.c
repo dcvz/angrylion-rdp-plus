@@ -2,8 +2,6 @@
 #include "common.h"
 #include "plugin.h"
 #include "msg.h"
-#include "file.h"
-#include "bitmap.h"
 #include "screen.h"
 #include "parallel.h"
 

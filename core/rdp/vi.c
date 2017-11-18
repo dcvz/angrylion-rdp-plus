@@ -81,7 +81,6 @@ static int32_t vi_width_low;
 static uint32_t frame_buffer;
 static uint32_t tvfadeoutstate[PRESCALE_HEIGHT];
 
-static char screenshot_path[FILE_MAX_PATH];
 static enum vi_mode vi_mode;
 
 // prescale buffer
@@ -97,55 +96,6 @@ static int32_t hres_raw, vres_raw;
 static int32_t v_start;
 static int32_t h_start;
 static int32_t v_current_line;
-
-static void vi_screenshot_write(char* path, int32_t* buffer, int32_t width, int32_t height, int32_t pitch, int32_t output_height)
-{
-    msg_debug("screen: writing screenshot to '%s'", path);
-
-    // prepare bitmap headers
-    struct bitmap_info_header ihdr = {0};
-    ihdr.size = sizeof(ihdr);
-    ihdr.width = width;
-    ihdr.height = output_height;
-    ihdr.planes = 1;
-    ihdr.bit_count = 32;
-    ihdr.size_image = width * output_height * sizeof(int32_t);
-
-    struct bitmap_file_header fhdr = {0};
-    fhdr.type = 'B' | ('M' << 8);
-    fhdr.off_bits = sizeof(fhdr) + sizeof(ihdr) + 10;
-    fhdr.size = ihdr.size_image + fhdr.off_bits;
-
-    FILE* fp = fopen(path, "wb");
-
-    if (!fp) {
-        msg_warning("Can't open screenshot file %s!", path);
-        return;
-    }
-
-    // write bitmap headers
-    fwrite(&fhdr, sizeof(fhdr), 1, fp);
-    fwrite(&ihdr, sizeof(ihdr), 1, fp);
-
-    // write bitmap contents
-    fseek(fp, fhdr.off_bits, SEEK_SET);
-
-    // check if interpolation is required and copy lines to bitmap
-    if (height != output_height) {
-        // nearest-neighbor mode
-        for (int32_t y = output_height - 1; y >= 0; y--) {
-            int32_t iy = y * height / output_height;
-            fwrite(buffer + pitch * iy, width * sizeof(int32_t), 1, fp);
-        }
-    } else {
-        // direct mode
-        for (int32_t y = height - 1; y >= 0; y--) {
-            fwrite(buffer + pitch * y, width * sizeof(int32_t), 1, fp);
-        }
-    }
-
-    fclose(fp);
-}
 
 static void vi_init(void)
 {
@@ -574,11 +524,6 @@ static void vi_process_end(void)
     }
 
     screen_upload(buffer, width, height, pitch, output_height);
-
-    if (screenshot_path[0]) {
-        vi_screenshot_write(screenshot_path, buffer, width, height, pitch, output_height);
-        screenshot_path[0] = 0;
-    }
 }
 
 static bool vi_process_start_fast(void)
@@ -686,11 +631,6 @@ static void vi_process_end_fast(void)
     }
 
     screen_upload(prescale, hres_raw, vres_raw, hres_raw, output_height);
-
-    if (screenshot_path[0]) {
-        vi_screenshot_write(screenshot_path, prescale, hres_raw, vres_raw, hres_raw, output_height);
-        screenshot_path[0] = 0;
-    }
 }
 
 void rdp_update_vi(void)
@@ -802,11 +742,6 @@ void rdp_update_vi(void)
 
     // render frame to screen
     screen_swap();
-}
-
-void rdp_screenshot(char* path)
-{
-    strcpy(screenshot_path, path);
 }
 
 static void vi_close(void)

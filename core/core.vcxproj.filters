@@ -26,9 +26,6 @@
     <ClCompile Include="parallel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="file.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="rdp\cmd.c">
       <Filter>Source Files\rdp</Filter>
     </ClCompile>
@@ -98,12 +95,6 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="msg.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="file.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="bitmap.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="plugin.h">
