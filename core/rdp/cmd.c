@@ -229,7 +229,7 @@ void rdp_update(void)
     uint32_t dp_current_al = *dp_reg[DP_CURRENT] & ~7;
     uint32_t dp_end_al = *dp_reg[DP_END] & ~7;
 
-    *dp_reg[DP_STATUS] &= ~DP_STATUS_FREEZE;
+//    *dp_reg[DP_STATUS] &= ~DP_STATUS_FREEZE;
 
     if (dp_end_al <= dp_current_al) {
         return;
