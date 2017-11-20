@@ -126,6 +126,11 @@ void screen_upload(int32_t* buffer, int32_t width, int32_t height, int32_t pitch
     gl_screen_upload(buffer, width, height, pitch, output_height);
 }
 
+void screen_download(int32_t* buffer, int32_t* width, int32_t* height)
+{
+    gl_screen_download(buffer, width, height);
+}
+
 void screen_swap(void)
 {
     // don't render when the window is minimized

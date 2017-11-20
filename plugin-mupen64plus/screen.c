@@ -72,6 +72,11 @@ void screen_upload(int32_t* buffer, int32_t width, int32_t height, int32_t pitch
     gl_screen_upload(buffer, width, height, pitch, output_height);
 }
 
+void screen_download(int32_t* buffer, int32_t* width, int32_t* height)
+{
+    gl_screen_download(buffer, width, height);
+}
+
 void screen_set_fullscreen(bool _fullscreen)
 {
     toggle_fs = true;
@@ -87,37 +92,4 @@ void screen_close(void)
     gl_screen_close();
 
     CoreVideo_Quit();
-}
-
-void ogl_readscreen(void *_dest, int32_t *_width, int32_t *_height, int32_t _front)
-{
-    if (_width == NULL || _height == NULL) {
-        return;
-    }
-
-    *_width = window_width;
-    *_height = window_height;
-
-    if (_dest == NULL) {
-        return;
-    }
-
-    unsigned char *pBufferData = (unsigned char*)malloc((*_width)*(*_height) * 4);
-    unsigned char *pDest = (unsigned char*)_dest;
-
-    glReadPixels(0, 0, window_width, window_height, GL_RGBA, GL_UNSIGNED_BYTE, pBufferData);
-
-    //Convert RGBA to RGB
-    for (int32_t y = 0; y < *_height; ++y) {
-        unsigned char *ptr = pBufferData + ((*_width) * 4 * y);
-        for (int32_t x = 0; x < *_width; ++x) {
-            pDest[x * 3] = ptr[0]; // red
-            pDest[x * 3 + 1] = ptr[1]; // green
-            pDest[x * 3 + 2] = ptr[2]; // blue
-            ptr += 4;
-        }
-        pDest += (*_width) * 3;
-    }
-
-    free(pBufferData);
 }

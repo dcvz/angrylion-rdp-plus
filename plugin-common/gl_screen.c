@@ -3,6 +3,8 @@
 
 #include "core/msg.h"
 
+#include <stdlib.h>
+
 // supposedly, these settings are most hardware-friendly on all platforms
 #define TEX_INTERNAL_FORMAT GL_RGBA8
 #define TEX_FORMAT GL_BGRA
@@ -15,7 +17,6 @@ static GLuint texture;
 static int32_t tex_width;
 static int32_t tex_height;
 
-static int32_t tex_display_width;
 static int32_t tex_display_height;
 
 static void gl_check_errors(void)
@@ -166,16 +167,44 @@ bool gl_screen_upload(int32_t* buffer, int32_t width, int32_t height, int32_t pi
     }
 
     // update output size
-    tex_display_width = width;
     tex_display_height = output_height;
 
     return buffer_size_changed;
 }
 
+void gl_screen_download(int32_t* buffer, int32_t* width, int32_t* height)
+{
+    *width = tex_width;
+    *height = tex_display_height;
+
+    if (!buffer) {
+        return;
+    }
+
+    // check if resampling is required
+    if (tex_display_height == tex_height) {
+        // size matches, direct copy
+        glGetTexImage(GL_TEXTURE_2D, 0, TEX_FORMAT, TEX_TYPE, (void*)buffer);
+    } else {
+        // do nearest-neighbor resampling
+        int32_t* tex_buffer = malloc(tex_width * tex_display_height * sizeof(int32_t));
+        glGetTexImage(GL_TEXTURE_2D, 0, TEX_FORMAT, TEX_TYPE, tex_buffer);
+
+        for (int32_t y = 0; y < tex_display_height; y++) {
+            int32_t iy = y * tex_height / tex_display_height;
+            uint32_t os = tex_width * iy;
+            uint32_t od = tex_width * y;
+            memcpy(buffer + od, tex_buffer + os, tex_width * sizeof(int32_t));
+        }
+
+        free(tex_buffer);
+    }
+}
+
 void gl_screen_render(int32_t win_width, int32_t win_height, int32_t win_x, int32_t win_y)
 {
     int32_t hw = tex_display_height * win_width;
-    int32_t wh = tex_display_width * win_height;
+    int32_t wh = tex_width * win_height;
 
     // add letterboxes or pillarboxes if the window has a different aspect ratio
     // than the current display mode
@@ -184,7 +213,7 @@ void gl_screen_render(int32_t win_width, int32_t win_height, int32_t win_x, int3
         win_x += (win_width - w_max) / 2;
         win_width = w_max;
     } else if (hw < wh) {
-        int32_t h_max = hw / tex_display_width;
+        int32_t h_max = hw / tex_width;
         win_y += (win_height - h_max) / 2;
         win_height = h_max;
     }
@@ -207,7 +236,6 @@ void gl_screen_close(void)
     tex_width = 0;
     tex_height = 0;
 
-    tex_display_width = 0;
     tex_display_height = 0;
 
     glDeleteTextures(1, &texture);

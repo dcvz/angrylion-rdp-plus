@@ -218,7 +218,7 @@ EXPORT void CALL ChangeWindow(void)
 
 EXPORT void CALL ReadScreen2(void *dest, int *width, int *height, int front)
 {
-    ogl_readscreen(dest, width, height, front);
+    screen_download(dest, width, height);
 }
 
 EXPORT void CALL SetRenderingCallback(void (*callback)(int))

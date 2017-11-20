@@ -12,8 +12,55 @@
 
 static bool warn_hle;
 static HINSTANCE hinst;
+static char screenshot_path[MAX_PATH];
+static uint16_t screenshot_index;
 
 GFX_INFO gfx;
+
+static void write_screenshot(char* path)
+{
+    int32_t width;
+    int32_t height;
+
+    screen_download(NULL, &width, &height);
+
+    // prepare bitmap headers
+    BITMAPINFOHEADER ihdr = {0};
+    ihdr.biSize = sizeof(ihdr);
+    ihdr.biWidth = width;
+    ihdr.biHeight = height;
+    ihdr.biPlanes = 1;
+    ihdr.biBitCount = 32;
+    ihdr.biSizeImage = width * height * sizeof(int32_t);
+
+    BITMAPFILEHEADER fhdr = {0};
+    fhdr.bfType = 'B' | ('M' << 8);
+    fhdr.bfOffBits = sizeof(fhdr) + sizeof(ihdr) + 10;
+    fhdr.bfSize = ihdr.biSizeImage + fhdr.bfOffBits;
+
+    FILE* fp = fopen(path, "wb");
+
+    if (!fp) {
+        msg_warning("Can't open screenshot file %s!", path);
+        return;
+    }
+
+    // write bitmap headers
+    fwrite(&fhdr, sizeof(fhdr), 1, fp);
+    fwrite(&ihdr, sizeof(ihdr), 1, fp);
+
+    // write bitmap contents
+    fseek(fp, fhdr.bfOffBits, SEEK_SET);
+
+    int32_t* buf = malloc(ihdr.biSizeImage);
+    screen_download(buf, &width, &height);
+    for (int32_t y = height - 1; y >= 0; y--) {
+        fwrite(buf + width * y, width * sizeof(int32_t), 1, fp);
+    }
+    free(buf);
+
+    fclose(fp);
+}
 
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
@@ -27,6 +74,22 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 
 EXPORT void CALL CaptureScreen(char* directory)
 {
+    char rom_name[128];
+    plugin_get_rom_name(rom_name, sizeof(rom_name));
+
+    FILE* fp;
+
+    for (; screenshot_index < 10000; screenshot_index++) {
+        sprintf(screenshot_path, "%s\\%s_%04d.bmp", directory, rom_name, screenshot_index++);
+        fp = fopen(screenshot_path, "rb");
+        if (!fp) {
+            break;
+        }
+    }
+
+    if (fp) {
+        fclose(fp);
+    }
 }
 
 EXPORT void CALL ChangeWindow(void)
@@ -105,6 +168,7 @@ EXPORT void CALL RomClosed(void)
 
 EXPORT void CALL RomOpen(void)
 {
+    screenshot_index = 0;
     config_load();
     rdp_init(config_get());
 }
@@ -116,6 +180,12 @@ EXPORT void CALL ShowCFB(void)
 EXPORT void CALL UpdateScreen(void)
 {
     rdp_update_vi();
+
+    // write screenshot file if requested
+    if (screenshot_path[0]) {
+        write_screenshot(screenshot_path);
+        screenshot_path[0] = 0;
+    }
 }
 
 EXPORT void CALL ViStatusChanged(void)
