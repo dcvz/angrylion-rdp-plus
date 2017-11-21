@@ -24,6 +24,7 @@ if(NOT CMAKE_BUILD_TYPE)
 endif(NOT CMAKE_BUILD_TYPE)
 
 find_package(Git REQUIRED)
+find_package(PythonLibs)
 find_package(PythonInterp 3.2 REQUIRED)
 find_package(OpenGL REQUIRED)
 
