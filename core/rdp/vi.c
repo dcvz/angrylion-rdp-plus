@@ -658,9 +658,9 @@ void rdp_update_vi(void)
 
     hres =  h_end - h_start;
     vres = (v_end - v_start) >> 1; // vertical is measured in half-lines
-    
+
     // skip invalid/unsupported frame sizes
-    if (hres <= 0 || vres <= 0) {
+    if (vi_mode != VI_MODE_NORMAL && (hres <= 0 || vres <= 0)) {
        return;
     }
 
