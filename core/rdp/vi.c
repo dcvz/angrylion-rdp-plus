@@ -520,7 +520,7 @@ static void vi_process_end(void)
     }
 
     if (config.vi.widescreen) {
-        output_height = output_height * 9 / 16;
+        output_height = output_height * 3 / 4;
     }
 
     screen_upload(buffer, width, height, pitch, output_height);
