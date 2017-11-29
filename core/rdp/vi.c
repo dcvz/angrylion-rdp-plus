@@ -627,7 +627,7 @@ static void vi_process_end_fast(void)
     int32_t output_height = hres_raw * filtered_height / hres;
 
     if (config.vi.widescreen) {
-        output_height = output_height * 9 / 16;
+        output_height = output_height * 3 / 4;
     }
 
     screen_upload(prescale, hres_raw, vres_raw, hres_raw, output_height);
