@@ -13,7 +13,6 @@
 static bool warn_hle;
 static HINSTANCE hinst;
 static char screenshot_path[MAX_PATH];
-static uint16_t screenshot_index;
 
 GFX_INFO gfx;
 
@@ -77,17 +76,12 @@ EXPORT void CALL CaptureScreen(char* directory)
     char rom_name[128];
     plugin_get_rom_name(rom_name, sizeof(rom_name));
 
-    FILE* fp;
-
-    for (; screenshot_index < 10000; screenshot_index++) {
-        sprintf(screenshot_path, "%s\\%s_%04d.bmp", directory, rom_name, screenshot_index++);
-        fp = fopen(screenshot_path, "rb");
+    for (int32_t i = 0; i < 10000; i++) {
+        sprintf(screenshot_path, "%s\\%s_%04d.bmp", directory, rom_name, i);
+        FILE* fp = fopen(screenshot_path, "rb");
         if (!fp) {
             break;
         }
-    }
-
-    if (fp) {
         fclose(fp);
     }
 }
@@ -168,7 +162,6 @@ EXPORT void CALL RomClosed(void)
 
 EXPORT void CALL RomOpen(void)
 {
-    screenshot_index = 0;
     config_load();
     rdp_init(config_get());
 }
