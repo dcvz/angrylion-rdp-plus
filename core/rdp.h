@@ -53,7 +53,6 @@ struct rdp_config
     } vi;
     bool parallel;
     uint32_t num_workers;
-    bool trace_record;
 };
 
 int rdp_init(struct rdp_config* config);

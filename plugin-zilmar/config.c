@@ -69,9 +69,6 @@ INT_PTR CALLBACK config_dialog_proc(HWND hwnd, UINT iMessage, WPARAM wParam, LPA
             }
             SendMessage(dlg_combo_vi_mode, CB_SETCURSEL, (WPARAM)config.vi.mode, 0);
 
-            dlg_check_trace = GetDlgItem(hwnd, IDC_CHECK_TRACE);
-            SendMessage(dlg_check_trace, BM_SETCHECK, (WPARAM)config.trace_record, 0);
-
             dlg_check_multithread = GetDlgItem(hwnd, IDC_CHECK_MULTITHREAD);
             SendMessage(dlg_check_multithread, BM_SETCHECK, (WPARAM)config.parallel, 0);
 
@@ -117,7 +114,6 @@ INT_PTR CALLBACK config_dialog_proc(HWND hwnd, UINT iMessage, WPARAM wParam, LPA
                     config.vi.mode = SendMessage(dlg_combo_vi_mode, CB_GETCURSEL, 0, 0);
                     config.vi.widescreen = SendMessage(dlg_check_vi_widescreen, BM_GETCHECK, 0, 0);
                     config.vi.overscan = SendMessage(dlg_check_vi_overscan, BM_GETCHECK, 0, 0);
-                    config.trace_record = SendMessage(dlg_check_trace, BM_GETCHECK, 0, 0);
                     config.parallel = SendMessage(dlg_check_multithread, BM_GETCHECK, 0, 0);
                     config.num_workers = GetDlgItemInt(hwnd, IDC_EDIT_WORKERS, FALSE, FALSE);
 
