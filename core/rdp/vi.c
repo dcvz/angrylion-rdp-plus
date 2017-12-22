@@ -269,12 +269,13 @@ static bool vi_process_start(void)
 
                 if (tvfadeoutstate[i + 1]) {
                     tvfadeoutstate[i + 1]--;
-                    if (!tvfadeoutstate[i + 1])
+                    if (!tvfadeoutstate[i + 1]) {
                         if (validh) {
                             memset(&prescale[(i + 1) * PRESCALE_WIDTH + h_start], 0, hres * sizeof(uint32_t));
                         } else {
                             memset(&prescale[(i + 1) * PRESCALE_WIDTH], 0, PRESCALE_WIDTH * sizeof(uint32_t));
                         }
+                    }
                 }
 
                 i += 2;
@@ -286,12 +287,13 @@ static bool vi_process_start(void)
             if (tvfadeoutstate[i]) {
                 tvfadeoutstate[i]--;
             }
-            if (!tvfadeoutstate[i])
+            if (!tvfadeoutstate[i]) {
                 if (validh) {
                     memset(&prescale[i * PRESCALE_WIDTH + h_start], 0, hres * sizeof(uint32_t));
                 } else {
                     memset(&prescale[i * PRESCALE_WIDTH], 0, PRESCALE_WIDTH * sizeof(uint32_t));
                 }
+            }
         }
     }
 
@@ -567,7 +569,7 @@ static void vi_process_fast(uint32_t worker_id)
 
     for (int32_t y = y_begin; y < y_end; y += y_inc) {
         int32_t line = y * vi_width_low;
-        uint32_t* dst = prescale + y * hres_raw;
+        int32_t* dst = prescale + y * hres_raw;
 
         for (int32_t x = 0; x < hres_raw; x++) {
             uint32_t r, g, b;

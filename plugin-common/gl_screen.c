@@ -4,6 +4,7 @@
 #include "core/msg.h"
 
 #include <stdlib.h>
+#include <string.h>
 
 // supposedly, these settings are most hardware-friendly on all platforms
 #define TEX_INTERNAL_FORMAT GL_RGBA8

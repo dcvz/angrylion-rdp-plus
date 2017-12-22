@@ -4,6 +4,9 @@ option(RETRACER "Set to ON to build the retracer tool" ${RETRACER})
 
 project(angrylion-plus)
 
+# set policy CMP0042 for MacOS X
+set(CMAKE_MACOSX_RPATH 1)
+
 # check for INTERPROCEDURAL_OPTIMIZATION support
 if((${CMAKE_VERSION} VERSION_EQUAL 3.9) OR (${CMAKE_VERSION} VERSION_GREATER 3.9))
     cmake_policy(SET CMP0069 NEW)
