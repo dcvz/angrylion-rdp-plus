@@ -30,6 +30,7 @@
 #define KEY_NUM_WORKERS "NumWorkers"
 
 #define KEY_VI_MODE "ViMode"
+#define KEY_VI_INTERP "ViInterpolation"
 #define KEY_VI_WIDESCREEN "ViWidescreen"
 #define KEY_VI_OVERSCAN "ViOverscan"
 
@@ -98,7 +99,8 @@ EXPORT m64p_error CALL PluginStartup(m64p_dynlib_handle _CoreLibHandle, void *Co
 
     ConfigSetDefaultBool(configVideoAngrylionPlus, KEY_PARALLEL, config.parallel, "Distribute rendering between multiple processors if True");
     ConfigSetDefaultInt(configVideoAngrylionPlus, KEY_NUM_WORKERS, config.num_workers, "Rendering Workers (0=Use all logical processors)");
-    ConfigSetDefaultInt(configVideoAngrylionPlus, KEY_VI_MODE, config.vi.mode, "VI Mode (0=Filtered, 1=Unfiltered, 2=Depth, 3=Coverage)");
+    ConfigSetDefaultInt(configVideoAngrylionPlus, KEY_VI_MODE, config.vi.mode, "VI mode (0=Filtered, 1=Unfiltered, 2=Depth, 3=Coverage)");
+    ConfigSetDefaultInt(configVideoAngrylionPlus, KEY_VI_INTERP, config.vi.mode, "Scaling interpolation type (0=NN, 1=Linear)");
     ConfigSetDefaultBool(configVideoAngrylionPlus, KEY_VI_WIDESCREEN, config.vi.widescreen, "Use anamorphic 16:9 output mode if True");
     ConfigSetDefaultBool(configVideoAngrylionPlus, KEY_VI_OVERSCAN, config.vi.overscan, "Display overscan area in filteded mode if True");
 
@@ -182,6 +184,7 @@ EXPORT int CALL RomOpen (void)
     config.parallel = ConfigGetParamBool(configVideoAngrylionPlus, KEY_PARALLEL);
     config.num_workers = ConfigGetParamInt(configVideoAngrylionPlus, KEY_NUM_WORKERS);
     config.vi.mode = ConfigGetParamInt(configVideoAngrylionPlus, KEY_VI_MODE);
+    config.vi.interp = ConfigGetParamInt(configVideoAngrylionPlus, KEY_VI_INTERP);
     config.vi.widescreen = ConfigGetParamBool(configVideoAngrylionPlus, KEY_VI_WIDESCREEN);
     config.vi.overscan = ConfigGetParamBool(configVideoAngrylionPlus, KEY_VI_OVERSCAN);
 

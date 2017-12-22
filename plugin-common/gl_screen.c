@@ -102,7 +102,7 @@ static GLuint gl_shader_link(GLuint vert, GLuint frag)
     return program;
 }
 
-void gl_screen_init(void)
+void gl_screen_init(struct rdp_config* config)
 {
     // shader sources for drawing a clipped full-screen triangle. the geometry
     // is defined by the vertex ID, so a VBO is not required.
@@ -136,8 +136,19 @@ void gl_screen_init(void)
     // prepare texture
     glGenTextures(1, &texture);
     glBindTexture(GL_TEXTURE_2D, texture);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    // select interpolation method
+    GLint filter;
+    switch (config->vi.interp) {
+        case VI_INTERP_LINEAR:
+            filter = GL_LINEAR;
+            break;
+        case VI_INTERP_NEAREST:
+        default:
+            filter = GL_NEAREST;
+    }
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter);
 
     // check if there was an error when using any of the commands above
     gl_check_errors();

@@ -17,6 +17,7 @@
 #define KEY_GEN_NUM_WORKERS "num_workers"
 
 #define KEY_VI_MODE "mode"
+#define KEY_VI_INTERP "interpolation"
 #define KEY_VI_WIDESCREEN "widescreen"
 #define KEY_VI_OVERSCAN "overscan"
 
@@ -27,6 +28,7 @@ static struct rdp_config config;
 static char config_path[MAX_PATH + 1];
 
 static HWND dlg_combo_vi_mode;
+static HWND dlg_combo_vi_interp;
 static HWND dlg_check_trace;
 static HWND dlg_check_multithread;
 static HWND dlg_check_vi_widescreen;
@@ -47,6 +49,15 @@ static void config_dialog_update_vi_mode(void)
     EnableWindow(dlg_check_vi_overscan, sel == VI_MODE_NORMAL);
 }
 
+static void config_dialog_fill_combo(HWND dialog, char** entries, size_t num_entries, uint32_t selected)
+{
+    SendMessage(dialog, CB_RESETCONTENT, 0, 0);
+    for (size_t i = 0; i < num_entries; i++) {
+        SendMessage(dialog, CB_ADDSTRING, i, (LPARAM)entries[i]);
+    }
+    SendMessage(dialog, CB_SETCURSEL, (WPARAM)selected, 0);
+}
+
 INT_PTR CALLBACK config_dialog_proc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 {
     switch (iMessage) {
@@ -55,19 +66,23 @@ INT_PTR CALLBACK config_dialog_proc(HWND hwnd, UINT iMessage, WPARAM wParam, LPA
 
             config_load();
 
-            TCHAR vi_mode_strings[VI_MODE_NUM][16] = {
-                TEXT("Filtered"),   // VI_MODE_NORMAL
-                TEXT("Unfiltered"), // VI_MODE_COLOR
-                TEXT("Depth"),      // VI_MODE_DEPTH
-                TEXT("Coverage")    // VI_MODE_COVERAGE
+            char* vi_mode_strings[] = {
+                "Filtered",   // VI_MODE_NORMAL
+                "Unfiltered", // VI_MODE_COLOR
+                "Depth",      // VI_MODE_DEPTH
+                "Coverage"    // VI_MODE_COVERAGE
             };
 
             dlg_combo_vi_mode = GetDlgItem(hwnd, IDC_COMBO_VI_MODE);
-            SendMessage(dlg_combo_vi_mode, CB_RESETCONTENT, 0, 0);
-            for (int i = 0; i < VI_MODE_NUM; i++) {
-                SendMessage(dlg_combo_vi_mode, CB_ADDSTRING, i, (LPARAM)vi_mode_strings[i]);
-            }
-            SendMessage(dlg_combo_vi_mode, CB_SETCURSEL, (WPARAM)config.vi.mode, 0);
+            config_dialog_fill_combo(dlg_combo_vi_mode, vi_mode_strings, VI_MODE_NUM, config.vi.mode);
+
+            char* vi_interp_strings[] = {
+                "Nearest-neighbor", // VI_INTERP_NEAREST
+                "Linear"            // VI_INTERP_LINEAR
+            };
+
+            dlg_combo_vi_interp = GetDlgItem(hwnd, IDC_COMBO_VI_INTERP);
+            config_dialog_fill_combo(dlg_combo_vi_interp, vi_interp_strings, VI_INTERP_NUM, config.vi.interp);
 
             dlg_check_multithread = GetDlgItem(hwnd, IDC_CHECK_MULTITHREAD);
             SendMessage(dlg_check_multithread, BM_SETCHECK, (WPARAM)config.parallel, 0);
@@ -112,6 +127,7 @@ INT_PTR CALLBACK config_dialog_proc(HWND hwnd, UINT iMessage, WPARAM wParam, LPA
                 case IDOK:
                 case IDAPPLY:
                     config.vi.mode = SendMessage(dlg_combo_vi_mode, CB_GETCURSEL, 0, 0);
+                    config.vi.interp = SendMessage(dlg_combo_vi_interp, CB_GETCURSEL, 0, 0);
                     config.vi.widescreen = SendMessage(dlg_check_vi_widescreen, BM_GETCHECK, 0, 0);
                     config.vi.overscan = SendMessage(dlg_check_vi_overscan, BM_GETCHECK, 0, 0);
                     config.parallel = SendMessage(dlg_check_multithread, BM_GETCHECK, 0, 0);
@@ -148,6 +164,8 @@ static void config_handle(const char* key, const char* value, const char* sectio
     } else if (!_strcmpi(section, SECTION_VIDEO_INTERFACE)) {
         if (!_strcmpi(key, KEY_VI_MODE)) {
             config.vi.mode = strtol(value, NULL, 0);
+        } else if (!_strcmpi(key, KEY_VI_INTERP)) {
+            config.vi.interp = strtol(value, NULL, 0);
         } else if (!_strcmpi(key, KEY_VI_WIDESCREEN)) {
             config.vi.widescreen = strtol(value, NULL, 0) != 0;
         } else if (!_strcmpi(key, KEY_VI_OVERSCAN)) {
@@ -249,6 +267,7 @@ bool config_save(void)
 
     config_write_section(fp, SECTION_VIDEO_INTERFACE);
     config_write_int32(fp, KEY_VI_MODE, config.vi.mode);
+    config_write_int32(fp, KEY_VI_INTERP, config.vi.interp);
     config_write_int32(fp, KEY_VI_WIDESCREEN, config.vi.widescreen);
     config_write_int32(fp, KEY_VI_OVERSCAN, config.vi.overscan);
 

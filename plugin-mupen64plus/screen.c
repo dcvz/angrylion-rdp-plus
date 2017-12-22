@@ -28,7 +28,7 @@ int32_t window_width;
 int32_t window_height;
 int32_t window_fullscreen;
 
-void screen_init(void)
+void screen_init(struct rdp_config* config)
 {
     /* Get the core Video Extension function pointers from the library handle */
     CoreVideo_Init = (ptr_VidExt_Init) DLSYM(CoreLibHandle, "VidExt_Init");
@@ -51,7 +51,7 @@ void screen_init(void)
 
     CoreVideo_SetVideoMode(window_width, window_height, 0, window_fullscreen ? M64VIDEO_FULLSCREEN : M64VIDEO_WINDOWED, M64VIDEOFLAG_SUPPORT_RESIZING);
 
-    gl_screen_init();
+    gl_screen_init(config);
 }
 
 void screen_swap(void)

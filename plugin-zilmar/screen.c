@@ -46,7 +46,7 @@ void win32_client_resize(HWND hWnd, HWND hStatus, int32_t nWidth, int32_t nHeigh
     MoveWindow(hWnd, rwin.left, rwin.top, nWidth + pdiff.x, nHeight + pdiff.y, TRUE);
 }
 
-void screen_init(void)
+void screen_init(struct rdp_config* config)
 {
     // make window resizable for the user
     if (!fullscreen) {
@@ -118,7 +118,7 @@ void screen_init(void)
         msg_warning("Can't create OpenGL 3.3 core context.");
     }
 
-    gl_screen_init();
+    gl_screen_init(config);
 }
 
 void screen_upload(int32_t* buffer, int32_t width, int32_t height, int32_t pitch, int32_t output_height)

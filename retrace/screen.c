@@ -23,7 +23,7 @@ static int32_t texture_width;
 static int32_t texture_height;
 static bool fullscreen;
 
-void screen_init(void)
+void screen_init(struct rdp_config* config)
 {
     SDL_Init(SDL_INIT_VIDEO);
     SDL_SetThreadPriority(SDL_THREAD_PRIORITY_HIGH);

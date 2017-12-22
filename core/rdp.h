@@ -44,10 +44,18 @@ enum vi_mode
     VI_MODE_NUM
 };
 
+enum vi_interp
+{
+    VI_INTERP_NEAREST,
+    VI_INTERP_LINEAR,
+    VI_INTERP_NUM
+};
+
 struct rdp_config
 {
     struct {
         enum vi_mode mode;
+        enum vi_interp interp;
         bool widescreen;
         bool overscan;
     } vi;

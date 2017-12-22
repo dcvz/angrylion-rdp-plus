@@ -473,7 +473,7 @@ int rdp_init(struct rdp_config* _config)
     }
 
     // init externals
-    screen_init();
+    screen_init(_config);
     plugin_init();
 
     // init internals
