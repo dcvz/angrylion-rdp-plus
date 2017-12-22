@@ -382,8 +382,6 @@ static void vi_process(uint32_t worker_id)
 
             xfrac = (x_offs >> 5) & 0x1f;
 
-            int32_t lerping = ctrl.aa_mode != VI_AA_REPLICATE && (xfrac || yfrac);
-
             if (prev_line_x > cache_marker) {
                 vi_fetch_filter_ptr(&viaa_cache[prev_line_x], frame_buffer, prev_x, ctrl, vi_width_low, 0);
                 vi_fetch_filter_ptr(&viaa_cache[line_x], frame_buffer, cur_x, ctrl, vi_width_low, 0);
@@ -445,6 +443,8 @@ static void vi_process(uint32_t worker_id)
             } else {
                 color = viaa_cache[line_x];
             }
+
+            bool lerping = ctrl.aa_mode != VI_AA_REPLICATE && (xfrac || yfrac);
 
             if (lerping) {
                 if (ctrl.divot_enable) {
