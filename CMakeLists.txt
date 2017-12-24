@@ -1,7 +1,5 @@
 cmake_minimum_required(VERSION 2.8)
 
-option(RETRACER "Set to ON to build the retracer tool" ${RETRACER})
-
 project(angrylion-plus)
 
 # set policy CMP0042 for MacOS X
@@ -94,22 +92,3 @@ add_library(${NAME_PLUGIN_M64P} SHARED ${SOURCES_PLUGIN_M64P})
 set_target_properties(${NAME_PLUGIN_M64P} PROPERTIES PREFIX "")
 
 target_link_libraries(${NAME_PLUGIN_M64P} alp-core alp-plugin-common ${OPENGL_LIBRARIES})
-
-if(RETRACER)
-    # RDP retracer
-    set(NAME_RETRACER "${CMAKE_PROJECT_NAME}-retrace")
-    set(PATH_RETRACER "retrace")
-    set(LIB_RETRACER alp-core pthread)
-
-    # optionally use SDL2 for visual output
-    find_package(SDL2)
-    if(SDL2_FOUND)
-        set(LIB_RETRACER ${LIB_RETRACER} SDL2)
-        add_definitions(-DRETRACE_SDL)
-    endif(SDL2_FOUND)
-
-    file(GLOB SOURCES_RETRACE "${PATH_RETRACER}/*.c")
-    add_executable(${NAME_RETRACER} ${SOURCES_RETRACE})
-
-    target_link_libraries(${NAME_RETRACER} ${LIB_RETRACER})
-endif(RETRACER)
