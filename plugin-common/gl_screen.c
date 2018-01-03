@@ -155,27 +155,27 @@ void gl_screen_init(struct rdp_config* config)
     gl_check_errors();
 }
 
-bool gl_screen_upload(int32_t* buffer, int32_t width, int32_t height, int32_t pitch, int32_t output_height)
+bool gl_screen_upload(struct rdp_frame_buffer* fb, int32_t output_height)
 {
-    bool buffer_size_changed = tex_width != width || tex_height != height;
+    bool buffer_size_changed = tex_width != fb->width || tex_height != fb->height;
 
     // check if the framebuffer size has changed
     if (buffer_size_changed) {
-        tex_width = width;
-        tex_height = height;
+        tex_width = fb->width;
+        tex_height = fb->height;
 
         // set pitch for all unpacking operations
-        glPixelStorei(GL_UNPACK_ROW_LENGTH, pitch);
+        glPixelStorei(GL_UNPACK_ROW_LENGTH, fb->pitch);
 
         // reallocate texture buffer on GPU
         glTexImage2D(GL_TEXTURE_2D, 0, TEX_INTERNAL_FORMAT, tex_width,
-            tex_height, 0, TEX_FORMAT, TEX_TYPE, buffer);
+            tex_height, 0, TEX_FORMAT, TEX_TYPE, fb->pixels);
 
         msg_debug("screen: resized framebuffer texture: %dx%d", tex_width, tex_height);
     } else {
         // copy local buffer to GPU texture buffer
         glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, tex_width, tex_height,
-            TEX_FORMAT, TEX_TYPE, buffer);
+            TEX_FORMAT, TEX_TYPE, fb->pixels);
     }
 
     // update output size
@@ -184,19 +184,20 @@ bool gl_screen_upload(int32_t* buffer, int32_t width, int32_t height, int32_t pi
     return buffer_size_changed;
 }
 
-void gl_screen_download(int32_t* buffer, int32_t* width, int32_t* height)
+void gl_screen_download(struct rdp_frame_buffer* fb)
 {
-    *width = tex_width;
-    *height = tex_display_height;
+    fb->width = tex_width;
+    fb->height = tex_display_height;
+    fb->pitch = tex_width;
 
-    if (!buffer) {
+    if (!fb->pixels) {
         return;
     }
 
     // check if resampling is required
     if (tex_display_height == tex_height) {
         // size matches, direct copy
-        glGetTexImage(GL_TEXTURE_2D, 0, TEX_FORMAT, TEX_TYPE, (void*)buffer);
+        glGetTexImage(GL_TEXTURE_2D, 0, TEX_FORMAT, TEX_TYPE, (void*)fb->pixels);
     } else {
         // do nearest-neighbor resampling
         int32_t* tex_buffer = malloc(tex_width * tex_display_height * sizeof(int32_t));
@@ -206,7 +207,7 @@ void gl_screen_download(int32_t* buffer, int32_t* width, int32_t* height)
             int32_t iy = y * tex_height / tex_display_height;
             uint32_t os = tex_width * iy;
             uint32_t od = tex_width * y;
-            memcpy(buffer + od, tex_buffer + os, tex_width * sizeof(int32_t));
+            memcpy(fb->pixels + od, tex_buffer + os, tex_width * sizeof(int32_t));
         }
 
         free(tex_buffer);

@@ -121,14 +121,14 @@ void screen_init(struct rdp_config* config)
     gl_screen_init(config);
 }
 
-void screen_upload(int32_t* buffer, int32_t width, int32_t height, int32_t pitch, int32_t output_height)
+void screen_upload(struct rdp_frame_buffer* buffer, int32_t output_height)
 {
-    gl_screen_upload(buffer, width, height, pitch, output_height);
+    gl_screen_upload(buffer, output_height);
 }
 
-void screen_download(int32_t* buffer, int32_t* width, int32_t* height)
+void screen_download(struct rdp_frame_buffer* buffer)
 {
-    gl_screen_download(buffer, width, height);
+    gl_screen_download(buffer);
 }
 
 void screen_swap(void)

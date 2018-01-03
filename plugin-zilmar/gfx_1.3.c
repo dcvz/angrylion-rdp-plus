@@ -18,19 +18,17 @@ GFX_INFO gfx;
 
 static void write_screenshot(char* path)
 {
-    int32_t width;
-    int32_t height;
-
-    screen_download(NULL, &width, &height);
+    struct rdp_frame_buffer fb;
+    screen_download(&fb);
 
     // prepare bitmap headers
     BITMAPINFOHEADER ihdr = {0};
     ihdr.biSize = sizeof(ihdr);
-    ihdr.biWidth = width;
-    ihdr.biHeight = height;
+    ihdr.biWidth = fb.width;
+    ihdr.biHeight = fb.height;
     ihdr.biPlanes = 1;
     ihdr.biBitCount = 32;
-    ihdr.biSizeImage = width * height * sizeof(int32_t);
+    ihdr.biSizeImage = fb.width * fb.height * sizeof(int32_t);
 
     BITMAPFILEHEADER fhdr = {0};
     fhdr.bfType = 'B' | ('M' << 8);
@@ -51,12 +49,12 @@ static void write_screenshot(char* path)
     // write bitmap contents
     fseek(fp, fhdr.bfOffBits, SEEK_SET);
 
-    int32_t* buf = malloc(ihdr.biSizeImage);
-    screen_download(buf, &width, &height);
-    for (int32_t y = height - 1; y >= 0; y--) {
-        fwrite(buf + width * y, width * sizeof(int32_t), 1, fp);
+    fb.pixels = malloc(ihdr.biSizeImage);
+    screen_download(&fb);
+    for (int32_t y = fb.height - 1; y >= 0; y--) {
+        fwrite(fb.pixels + fb.width * y, fb.width * sizeof(*fb.pixels), 1, fp);
     }
-    free(buf);
+    free(fb.pixels);
 
     fclose(fp);
 }

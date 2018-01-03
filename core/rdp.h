@@ -63,6 +63,14 @@ struct rdp_config
     uint32_t num_workers;
 };
 
+struct rdp_frame_buffer
+{
+    uint32_t* pixels;
+    uint32_t width;
+    uint32_t height;
+    uint32_t pitch;
+};
+
 int rdp_init(struct rdp_config* config);
 void rdp_update_config(struct rdp_config* config);
 void rdp_update_vi(void);

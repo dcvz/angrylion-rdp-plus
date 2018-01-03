@@ -221,8 +221,12 @@ EXPORT void CALL ChangeWindow(void)
 
 EXPORT void CALL ReadScreen2(void *dest, int *width, int *height, int front)
 {
+    struct rdp_frame_buffer buffer;
+
     if (!dest) {
-        screen_download(dest, width, height);
+        screen_download(&buffer);
+        *width = buffer.width;
+        *height = buffer.height;
         return;
     }
 
@@ -230,12 +234,12 @@ EXPORT void CALL ReadScreen2(void *dest, int *width, int *height, int front)
     int32_t h = *height;
 
     // convert BGRA to RGB and also flip image vertically
-    int32_t* buf = malloc(w * h * sizeof(int32_t));
-    screen_download(buf, width, height);
+    buffer.pixels = malloc(w * h * sizeof(int32_t));
+    screen_download(&buffer);
 
     uint8_t* pdst = (uint8_t*)dest;
     for (int32_t y = h - 1; y >= 0; y--) {
-        uint8_t* psrc = (uint8_t*)(buf + y * w);
+        uint8_t* psrc = (uint8_t*)(buffer.pixels + y * w);
         for (int32_t x = 0; x < w; x++) {
             *pdst++ = psrc[2];
             *pdst++ = psrc[1];
@@ -244,7 +248,7 @@ EXPORT void CALL ReadScreen2(void *dest, int *width, int *height, int front)
         }
     }
 
-    free(buf);
+    free(buffer.pixels);
 }
 
 EXPORT void CALL SetRenderingCallback(void (*callback)(int))
