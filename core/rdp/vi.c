@@ -539,6 +539,11 @@ static bool vi_process_start_fast(void)
     hres_raw = x_add * hres / 1024;
     vres_raw = y_add * vres / 1024;
 
+    // skip even more invalid frame sizes
+    if (hres_raw <= 0 || vres_raw <= 0) {
+        return false;
+    }
+
     // skip blank/invalid modes
     if (!(ctrl.type & 2)) {
         return false;
