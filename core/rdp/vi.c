@@ -529,15 +529,15 @@ static void vi_process_end(void)
 
 static bool vi_process_start_fast(void)
 {
+    // skip invalid frame sizes
+    if (hres <= 0 || vres <= 0) {
+        return false;
+    }
+
     // note: this is probably a very, very crude method to get the frame size,
     // but should hopefully work most of the time
     hres_raw = x_add * hres / 1024;
     vres_raw = y_add * vres / 1024;
-
-    // skip invalid frame sizes
-    if (hres_raw <= 0 || vres_raw <= 0) {
-        return false;
-    }
 
     // drop every other interlaced frame to avoid "wobbly" output due to the
     // vertical offset
@@ -665,11 +665,6 @@ void rdp_update_vi(void)
 
     hres =  h_end - h_start;
     vres = (v_end - v_start) >> 1; // vertical is measured in half-lines
-
-    // skip invalid/unsupported frame sizes
-    if (vi_mode != VI_MODE_NORMAL && (hres <= 0 || vres <= 0)) {
-       return;
-    }
 
     x_add = *vi_reg_ptr[VI_X_SCALE] & 0xfff;
     x_start = (*vi_reg_ptr[VI_X_SCALE] >> 16) & 0xfff;
