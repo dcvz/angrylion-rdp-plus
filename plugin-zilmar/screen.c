@@ -131,7 +131,7 @@ void screen_download(struct rdp_frame_buffer* buffer)
     gl_screen_download(buffer);
 }
 
-void screen_swap(void)
+void screen_swap(bool blank)
 {
     // don't render when the window is minimized
     if (IsIconic(gfx.hWnd)) {
@@ -160,7 +160,9 @@ void screen_swap(void)
     int32_t win_x = 0;
     int32_t win_y = statusrect.bottom;
 
-    gl_screen_render(win_width, win_height, win_x, win_y);
+    if (!blank) {
+        gl_screen_render(win_width, win_height, win_x, win_y);
+    }
 
     // swap front and back buffers
     SwapBuffers(dc);

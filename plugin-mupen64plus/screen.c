@@ -54,14 +54,16 @@ void screen_init(struct rdp_config* config)
     gl_screen_init(config);
 }
 
-void screen_swap(void)
+void screen_swap(bool blank)
 {
     if (toggle_fs) {
         CoreVideo_ToggleFullScreen();
         toggle_fs = false;
     }
 
-    gl_screen_render(window_width, window_height, 0, 0);
+    if (!blank) {
+        gl_screen_render(window_width, window_height, 0, 0);
+    }
 
     (*render_callback)(1);
     CoreVideo_GL_SwapBuffers();

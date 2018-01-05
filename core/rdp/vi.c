@@ -680,6 +680,7 @@ void rdp_update_vi(void)
 
     // cancel if the frame buffer contains no valid address
     if (!frame_buffer) {
+        screen_swap(true);
         return;
     }
 
@@ -729,6 +730,7 @@ void rdp_update_vi(void)
 
     // try to init VI frame, abort if there's nothing to display
     if (!vi_process_start_ptr()) {
+        screen_swap(true);
         return;
     }
 
@@ -743,7 +745,7 @@ void rdp_update_vi(void)
     vi_process_end_ptr();
 
     // render frame to screen
-    screen_swap();
+    screen_swap(false);
 }
 
 static void vi_close(void)
