@@ -557,7 +557,7 @@ static void vi_process_fast(uint32_t worker_id)
     // vertical offset
     // TODO: completely skip rendering these frames in unfiltered to improve
     // performance?
-    if (v_current_line) {
+    if (ctrl.serrate && v_current_line) {
         return;
     }
 
