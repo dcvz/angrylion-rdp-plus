@@ -234,9 +234,6 @@ void gl_screen_render(int32_t win_width, int32_t win_height, int32_t win_x, int3
     // configure viewport
     glViewport(win_x, win_y, win_width, win_height);
 
-    // clear buffers
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
     // draw fullscreen triangle
     glDrawArrays(GL_TRIANGLES, 0, 3);
 
