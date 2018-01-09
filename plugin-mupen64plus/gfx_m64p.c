@@ -100,7 +100,7 @@ EXPORT m64p_error CALL PluginStartup(m64p_dynlib_handle _CoreLibHandle, void *Co
     ConfigSetDefaultBool(configVideoAngrylionPlus, KEY_PARALLEL, config.parallel, "Distribute rendering between multiple processors if True");
     ConfigSetDefaultInt(configVideoAngrylionPlus, KEY_NUM_WORKERS, config.num_workers, "Rendering Workers (0=Use all logical processors)");
     ConfigSetDefaultInt(configVideoAngrylionPlus, KEY_VI_MODE, config.vi.mode, "VI mode (0=Filtered, 1=Unfiltered, 2=Depth, 3=Coverage)");
-    ConfigSetDefaultInt(configVideoAngrylionPlus, KEY_VI_INTERP, config.vi.mode, "Scaling interpolation type (0=NN, 1=Linear)");
+    ConfigSetDefaultInt(configVideoAngrylionPlus, KEY_VI_INTERP, config.vi.interp, "Scaling interpolation type (0=NN, 1=Linear)");
     ConfigSetDefaultBool(configVideoAngrylionPlus, KEY_VI_WIDESCREEN, config.vi.widescreen, "Use anamorphic 16:9 output mode if True");
     ConfigSetDefaultBool(configVideoAngrylionPlus, KEY_VI_OVERSCAN, config.vi.overscan, "Display overscan area in filteded mode if True");
 
