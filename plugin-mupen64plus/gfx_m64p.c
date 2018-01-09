@@ -222,9 +222,9 @@ EXPORT void CALL ChangeWindow(void)
 EXPORT void CALL ReadScreen2(void *dest, int *width, int *height, int front)
 {
     struct rdp_frame_buffer buffer;
+    screen_download(&buffer);
 
     if (!dest) {
-        screen_download(&buffer);
         *width = buffer.width;
         *height = buffer.height;
         return;
