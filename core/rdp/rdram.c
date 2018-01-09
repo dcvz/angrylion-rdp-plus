@@ -29,7 +29,7 @@ static uint32_t idxlim32;
 static uint32_t* rdram32;
 static uint16_t* rdram16;
 static uint8_t* rdram8;
-static uint8_t* rdram_hidden;
+static uint8_t rdram_hidden[0x400000];
 
 static void rdram_init(void)
 {
@@ -40,7 +40,8 @@ static void rdram_init(void)
     rdram32 = (uint32_t*)plugin_get_rdram();
     rdram16 = (uint16_t*)plugin_get_rdram();
     rdram8 = plugin_get_rdram();
-    rdram_hidden = plugin_get_rdram_hidden();
+
+    memset(rdram_hidden, 3, sizeof(rdram_hidden));
 }
 
 static STRICTINLINE bool rdram_valid_idx8(uint32_t in)

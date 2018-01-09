@@ -7,7 +7,6 @@
 #define DP_INTERRUPT    0x20
 
 static uint32_t rdram_size;
-static uint8_t* rdram_hidden_bits;
 static ptr_PluginGetVersion CoreGetVersion = NULL;
 
 void plugin_init(void)
@@ -21,11 +20,6 @@ void plugin_init(void)
     } else {
         rdram_size = 0x800000;
     }
-
-    // mupen64plus plugins can't access the hidden bits, so allocate it on our own
-    uint32_t rdram_hidden_size = rdram_size / 2;
-    rdram_hidden_bits = malloc(rdram_hidden_size);
-    memset(rdram_hidden_bits, 3, rdram_hidden_size);
 }
 
 void plugin_sync_dp(void)
@@ -53,11 +47,6 @@ uint8_t* plugin_get_rdram(void)
     return gfx.RDRAM;
 }
 
-uint8_t* plugin_get_rdram_hidden(void)
-{
-    return rdram_hidden_bits;
-}
-
 uint32_t plugin_get_rdram_size(void)
 {
     return rdram_size;
@@ -75,8 +64,4 @@ uint8_t* plugin_get_rom_header(void)
 
 void plugin_close(void)
 {
-    if (rdram_hidden_bits) {
-        free(rdram_hidden_bits);
-        rdram_hidden_bits = NULL;
-    }
 }
