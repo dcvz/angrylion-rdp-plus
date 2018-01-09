@@ -71,7 +71,7 @@ struct rdp_frame_buffer
     uint32_t pitch;
 };
 
-int rdp_init(struct rdp_config* config);
+void rdp_init(struct rdp_config* config);
 void rdp_update_config(struct rdp_config* config);
 void rdp_update_vi(void);
 void rdp_update(void);

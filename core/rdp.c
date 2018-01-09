@@ -455,7 +455,7 @@ void rdp_init_worker(uint32_t worker_id)
     rasterizer_init(rdp);
 }
 
-int rdp_init(struct rdp_config* _config)
+void rdp_init(struct rdp_config* _config)
 {
     if (_config) {
         config = *_config;
@@ -491,8 +491,6 @@ int rdp_init(struct rdp_config* _config)
         rdp_states = malloc(sizeof(struct rdp_state));
         rdp_init_worker(0);
     }
-
-    return 0;
 }
 
 void rdp_update_config(struct rdp_config* config)
