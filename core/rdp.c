@@ -432,6 +432,16 @@ static void deduce_derivatives(struct rdp_state* rdp);
 #include "rdp/rasterizer.c"
 #include "rdp/vi.c"
 
+void rdp_config_defaults(struct rdp_config* config)
+{
+    config->parallel = true;
+    config->num_workers = 0;
+    config->vi.interp = VI_INTERP_NEAREST;
+    config->vi.mode = VI_MODE_NORMAL;
+    config->vi.widescreen = false;
+    config->vi.overscan = true;
+}
+
 void rdp_init_worker(uint32_t worker_id)
 {
     struct rdp_state* rdp = &rdp_states[worker_id];

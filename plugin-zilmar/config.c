@@ -64,7 +64,9 @@ INT_PTR CALLBACK config_dialog_proc(HWND hwnd, UINT iMessage, WPARAM wParam, LPA
         case WM_INITDIALOG: {
             SetWindowText(hwnd, CORE_BASE_NAME " Config");
 
-            config_load();
+            if (!config_load()) {
+                rdp_config_defaults(&config);
+            }
 
             char* vi_mode_strings[] = {
                 "Filtered",   // VI_MODE_NORMAL
