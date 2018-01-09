@@ -18,7 +18,7 @@ void plugin_init(void)
     if (core_version >= 0x020501) {
         rdram_size = *gfx.RDRAM_SIZE;
     } else {
-        rdram_size = 0x800000;
+        rdram_size = RDRAM_MAX_SIZE;
     }
 }
 

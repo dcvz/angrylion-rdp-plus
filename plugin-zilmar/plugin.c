@@ -1,5 +1,6 @@
 #include "gfx_1.3.h"
 
+#include "core/rdp.h"
 #include "core/plugin.h"
 
 #include <stdbool.h>
@@ -44,9 +45,14 @@ static bool is_valid_ptr(void *ptr, uint32_t bytes)
 
 void plugin_init(void)
 {
-    // Zilmar plugins can't know how much RDRAM is allocated, so use a Win32 hack
-    // to detect it
-    rdram_size = is_valid_ptr(&gfx.RDRAM[0x7f0000], 16) ? 0x800000 : 0x400000;
+    rdram_size = RDRAM_MAX_SIZE;
+
+    // Zilmar's API doesn't provide a way to check the amount of RDRAM available.
+    // It can only be 4 MiB or 8 MiB, so check if the last 16 bytes of the provided
+    // buffer in the 8 MiB range are valid. If not, it must be 4 MiB.
+    if (!is_valid_ptr(&gfx.RDRAM[0x7f0000], 16)) {
+        rdram_size /= 2;
+    }
 }
 
 void plugin_sync_dp(void)

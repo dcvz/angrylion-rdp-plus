@@ -3,6 +3,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#define RDRAM_MAX_SIZE 0x800000
+
 enum dp_register
 {
     DP_START,
