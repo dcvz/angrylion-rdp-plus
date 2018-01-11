@@ -224,7 +224,7 @@ EXPORT void CALL ChangeWindow(void)
 EXPORT void CALL ReadScreen2(void *dest, int *width, int *height, int front)
 {
     struct rdp_frame_buffer buffer;
-    screen_download(&buffer);
+    screen_read(&buffer);
 
     if (!dest) {
         *width = buffer.width;
@@ -237,7 +237,7 @@ EXPORT void CALL ReadScreen2(void *dest, int *width, int *height, int front)
 
     // convert BGRA to RGB and also flip image vertically
     buffer.pixels = malloc(w * h * sizeof(int32_t));
-    screen_download(&buffer);
+    screen_read(&buffer);
 
     uint8_t* pdst = (uint8_t*)dest;
     for (int32_t y = h - 1; y >= 0; y--) {

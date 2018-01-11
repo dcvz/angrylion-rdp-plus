@@ -524,7 +524,7 @@ static void vi_process_end(void)
         output_height = output_height * 3 / 4;
     }
 
-    screen_upload(&fb, output_height);
+    screen_write(&fb, output_height);
 }
 
 static bool vi_process_start_fast(void)
@@ -637,7 +637,7 @@ static void vi_process_end_fast(void)
         output_height = output_height * 3 / 4;
     }
 
-    screen_upload(&fb, output_height);
+    screen_write(&fb, output_height);
 }
 
 void rdp_update_vi(void)

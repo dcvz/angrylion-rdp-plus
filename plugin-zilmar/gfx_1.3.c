@@ -19,7 +19,7 @@ GFX_INFO gfx;
 static void write_screenshot(char* path)
 {
     struct rdp_frame_buffer fb;
-    screen_download(&fb);
+    screen_read(&fb);
 
     // prepare bitmap headers
     BITMAPINFOHEADER ihdr = {0};
@@ -50,7 +50,7 @@ static void write_screenshot(char* path)
     fseek(fp, fhdr.bfOffBits, SEEK_SET);
 
     fb.pixels = malloc(ihdr.biSizeImage);
-    screen_download(&fb);
+    screen_read(&fb);
     for (int32_t y = fb.height - 1; y >= 0; y--) {
         fwrite(fb.pixels + fb.width * y, fb.width * sizeof(*fb.pixels), 1, fp);
     }

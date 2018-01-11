@@ -155,7 +155,7 @@ void gl_screen_init(struct rdp_config* config)
     gl_check_errors();
 }
 
-bool gl_screen_upload(struct rdp_frame_buffer* fb, int32_t output_height)
+bool gl_screen_write(struct rdp_frame_buffer* fb, int32_t output_height)
 {
     bool buffer_size_changed = tex_width != fb->width || tex_height != fb->height;
 
@@ -184,7 +184,7 @@ bool gl_screen_upload(struct rdp_frame_buffer* fb, int32_t output_height)
     return buffer_size_changed;
 }
 
-void gl_screen_download(struct rdp_frame_buffer* fb)
+void gl_screen_read(struct rdp_frame_buffer* fb)
 {
     fb->width = tex_width;
     fb->height = tex_display_height;
