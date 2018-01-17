@@ -97,6 +97,19 @@ static int32_t v_start;
 static int32_t h_start;
 static int32_t v_current_line;
 
+// VI mode function pointers and prototypes
+static bool(*vi_process_start_ptr)(void);
+static void(*vi_process_ptr)(uint32_t);
+static void(*vi_process_end_ptr)(void);
+
+static bool vi_process_start(void);
+static void vi_process(uint32_t worker_id);
+static void vi_process_end(void);
+
+static bool vi_process_start_fast(void);
+static void vi_process_fast(uint32_t worker_id);
+static void vi_process_end_fast(void);
+
 static void vi_init(void)
 {
     vi_gamma_init();
@@ -110,6 +123,18 @@ static void vi_init(void)
     prevserrate = false;
     oldvstart = 1337;
     prevwasblank = false;
+
+    // select filter functions based on config
+    if (config.vi.mode == VI_MODE_NORMAL) {
+        vi_process_start_ptr = vi_process_start;
+        vi_process_ptr = vi_process;
+        vi_process_end_ptr = vi_process_end;
+    }
+    else {
+        vi_process_start_ptr = vi_process_start_fast;
+        vi_process_ptr = vi_process_fast;
+        vi_process_end_ptr = vi_process_end_fast;
+    }
 }
 
 static bool vi_process_start(void)
@@ -711,21 +736,6 @@ void rdp_update_vi(void)
                     "that turning this bit on will result in permanent damage "
                     "to the hardware! Emulation will now continue.");
         vbusclock = true;
-    }
-
-    // select filter functions based on config
-    bool (*vi_process_start_ptr)(void);
-    void (*vi_process_ptr)(uint32_t);
-    void (*vi_process_end_ptr)(void);
-
-    if (config.vi.mode == VI_MODE_NORMAL) {
-        vi_process_start_ptr = vi_process_start;
-        vi_process_ptr = vi_process;
-        vi_process_end_ptr = vi_process_end;
-    } else {
-        vi_process_start_ptr = vi_process_start_fast;
-        vi_process_ptr = vi_process_fast;
-        vi_process_end_ptr = vi_process_end_fast;
     }
 
     // try to init VI frame, abort if there's nothing to display
