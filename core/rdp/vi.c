@@ -603,9 +603,9 @@ static void vi_process_fast(uint32_t worker_id)
                     switch (ctrl.type) {
                         case VI_TYPE_RGBA5551: {
                             uint16_t pix = rdram_read_idx16((frame_buffer >> 1) + line + x);
-                            r = GET_HI(pix);
-                            g = GET_MED(pix);
-                            b = GET_LOW(pix);
+                            r = RGBA16_R(pix);
+                            g = RGBA16_G(pix);
+                            b = RGBA16_B(pix);
                             break;
                         }
 

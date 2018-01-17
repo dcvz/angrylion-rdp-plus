@@ -22,9 +22,9 @@
 #define PIXELS_TO_BYTES(pix, siz) (((pix) << (siz)) >> 1)
 
 // RGBA5551 to RGBA8888 helper
-#define GET_LOW(x)  (((x) & 0x3e) << 2)
-#define GET_MED(x)  (((x) & 0x7c0) >> 3)
-#define GET_HI(x)   (((x) >> 8) & 0xf8)
+#define RGBA16_B(x) (((x) & 0x3e) << 2)
+#define RGBA16_G(x) (((x) & 0x7c0) >> 3)
+#define RGBA16_R(x) (((x) >> 8) & 0xf8)
 
 // inlining
 #define INLINE inline

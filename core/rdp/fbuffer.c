@@ -165,9 +165,9 @@ static void fbread_16(struct rdp_state* rdp, uint32_t curpixel, uint32_t* curpix
 
         if (rdp->fb_format == FORMAT_RGBA)
         {
-            rdp->memory_color.r = GET_HI(fword);
-            rdp->memory_color.g = GET_MED(fword);
-            rdp->memory_color.b = GET_LOW(fword);
+            rdp->memory_color.r = RGBA16_R(fword);
+            rdp->memory_color.g = RGBA16_G(fword);
+            rdp->memory_color.b = RGBA16_B(fword);
             lowbits = ((fword & 1) << 2) | hbyte;
         }
         else
@@ -185,9 +185,9 @@ static void fbread_16(struct rdp_state* rdp, uint32_t curpixel, uint32_t* curpix
 
         if (rdp->fb_format == FORMAT_RGBA)
         {
-            rdp->memory_color.r = GET_HI(fword);
-            rdp->memory_color.g = GET_MED(fword);
-            rdp->memory_color.b = GET_LOW(fword);
+            rdp->memory_color.r = RGBA16_R(fword);
+            rdp->memory_color.g = RGBA16_G(fword);
+            rdp->memory_color.b = RGBA16_B(fword);
         }
         else
             rdp->memory_color.r = rdp->memory_color.g = rdp->memory_color.b = fword >> 8;
@@ -211,9 +211,9 @@ static void fbread2_16(struct rdp_state* rdp, uint32_t curpixel, uint32_t* curpi
 
         if (rdp->fb_format == FORMAT_RGBA)
         {
-            rdp->pre_memory_color.r = GET_HI(fword);
-            rdp->pre_memory_color.g = GET_MED(fword);
-            rdp->pre_memory_color.b = GET_LOW(fword);
+            rdp->pre_memory_color.r = RGBA16_R(fword);
+            rdp->pre_memory_color.g = RGBA16_G(fword);
+            rdp->pre_memory_color.b = RGBA16_B(fword);
             lowbits = ((fword & 1) << 2) | hbyte;
         }
         else
@@ -231,9 +231,9 @@ static void fbread2_16(struct rdp_state* rdp, uint32_t curpixel, uint32_t* curpi
 
         if (rdp->fb_format == FORMAT_RGBA)
         {
-            rdp->pre_memory_color.r = GET_HI(fword);
-            rdp->pre_memory_color.g = GET_MED(fword);
-            rdp->pre_memory_color.b = GET_LOW(fword);
+            rdp->pre_memory_color.r = RGBA16_R(fword);
+            rdp->pre_memory_color.g = RGBA16_G(fword);
+            rdp->pre_memory_color.b = RGBA16_B(fword);
         }
         else
             rdp->pre_memory_color.r = rdp->pre_memory_color.g = rdp->pre_memory_color.b = fword >> 8;

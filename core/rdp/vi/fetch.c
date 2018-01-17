@@ -25,9 +25,9 @@ static void vi_fetch_filter16(struct ccvg* res, uint32_t fboffset, uint32_t cur_
         RREADIDX16(pix, idx);
         cur_cvg = 7;
     }
-    r = GET_HI(pix);
-    g = GET_MED(pix);
-    b = GET_LOW(pix);
+    r = RGBA16_R(pix);
+    g = RGBA16_G(pix);
+    b = RGBA16_B(pix);
 
     if (cur_cvg == 7)
     {

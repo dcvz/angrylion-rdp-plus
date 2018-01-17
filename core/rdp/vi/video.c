@@ -86,9 +86,9 @@ static STRICTINLINE void video_filter16(int* endr, int* endg, int* endb, uint32_
         rdram_read_pair16(&pix, &hidval, dirs[i]);
         if (hidval == 3 && (pix & 1))
         {
-            backr[numoffull] = GET_HI(pix);
-            backg[numoffull] = GET_MED(pix);
-            backb[numoffull] = GET_LOW(pix);
+            backr[numoffull] = RGBA16_R(pix);
+            backg[numoffull] = RGBA16_G(pix);
+            backb[numoffull] = RGBA16_B(pix);
             numoffull++;
         }
     }
