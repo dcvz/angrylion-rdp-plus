@@ -248,9 +248,9 @@ static void fbread_32(struct rdp_state* rdp, uint32_t curpixel, uint32_t* curpix
 {
     uint32_t mem, addr = (rdp->fb_address >> 2) + curpixel;
     RREADIDX32(mem, addr);
-    rdp->memory_color.r = (mem >> 24) & 0xff;
-    rdp->memory_color.g = (mem >> 16) & 0xff;
-    rdp->memory_color.b = (mem >> 8) & 0xff;
+    rdp->memory_color.r = RGBA32_R(mem);
+    rdp->memory_color.g = RGBA32_G(mem);
+    rdp->memory_color.b = RGBA32_B(mem);
     if (rdp->other_modes.image_read_en)
     {
         *curpixel_memcvg = (mem >> 5) & 7;
@@ -267,9 +267,9 @@ static INLINE void fbread2_32(struct rdp_state* rdp, uint32_t curpixel, uint32_t
 {
     uint32_t mem, addr = (rdp->fb_address >> 2) + curpixel;
     RREADIDX32(mem, addr);
-    rdp->pre_memory_color.r = (mem >> 24) & 0xff;
-    rdp->pre_memory_color.g = (mem >> 16) & 0xff;
-    rdp->pre_memory_color.b = (mem >> 8) & 0xff;
+    rdp->pre_memory_color.r = RGBA32_R(mem);
+    rdp->pre_memory_color.g = RGBA32_G(mem);
+    rdp->pre_memory_color.b = RGBA32_B(mem);
     if (rdp->other_modes.image_read_en)
     {
         *curpixel_memcvg = (mem >> 5) & 7;

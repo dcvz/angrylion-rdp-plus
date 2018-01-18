@@ -611,9 +611,9 @@ static void vi_process_fast(uint32_t worker_id)
 
                         case VI_TYPE_RGBA8888: {
                             uint32_t pix = rdram_read_idx32((frame_buffer >> 2) + line + x);
-                            r = (pix >> 24) & 0xff;
-                            g = (pix >> 16) & 0xff;
-                            b = (pix >>  8) & 0xff;
+                            r = RGBA32_R(pix);
+                            g = RGBA32_G(pix);
+                            b = RGBA32_B(pix);
                             break;
                         }
 

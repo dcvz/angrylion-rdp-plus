@@ -506,18 +506,18 @@ static void rdp_set_prim_color(struct rdp_state* rdp, const uint32_t* args)
 {
     rdp->min_level = (args[0] >> 8) & 0x1f;
     rdp->primitive_lod_frac = args[0] & 0xff;
-    rdp->prim_color.r = (args[1] >> 24) & 0xff;
-    rdp->prim_color.g = (args[1] >> 16) & 0xff;
-    rdp->prim_color.b = (args[1] >>  8) & 0xff;
-    rdp->prim_color.a = (args[1] >>  0) & 0xff;
+    rdp->prim_color.r = RGBA32_R(args[1]);
+    rdp->prim_color.g = RGBA32_G(args[1]);
+    rdp->prim_color.b = RGBA32_B(args[1]);
+    rdp->prim_color.a = RGBA32_A(args[1]);
 }
 
 static void rdp_set_env_color(struct rdp_state* rdp, const uint32_t* args)
 {
-    rdp->env_color.r = (args[1] >> 24) & 0xff;
-    rdp->env_color.g = (args[1] >> 16) & 0xff;
-    rdp->env_color.b = (args[1] >>  8) & 0xff;
-    rdp->env_color.a = (args[1] >>  0) & 0xff;
+    rdp->env_color.r = RGBA32_R(args[1]);
+    rdp->env_color.g = RGBA32_G(args[1]);
+    rdp->env_color.b = RGBA32_B(args[1]);
+    rdp->env_color.a = RGBA32_A(args[1]);
 }
 
 static void rdp_set_combine(struct rdp_state* rdp, const uint32_t* args)

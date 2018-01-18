@@ -56,9 +56,9 @@ static void vi_fetch_filter32(struct ccvg* res, uint32_t fboffset, uint32_t cur_
         cur_cvg = (pix >> 5) & 7;
     else
         cur_cvg = 7;
-    r = (pix >> 24) & 0xff;
-    g = (pix >> 16) & 0xff;
-    b = (pix >> 8) & 0xff;
+    r = RGBA32_R(pix) & 0xff;
+    g = RGBA32_G(pix) & 0xff;
+    b = RGBA32_B(pix) & 0xff;
 
     if (cur_cvg == 7)
     {
