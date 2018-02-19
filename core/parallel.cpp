@@ -23,7 +23,9 @@ public:
 
         // wait for workers to finish task to make sure they're ready
         m_workers_active = m_workers.size();
-        m_signal_done.wait(ul);
+        while (m_workers_active) {
+            m_signal_done.wait(ul);
+        }
     }
 
     ~Parallel() {
