@@ -193,8 +193,8 @@ void screen_set_fullscreen(bool _fullscreen)
         GetWindowPlacement(gfx.hWnd, &old_pos);
 
         // use virtual screen dimensions for fullscreen mode
-        int32_t vs_width = GetSystemMetrics(SM_CXVIRTUALSCREEN);
-        int32_t vs_height = GetSystemMetrics(SM_CYVIRTUALSCREEN);
+        int32_t vs_width = GetSystemMetrics(SM_CXSCREEN);
+        int32_t vs_height = GetSystemMetrics(SM_CYSCREEN);
 
         // disable all styles to get a borderless window and save it to restore
         // it later
