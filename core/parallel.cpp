@@ -13,14 +13,15 @@ public:
     Parallel(uint32_t num_workers) {
         std::unique_lock<std::mutex> ul(m_mutex);
 
+        // give workers an empty task
+        m_task = [](uint32_t) {};
+
         // create worker threads
         for (uint32_t worker_id = 0; worker_id < num_workers; worker_id++) {
             m_workers.emplace_back(std::thread(&Parallel::do_work, this, worker_id));
         }
 
-        // give workers an empty task and wait for them to finish it to
-        // make sure they're ready
-        m_task = [](uint32_t){};
+        // wait for workers to finish task to make sure they're ready
         m_workers_active = m_workers.size();
         m_signal_done.wait(ul);
     }
