@@ -32,7 +32,7 @@
 #define KEY_VI_MODE "ViMode"
 #define KEY_VI_INTERP "ViInterpolation"
 #define KEY_VI_WIDESCREEN "ViWidescreen"
-#define KEY_VI_OVERSCAN "ViOverscan"
+#define KEY_VI_HIDE_OVERSCAN "ViHideOverscan"
 
 #include <stdlib.h>
 #include <string.h>
@@ -104,7 +104,7 @@ EXPORT m64p_error CALL PluginStartup(m64p_dynlib_handle _CoreLibHandle, void *Co
     ConfigSetDefaultInt(configVideoAngrylionPlus, KEY_VI_MODE, config.vi.mode, "VI mode (0=Filtered, 1=Unfiltered, 2=Depth, 3=Coverage)");
     ConfigSetDefaultInt(configVideoAngrylionPlus, KEY_VI_INTERP, config.vi.interp, "Scaling interpolation type (0=NN, 1=Linear)");
     ConfigSetDefaultBool(configVideoAngrylionPlus, KEY_VI_WIDESCREEN, config.vi.widescreen, "Use anamorphic 16:9 output mode if True");
-    ConfigSetDefaultBool(configVideoAngrylionPlus, KEY_VI_OVERSCAN, config.vi.overscan, "Display overscan area in filteded mode if True");
+    ConfigSetDefaultBool(configVideoAngrylionPlus, KEY_VI_HIDE_OVERSCAN, config.vi.hide_overscan, "Hide overscan area in filteded mode if True");
 
     ConfigSaveSection("Video-General");
     ConfigSaveSection("Video-Angrylion-Plus");
@@ -188,7 +188,7 @@ EXPORT int CALL RomOpen (void)
     config.vi.mode = ConfigGetParamInt(configVideoAngrylionPlus, KEY_VI_MODE);
     config.vi.interp = ConfigGetParamInt(configVideoAngrylionPlus, KEY_VI_INTERP);
     config.vi.widescreen = ConfigGetParamBool(configVideoAngrylionPlus, KEY_VI_WIDESCREEN);
-    config.vi.overscan = ConfigGetParamBool(configVideoAngrylionPlus, KEY_VI_OVERSCAN);
+    config.vi.hide_overscan = ConfigGetParamBool(configVideoAngrylionPlus, KEY_VI_HIDE_OVERSCAN);
 
     rdp_init(&config);
     return 1;

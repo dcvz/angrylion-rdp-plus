@@ -445,7 +445,7 @@ void rdp_config_defaults(struct rdp_config* config)
     config->vi.interp = VI_INTERP_NEAREST;
     config->vi.mode = VI_MODE_NORMAL;
     config->vi.widescreen = false;
-    config->vi.overscan = true;
+    config->vi.hide_overscan = false;
 }
 
 void rdp_init_worker(uint32_t worker_id)

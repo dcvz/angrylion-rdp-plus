@@ -19,7 +19,7 @@
 #define KEY_VI_MODE "mode"
 #define KEY_VI_INTERP "interpolation"
 #define KEY_VI_WIDESCREEN "widescreen"
-#define KEY_VI_OVERSCAN "overscan"
+#define KEY_VI_HIDE_OVERSCAN "hide_overscan"
 
 #define CONFIG_FILE_NAME CORE_SIMPLE_NAME "-config.ini"
 
@@ -93,7 +93,7 @@ INT_PTR CALLBACK config_dialog_proc(HWND hwnd, UINT iMessage, WPARAM wParam, LPA
             SendMessage(dlg_check_vi_widescreen, BM_SETCHECK, (WPARAM)config.vi.widescreen, 0);
 
             dlg_check_vi_overscan = GetDlgItem(hwnd, IDC_CHECK_VI_OVERSCAN);
-            SendMessage(dlg_check_vi_overscan, BM_SETCHECK, (WPARAM)config.vi.overscan, 0);
+            SendMessage(dlg_check_vi_overscan, BM_SETCHECK, (WPARAM)config.vi.hide_overscan, 0);
 
             dlg_edit_workers = GetDlgItem(hwnd, IDC_EDIT_WORKERS);
             SetDlgItemInt(hwnd, IDC_EDIT_WORKERS, config.num_workers, FALSE);
@@ -131,7 +131,7 @@ INT_PTR CALLBACK config_dialog_proc(HWND hwnd, UINT iMessage, WPARAM wParam, LPA
                     config.vi.mode = SendMessage(dlg_combo_vi_mode, CB_GETCURSEL, 0, 0);
                     config.vi.interp = SendMessage(dlg_combo_vi_interp, CB_GETCURSEL, 0, 0);
                     config.vi.widescreen = SendMessage(dlg_check_vi_widescreen, BM_GETCHECK, 0, 0);
-                    config.vi.overscan = SendMessage(dlg_check_vi_overscan, BM_GETCHECK, 0, 0);
+                    config.vi.hide_overscan = SendMessage(dlg_check_vi_overscan, BM_GETCHECK, 0, 0);
                     config.parallel = SendMessage(dlg_check_multithread, BM_GETCHECK, 0, 0);
                     config.num_workers = GetDlgItemInt(hwnd, IDC_EDIT_WORKERS, FALSE, FALSE);
 
@@ -170,8 +170,8 @@ static void config_handle(const char* key, const char* value, const char* sectio
             config.vi.interp = strtol(value, NULL, 0);
         } else if (!_strcmpi(key, KEY_VI_WIDESCREEN)) {
             config.vi.widescreen = strtol(value, NULL, 0) != 0;
-        } else if (!_strcmpi(key, KEY_VI_OVERSCAN)) {
-            config.vi.overscan = strtol(value, NULL, 0) != 0;
+        } else if (!_strcmpi(key, KEY_VI_HIDE_OVERSCAN)) {
+            config.vi.hide_overscan = strtol(value, NULL, 0) != 0;
         }
     }
 }
@@ -271,7 +271,7 @@ bool config_save(void)
     config_write_int32(fp, KEY_VI_MODE, config.vi.mode);
     config_write_int32(fp, KEY_VI_INTERP, config.vi.interp);
     config_write_int32(fp, KEY_VI_WIDESCREEN, config.vi.widescreen);
-    config_write_int32(fp, KEY_VI_OVERSCAN, config.vi.overscan);
+    config_write_int32(fp, KEY_VI_HIDE_OVERSCAN, config.vi.hide_overscan);
 
     fclose(fp);
 

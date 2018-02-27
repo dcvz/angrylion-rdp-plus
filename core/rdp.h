@@ -59,7 +59,7 @@ struct rdp_config
         enum vi_mode mode;
         enum vi_interp interp;
         bool widescreen;
-        bool overscan;
+        bool hide_overscan;
     } vi;
     bool parallel;
     uint32_t num_workers;

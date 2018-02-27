@@ -527,12 +527,7 @@ static void vi_process_end(void)
 
     int32_t output_height;
 
-    if (config.vi.overscan) {
-        // use entire prescale buffer
-        fb.width = PRESCALE_WIDTH;
-        fb.height = (ispal ? V_RES_PAL : V_RES_NTSC) >> !ctrl.serrate;
-        output_height = V_RES_NTSC;
-    } else {
+    if (config.vi.hide_overscan) {
         // crop away overscan area from prescale
         fb.width = maxhpass - minhpass;
         fb.height = vres << ctrl.serrate;
@@ -540,6 +535,11 @@ static void vi_process_end(void)
         int32_t x = h_start + minhpass;
         int32_t y = (v_start + (emucontrolsvicurrent ? lowerfield : 0)) << ctrl.serrate;
         fb.pixels += x + y * fb.pitch;
+    } else {
+        // use entire prescale buffer
+        fb.width = PRESCALE_WIDTH;
+        fb.height = (ispal ? V_RES_PAL : V_RES_NTSC) >> !ctrl.serrate;
+        output_height = V_RES_NTSC;
     }
 
     if (config.vi.widescreen) {
