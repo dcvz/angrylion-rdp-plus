@@ -23,9 +23,7 @@ public:
 
         // wait for workers to finish task to make sure they're ready
         m_workers_active = m_workers.size();
-        while (m_workers_active) {
-            m_signal_done.wait(ul);
-        }
+        wait(ul);
     }
 
     ~Parallel() {
@@ -85,7 +83,12 @@ private:
 
     void wait() {
         std::unique_lock<std::mutex> ul(m_mutex);
+        wait(ul);
+    }
+
+    void wait(std::unique_lock<std::mutex>& ul) {
         while (m_workers_active) {
+            std::this_thread::yield();
             m_signal_done.wait(ul);
         }
     }
