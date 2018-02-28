@@ -69,13 +69,19 @@ private:
     void do_work(int32_t worker_id) {
         std::unique_lock<std::mutex> ul(m_mutex);
         while (m_accept_work) {
+            // switch to async mode and run task
             ul.unlock();
             if (m_accept_work) {
                 m_task(worker_id);
             }
             ul.lock();
+
+            // task is done, update number of active workers
+            // and signal main thread
             m_workers_active--;
             m_signal_done.notify_all();
+
+            // go idle and wait for more work
             m_signal_work.wait(ul);
         }
     }
@@ -96,6 +102,7 @@ private:
     Parallel(const Parallel&) = delete;
 };
 
+// C interface for the Parallel class
 static std::unique_ptr<Parallel> parallel;
 static uint32_t worker_num;
 
