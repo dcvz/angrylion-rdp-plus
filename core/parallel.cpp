@@ -10,7 +10,7 @@
 class Parallel
 {
 public:
-    Parallel(uint32_t num_workers) {
+    Parallel(uint32_t num_workers) : m_workers_active(num_workers) {
         std::unique_lock<std::mutex> ul(m_mutex);
 
         // give workers an empty task
@@ -22,7 +22,6 @@ public:
         }
 
         // wait for workers to finish task to make sure they're ready
-        m_workers_active = m_workers.size();
         wait(ul);
     }
 
