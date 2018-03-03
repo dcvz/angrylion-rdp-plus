@@ -203,8 +203,8 @@ void rdp_update(void)
     uint32_t dp_current_al = (*dp_reg[DP_CURRENT] & ~7) >> 2;
     uint32_t dp_end_al = (*dp_reg[DP_END] & ~7) >> 2;
 
-    // don't do anything while the registers are not set up correctly
-    if (dp_end_al <= dp_current_al) {
+    // don't do anything if the RDP has crashed or the registers are not set up correctly
+    if (rdp_pipeline_crashed || dp_end_al <= dp_current_al) {
         return;
     }
 
