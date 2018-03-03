@@ -11,6 +11,9 @@
 #include <stdio.h>
 #include <assert.h>
 
+#define MIN(a, b) (((a) < (b)) ? (a) : (b))
+#define MAX(a, b) (((a) > (b)) ? (a) : (b))
+
 #define SIGN16(x)   ((int16_t)(x))
 #define SIGN8(x)    ((int8_t)(x))
 
@@ -495,6 +498,7 @@ void rdp_init(struct rdp_config* _config)
     // init internals
     rdram_init();
     vi_init();
+    cmd_init();
 
     rdp_pipeline_crashed = 0;
     memset(&onetimewarnings, 0, sizeof(onetimewarnings));

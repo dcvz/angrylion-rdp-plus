@@ -1,8 +1,13 @@
-#define CMD_BUFFER_COUNT 1024
-#define CMD_MAX_BUFFER_LENGTH 0x10000
+// maximum number of commands to buffer for parallel processing
+#define CMD_BUFFER_SIZE 1024
 
-#define CMD_MAX_INTS 44
-#define CMD_MAX_SIZE (CMD_MAX_INTS * sizeof(int32_t))
+// maximum data size of a single command in bytes
+#define CMD_MAX_SIZE 176
+
+// maximum data size of a single command in 32 bit integers
+#define CMD_MAX_INTS (CMD_MAX_SIZE / sizeof(int32_t))
+
+// extracts the command ID from a command buffer
 #define CMD_ID(cmd) ((*(cmd) >> 24) & 0x3f)
 
 // list of command IDs
@@ -43,12 +48,12 @@
 #define CMD_ID_SET_MASK_IMAGE                  0x3e
 #define CMD_ID_SET_COLOR_IMAGE                 0x3f
 
-static uint32_t rdp_cmd_buf[CMD_BUFFER_COUNT][CMD_MAX_INTS];
+static uint32_t rdp_cmd_buf[CMD_BUFFER_SIZE][CMD_MAX_INTS];
 static uint32_t rdp_cmd_buf_pos;
 
-static uint32_t rdp_cmd_data[0x10000];
-static uint32_t rdp_cmd_ptr = 0;
-static uint32_t rdp_cmd_cur = 0;
+static uint32_t rdp_cmd_pos;
+static uint32_t rdp_cmd_id;
+static uint32_t rdp_cmd_len;
 
 static void rdp_invalid(struct rdp_state* rdp, const uint32_t* args);
 static void rdp_noop(struct rdp_state* rdp, const uint32_t* args);
@@ -161,126 +166,109 @@ static const struct
     {rdp_set_color_image,   8,   true,  "Set_Color_Image"}
 };
 
-static void rdp_cmd_run(struct rdp_state* rdp, const uint32_t* arg)
+static void cmd_run(struct rdp_state* rdp, const uint32_t* arg)
 {
     uint32_t cmd_id = CMD_ID(arg);
     rdp_commands[cmd_id].handler(rdp, arg);
 }
 
-static void rdp_cmd_run_buffered(uint32_t worker_id)
+static void cmd_run_buffered(uint32_t worker_id)
 {
     for (uint32_t pos = 0; pos < rdp_cmd_buf_pos; pos++) {
-        rdp_cmd_run(&rdp_states[worker_id], rdp_cmd_buf[pos]);
+        cmd_run(&rdp_states[worker_id], rdp_cmd_buf[pos]);
     }
 }
 
-static void rdp_cmd_flush(void)
+static void cmd_flush(void)
 {
     // only run if there's something buffered
     if (rdp_cmd_buf_pos) {
         // let workers run all buffered commands in parallel
-        parallel_run(rdp_cmd_run_buffered);
-
+        parallel_run(cmd_run_buffered);
         // reset buffer by starting from the beginning
         rdp_cmd_buf_pos = 0;
     }
 }
 
-static void rdp_cmd_push(const uint32_t* arg, uint32_t length)
+static void cmd_init(void)
 {
-    // copy command data to current buffer position
-    memcpy(rdp_cmd_buf + rdp_cmd_buf_pos, arg, length * sizeof(uint32_t));
-
-    // increment buffer position and flush buffer when it is full
-    if (++rdp_cmd_buf_pos >= CMD_BUFFER_COUNT) {
-        rdp_cmd_flush();
-    }
-}
-
-static void rdp_cmd(const uint32_t* arg, uint32_t length)
-{
-    uint32_t cmd_id = CMD_ID(arg);
-
-    // check if parallel processing is enabled
-    if (config.parallel) {
-        // flush pending commands if the next command requires it
-        if (rdp_commands[cmd_id].sync) {
-            rdp_cmd_flush();
-        }
-
-        // special case: sync_full always needs to be run in main thread
-        // (parameters are unused, so NULL is fine)
-        if (cmd_id == CMD_ID_SYNC_FULL) {
-            rdp_sync_full(NULL, NULL);
-            return;
-        }
-
-        // put command in the buffer
-        rdp_cmd_push(arg, length);
-    } else {
-        // run command directly
-        rdp_cmd_run(&rdp_states[0], arg);
-    }
+    rdp_cmd_pos = 0;
+    rdp_cmd_id = 0;
+    rdp_cmd_len = CMD_MAX_INTS;
 }
 
 void rdp_update(void)
 {
     uint32_t** dp_reg = plugin_get_dp_registers();
-    uint32_t dp_current_al = *dp_reg[DP_CURRENT] & ~7;
-    uint32_t dp_end_al = *dp_reg[DP_END] & ~7;
+    uint32_t dp_current_al = (*dp_reg[DP_CURRENT] & ~7) >> 2;
+    uint32_t dp_end_al = (*dp_reg[DP_END] & ~7) >> 2;
 
-//    *dp_reg[DP_STATUS] &= ~DP_STATUS_FREEZE;
-
+    // don't do anything while the registers are not set up correctly
     if (dp_end_al <= dp_current_al) {
         return;
     }
 
-    uint32_t length = (dp_end_al - dp_current_al) >> 2;
+    // while there's data in the command buffer...
+    while (dp_end_al - dp_current_al > 0) {
+        bool xbus_dma = (*dp_reg[DP_STATUS] & DP_STATUS_XBUS_DMA) != 0;
+        uint32_t* dmem = (uint32_t*)plugin_get_dmem();
+        uint32_t* cmd_buf = rdp_cmd_buf[rdp_cmd_buf_pos];
 
-    dp_current_al >>= 2;
+        // when reading the first int, extract the command ID and update the buffer length
+        if (rdp_cmd_pos == 0) {
+            if (xbus_dma) {
+                cmd_buf[rdp_cmd_pos++] = dmem[dp_current_al++ & 0x3ff];
+            } else {
+                cmd_buf[rdp_cmd_pos++] = rdram_read_idx32(dp_current_al++);
+            }
 
-    while (length) {
-        uint32_t toload = length > CMD_MAX_BUFFER_LENGTH ? CMD_MAX_BUFFER_LENGTH : length;
+            rdp_cmd_id = CMD_ID(cmd_buf);
+            rdp_cmd_len = rdp_commands[rdp_cmd_id].length >> 2;
+        }
 
-        if (*dp_reg[DP_STATUS] & DP_STATUS_XBUS_DMA) {
-            uint32_t* dmem = (uint32_t*)plugin_get_dmem();
-            for (uint32_t i = 0; i < toload; i ++) {
-                rdp_cmd_data[rdp_cmd_ptr] = dmem[dp_current_al & 0x3ff];
-                rdp_cmd_ptr++;
-                dp_current_al++;
+        // copy more data from the N64 to the local command buffer
+        uint32_t toload = MIN(dp_end_al - dp_current_al, rdp_cmd_len - 1);
+
+        if (xbus_dma) {
+            for (uint32_t i = 0; i < toload; i++) {
+                cmd_buf[rdp_cmd_pos++] = dmem[dp_current_al++ & 0x3ff];
             }
         } else {
-            for (uint32_t i = 0; i < toload; i ++) {
-                RREADIDX32(rdp_cmd_data[rdp_cmd_ptr], dp_current_al);
-                rdp_cmd_ptr++;
-                dp_current_al++;
+            for (uint32_t i = 0; i < toload; i++) {
+                cmd_buf[rdp_cmd_pos++] = rdram_read_idx32(dp_current_al++);
             }
         }
 
-        length -= toload;
+        // if there's enough data for the current command...
+        if (rdp_cmd_pos == rdp_cmd_len) {
+            // check if parallel processing is enabled
+            if (config.parallel) {
+                // special case: sync_full always needs to be run in main thread
+                if (rdp_cmd_id == CMD_ID_SYNC_FULL) {
+                    // first, run all pending commands
+                    cmd_flush();
 
-        while (rdp_cmd_cur < rdp_cmd_ptr && !rdp_pipeline_crashed) {
-            uint32_t cmd = CMD_ID(rdp_cmd_data + rdp_cmd_cur);
-            uint32_t cmd_length = rdp_commands[cmd].length >> 2;
+                    // parameters are unused, so NULL is fine
+                    rdp_sync_full(NULL, NULL);
+                } else {
+                    // increment buffer position
+                    rdp_cmd_buf_pos++;
 
-            if ((rdp_cmd_ptr - rdp_cmd_cur) < cmd_length) {
-                if (!length) {
-                    goto end;
+                    // flush buffer when it is full or when the current command requires a sync
+                    if (rdp_cmd_buf_pos >= CMD_BUFFER_SIZE || rdp_commands[rdp_cmd_id].sync) {
+                        cmd_flush();
+                    }
                 }
-
-                dp_current_al -= (rdp_cmd_ptr - rdp_cmd_cur);
-                length += (rdp_cmd_ptr - rdp_cmd_cur);
-                break;
+            } else {
+                // run command directly
+                cmd_run(&rdp_states[0], cmd_buf);
             }
 
-            rdp_cmd(rdp_cmd_data + rdp_cmd_cur, cmd_length);
-            rdp_cmd_cur += cmd_length;
+            // reset current command buffer to prepare for the next one
+            cmd_init();
         }
-
-        rdp_cmd_ptr = 0;
-        rdp_cmd_cur = 0;
     }
 
-end:
+    // update DP registers to indicate that all bytes have been read
     *dp_reg[DP_START] = *dp_reg[DP_CURRENT] = *dp_reg[DP_END];
 }
