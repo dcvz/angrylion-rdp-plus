@@ -224,31 +224,15 @@ EXPORT void CALL ChangeWindow(void)
 EXPORT void CALL ReadScreen2(void *dest, int *width, int *height, int front)
 {
     struct rdp_frame_buffer fb = { 0 };
-    screen_read(&fb);
+    screen_read(&fb, true);
 
     *width = fb.width;
     *height = fb.height;
 
-    if (!dest) {
-        return;
+    if (dest) {
+        fb.pixels = dest;
+        screen_read(&fb, true);
     }
-
-    // convert BGRA to RGB and also flip image vertically
-    fb.pixels = malloc(fb.width * fb.height * sizeof(int32_t));
-    screen_read(&fb);
-
-    uint8_t* pdst = (uint8_t*)dest;
-    for (int32_t y = fb.height - 1; y >= 0; y--) {
-        uint8_t* psrc = (uint8_t*)(fb.pixels + y * fb.width);
-        for (int32_t x = 0; x < (int32_t)fb.width; x++) {
-            *pdst++ = psrc[2];
-            *pdst++ = psrc[1];
-            *pdst++ = psrc[0];
-            psrc += 4;
-        }
-    }
-
-    free(fb.pixels);
 }
 
 EXPORT void CALL SetRenderingCallback(void (*callback)(int))
