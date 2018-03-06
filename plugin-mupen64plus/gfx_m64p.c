@@ -223,7 +223,7 @@ EXPORT void CALL ChangeWindow(void)
 
 EXPORT void CALL ReadScreen2(void *dest, int *width, int *height, int front)
 {
-    struct rdp_frame_buffer buffer;
+    struct rdp_frame_buffer buffer = { 0 };
     screen_read(&buffer);
 
     *width = buffer.width;
