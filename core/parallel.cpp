@@ -11,8 +11,6 @@ class Parallel
 {
 public:
     Parallel(uint32_t num_workers) : m_workers_active(num_workers) {
-        std::unique_lock<std::mutex> ul(m_mutex);
-
         // give workers an empty task
         m_task = [](uint32_t) {};
 
@@ -22,7 +20,7 @@ public:
         }
 
         // wait for workers to finish task to make sure they're ready
-        wait(ul);
+        wait();
     }
 
     ~Parallel() {
@@ -88,10 +86,6 @@ private:
 
     void wait() {
         std::unique_lock<std::mutex> ul(m_mutex);
-        wait(ul);
-    }
-
-    void wait(std::unique_lock<std::mutex>& ul) {
         while (m_workers_active) {
             std::this_thread::yield();
             m_signal_done.wait(ul);
