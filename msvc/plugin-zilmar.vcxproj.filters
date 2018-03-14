@@ -11,41 +11,41 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="gfx_1.3.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="wgl_ext.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="config.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="resource.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="gfx_1.3.c">
+    <ClCompile Include="..\src\plugin\zilmar\config.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="wgl_ext.c">
+    <ClCompile Include="..\src\plugin\zilmar\gfx_1.3.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="msg.c">
+    <ClCompile Include="..\src\plugin\zilmar\msg.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="screen.c">
+    <ClCompile Include="..\src\plugin\zilmar\plugin.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="plugin.c">
+    <ClCompile Include="..\src\plugin\zilmar\screen.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="config.c">
+    <ClCompile Include="..\src\plugin\zilmar\wgl_ext.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="config.rc">
+    <ClInclude Include="..\src\plugin\zilmar\config.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\plugin\zilmar\gfx_1.3.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\plugin\zilmar\resource.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\plugin\zilmar\wgl_ext.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="..\src\plugin\zilmar\config.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
   </ItemGroup>

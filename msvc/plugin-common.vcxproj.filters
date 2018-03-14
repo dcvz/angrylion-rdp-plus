@@ -11,18 +11,18 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="gl_core_3_3.c">
+    <ClCompile Include="..\src\plugin\common\gl_core_3_3.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="gl_screen.c">
+    <ClCompile Include="..\src\plugin\common\gl_screen.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="gl_core_3_3.h">
+    <ClInclude Include="..\src\plugin\common\gl_core_3_3.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="gl_screen.h">
+    <ClInclude Include="..\src\plugin\common\gl_screen.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

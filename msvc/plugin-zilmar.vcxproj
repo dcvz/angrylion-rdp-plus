@@ -19,21 +19,21 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="config.h" />
-    <ClInclude Include="gfx_1.3.h" />
-    <ClInclude Include="resource.h" />
-    <ClInclude Include="wgl_ext.h" />
+    <ResourceCompile Include="..\src\plugin\zilmar\config.rc" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="config.c" />
-    <ClCompile Include="gfx_1.3.c" />
-    <ClCompile Include="msg.c" />
-    <ClCompile Include="plugin.c" />
-    <ClCompile Include="screen.c" />
-    <ClCompile Include="wgl_ext.c" />
+    <ClCompile Include="..\src\plugin\zilmar\config.c" />
+    <ClCompile Include="..\src\plugin\zilmar\gfx_1.3.c" />
+    <ClCompile Include="..\src\plugin\zilmar\msg.c" />
+    <ClCompile Include="..\src\plugin\zilmar\plugin.c" />
+    <ClCompile Include="..\src\plugin\zilmar\screen.c" />
+    <ClCompile Include="..\src\plugin\zilmar\wgl_ext.c" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="config.rc" />
+    <ClInclude Include="..\src\plugin\zilmar\config.h" />
+    <ClInclude Include="..\src\plugin\zilmar\gfx_1.3.h" />
+    <ClInclude Include="..\src\plugin\zilmar\resource.h" />
+    <ClInclude Include="..\src\plugin\zilmar\wgl_ext.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{722AD25D-C281-48FB-9A58-7699E50F8E6D}</ProjectGuid>
@@ -120,7 +120,7 @@
       <PrecompiledHeader />
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <AdditionalIncludeDirectories>$(SolutionDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <AdditionalOptions>ddraw.lib dxguid.lib %(AdditionalOptions)</AdditionalOptions>
@@ -143,7 +143,7 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <AdditionalIncludeDirectories>$(SolutionDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <AdditionalOptions>ddraw.lib dxguid.lib %(AdditionalOptions)</AdditionalOptions>
@@ -174,7 +174,7 @@
       <TreatWarningAsError>true</TreatWarningAsError>
       <FloatingPointModel>Fast</FloatingPointModel>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
-      <AdditionalIncludeDirectories>$(SolutionDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
@@ -213,7 +213,7 @@
       <TreatWarningAsError>true</TreatWarningAsError>
       <FloatingPointModel>Fast</FloatingPointModel>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
-      <AdditionalIncludeDirectories>$(SolutionDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>

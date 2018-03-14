@@ -20,98 +20,98 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="rdp.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="parallel.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="rdp\cmd.c">
-      <Filter>Source Files\rdp</Filter>
-    </ClCompile>
-    <ClCompile Include="rdp\blender.c">
-      <Filter>Source Files\rdp</Filter>
-    </ClCompile>
-    <ClCompile Include="rdp\combiner.c">
-      <Filter>Source Files\rdp</Filter>
-    </ClCompile>
-    <ClCompile Include="rdp\coverage.c">
-      <Filter>Source Files\rdp</Filter>
-    </ClCompile>
-    <ClCompile Include="rdp\rasterizer.c">
-      <Filter>Source Files\rdp</Filter>
-    </ClCompile>
-    <ClCompile Include="rdp\zbuffer.c">
-      <Filter>Source Files\rdp</Filter>
-    </ClCompile>
-    <ClCompile Include="rdp\fbuffer.c">
-      <Filter>Source Files\rdp</Filter>
-    </ClCompile>
-    <ClCompile Include="rdp\dither.c">
-      <Filter>Source Files\rdp</Filter>
-    </ClCompile>
-    <ClCompile Include="rdp\tex.c">
-      <Filter>Source Files\rdp</Filter>
-    </ClCompile>
-    <ClCompile Include="screen.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="rdp\rdram.c">
-      <Filter>Source Files\rdp</Filter>
-    </ClCompile>
-    <ClCompile Include="rdp\vi\divot.c">
-      <Filter>Source Files\rdp\vi</Filter>
-    </ClCompile>
-    <ClCompile Include="rdp\vi\fetch.c">
-      <Filter>Source Files\rdp\vi</Filter>
-    </ClCompile>
-    <ClCompile Include="rdp\vi\gamma.c">
-      <Filter>Source Files\rdp\vi</Filter>
-    </ClCompile>
-    <ClCompile Include="rdp\vi\lerp.c">
-      <Filter>Source Files\rdp\vi</Filter>
-    </ClCompile>
-    <ClCompile Include="rdp\vi\restore.c">
-      <Filter>Source Files\rdp\vi</Filter>
-    </ClCompile>
-    <ClCompile Include="rdp\vi\video.c">
-      <Filter>Source Files\rdp\vi</Filter>
-    </ClCompile>
-    <ClCompile Include="rdp\tex\tcoord.c">
+    <ClCompile Include="..\src\core\rdp\tex\tcoord.c">
       <Filter>Source Files\rdp\tex</Filter>
     </ClCompile>
-    <ClCompile Include="rdp\tex\tmem.c">
+    <ClCompile Include="..\src\core\rdp\tex\tmem.c">
       <Filter>Source Files\rdp\tex</Filter>
     </ClCompile>
-    <ClCompile Include="rdp\vi.c">
+    <ClCompile Include="..\src\core\rdp\vi\divot.c">
+      <Filter>Source Files\rdp\vi</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\rdp\vi\fetch.c">
+      <Filter>Source Files\rdp\vi</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\rdp\vi\gamma.c">
+      <Filter>Source Files\rdp\vi</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\rdp\vi\lerp.c">
+      <Filter>Source Files\rdp\vi</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\rdp\vi\restore.c">
+      <Filter>Source Files\rdp\vi</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\rdp\vi\video.c">
+      <Filter>Source Files\rdp\vi</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\rdp\blender.c">
       <Filter>Source Files\rdp</Filter>
     </ClCompile>
-    <ClCompile Include="plugin.c">
+    <ClCompile Include="..\src\core\rdp\cmd.c">
+      <Filter>Source Files\rdp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\rdp\combiner.c">
+      <Filter>Source Files\rdp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\rdp\coverage.c">
+      <Filter>Source Files\rdp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\rdp\dither.c">
+      <Filter>Source Files\rdp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\rdp\fbuffer.c">
+      <Filter>Source Files\rdp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\rdp\rasterizer.c">
+      <Filter>Source Files\rdp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\rdp\rdram.c">
+      <Filter>Source Files\rdp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\rdp\tex.c">
+      <Filter>Source Files\rdp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\rdp\vi.c">
+      <Filter>Source Files\rdp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\rdp\zbuffer.c">
+      <Filter>Source Files\rdp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\parallel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\plugin.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\rdp.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\screen.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="common.h">
+    <ClInclude Include="..\src\core\common.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="rdp.h">
+    <ClInclude Include="..\src\core\msg.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="msg.h">
+    <ClInclude Include="..\src\core\parallel.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="plugin.h">
+    <ClInclude Include="..\src\core\plugin.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="screen.h">
+    <ClInclude Include="..\src\core\rdp.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="parallel.h">
+    <ClInclude Include="..\src\core\screen.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="version.h.in">
+    <None Include="..\src\core\version.h.in">
       <Filter>Source Files</Filter>
     </None>
   </ItemGroup>

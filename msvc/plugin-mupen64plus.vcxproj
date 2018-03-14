@@ -19,19 +19,19 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="gfx_m64p.c" />
-    <ClCompile Include="msg.c" />
-    <ClCompile Include="plugin.c" />
-    <ClCompile Include="screen.c" />
+    <ClInclude Include="..\src\plugin\mupen64plus\api\m64p_common.h" />
+    <ClInclude Include="..\src\plugin\mupen64plus\api\m64p_config.h" />
+    <ClInclude Include="..\src\plugin\mupen64plus\api\m64p_plugin.h" />
+    <ClInclude Include="..\src\plugin\mupen64plus\api\m64p_types.h" />
+    <ClInclude Include="..\src\plugin\mupen64plus\api\m64p_vidext.h" />
+    <ClInclude Include="..\src\plugin\mupen64plus\gfx_m64p.h" />
+    <ClInclude Include="..\src\plugin\mupen64plus\screen.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="api\m64p_common.h" />
-    <ClInclude Include="api\m64p_config.h" />
-    <ClInclude Include="api\m64p_plugin.h" />
-    <ClInclude Include="api\m64p_types.h" />
-    <ClInclude Include="api\m64p_vidext.h" />
-    <ClInclude Include="gfx_m64p.h" />
-    <ClInclude Include="screen.h" />
+    <ClCompile Include="..\src\plugin\mupen64plus\gfx_m64p.c" />
+    <ClCompile Include="..\src\plugin\mupen64plus\msg.c" />
+    <ClCompile Include="..\src\plugin\mupen64plus\plugin.c" />
+    <ClCompile Include="..\src\plugin\mupen64plus\screen.c" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{54BDC4EF-2526-47F7-A73E-C1C0FBC0237C}</ProjectGuid>
@@ -118,7 +118,7 @@
       <PrecompiledHeader />
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <AdditionalIncludeDirectories>$(SolutionDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <AdditionalOptions>ddraw.lib dxguid.lib %(AdditionalOptions)</AdditionalOptions>
@@ -140,7 +140,7 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <AdditionalIncludeDirectories>$(SolutionDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <AdditionalOptions>ddraw.lib dxguid.lib %(AdditionalOptions)</AdditionalOptions>
@@ -170,7 +170,7 @@
       <TreatWarningAsError>true</TreatWarningAsError>
       <FloatingPointModel>Fast</FloatingPointModel>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
-      <AdditionalIncludeDirectories>$(SolutionDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
@@ -208,7 +208,7 @@
       <TreatWarningAsError>true</TreatWarningAsError>
       <FloatingPointModel>Fast</FloatingPointModel>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
-      <AdditionalIncludeDirectories>$(SolutionDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
