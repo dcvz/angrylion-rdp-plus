@@ -19,6 +19,11 @@ endif()
 # C++14 is required for the Parallel utility class
 set(CMAKE_CXX_STANDARD 14)
 
+# disable warnings to use unportable secure file IO
+if(MSVC)
+    add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+endif(MSVC)
+
 # default to release build
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
