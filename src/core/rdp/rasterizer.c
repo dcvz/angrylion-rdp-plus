@@ -1900,7 +1900,7 @@ static void edgewalker_for_prims(struct rdp_state* rdp, int32_t* ewdata)
 
 
     uint32_t worker_id = rdp->worker_id;
-    uint32_t worker_num = config.parallel ? parallel_worker_num() : 1;
+    uint32_t num_workers = config.parallel ? parallel_num_workers() : 1;
 
     if (flip)
     {
@@ -1982,7 +1982,7 @@ static void edgewalker_for_prims(struct rdp_state* rdp, int32_t* ewdata)
             {
                 rdp->span[j].lx = maxxmx;
                 rdp->span[j].rx = minxhx;
-                rdp->span[j].validline  = !allinval && !allover && !allunder && (!rdp->scfield || (rdp->scfield && !(rdp->sckeepodd ^ (j & 1)))) && (!config.parallel || j % worker_num == worker_id);
+                rdp->span[j].validline  = !allinval && !allover && !allunder && (!rdp->scfield || (rdp->scfield && !(rdp->sckeepodd ^ (j & 1)))) && (!config.parallel || j % num_workers == worker_id);
 
             }
 
@@ -2069,7 +2069,7 @@ static void edgewalker_for_prims(struct rdp_state* rdp, int32_t* ewdata)
             {
                 rdp->span[j].lx = minxmx;
                 rdp->span[j].rx = maxxhx;
-                rdp->span[j].validline  = !allinval && !allover && !allunder && (!rdp->scfield || (rdp->scfield && !(rdp->sckeepodd ^ (j & 1)))) && (!config.parallel || j % worker_num == worker_id);
+                rdp->span[j].validline  = !allinval && !allover && !allunder && (!rdp->scfield || (rdp->scfield && !(rdp->sckeepodd ^ (j & 1)))) && (!config.parallel || j % num_workers == worker_id);
             }
 
         }

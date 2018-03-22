@@ -146,7 +146,7 @@ void parallel_run(void task(uint32_t))
     parallel->run(task);
 }
 
-uint32_t parallel_worker_num()
+uint32_t parallel_num_workers()
 {
     return parallel->num_workers();
 }

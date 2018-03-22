@@ -357,7 +357,7 @@ static void vi_process(uint32_t worker_id)
 
     if (config.parallel) {
         y_begin = worker_id;
-        y_inc = parallel_worker_num();
+        y_inc = parallel_num_workers();
     }
 
     for (int32_t y = y_begin; y < y_end; y += y_inc) {
@@ -585,7 +585,7 @@ static void vi_process_fast(uint32_t worker_id)
 
     if (config.parallel) {
         y_begin = worker_id;
-        y_inc = parallel_worker_num();
+        y_inc = parallel_num_workers();
     }
 
     for (int32_t y = y_begin; y < y_end; y += y_inc) {
