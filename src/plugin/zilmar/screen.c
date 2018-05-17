@@ -161,7 +161,7 @@ void screen_swap(bool blank)
     }
 
     // clear current buffer, indicating the start of a new frame
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    gl_screen_clear();
 
     RECT rect;
     GetClientRect(gfx.hWnd, &rect);
