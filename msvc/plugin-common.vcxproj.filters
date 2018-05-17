@@ -9,20 +9,29 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Source Files\screen">
+      <UniqueIdentifier>{6efebbbd-8faa-46ac-873e-273e1f601814}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\plugin\common\gl_core_3_3.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\plugin\common\gl_screen_3_3.c">
+    <ClCompile Include="..\src\plugin\common\gl_screen.c">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\plugin\common\screen\gl_screen_3_3.c">
+      <Filter>Source Files\screen</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\plugin\common\screen\gl_screen_es_3_0.c">
+      <Filter>Source Files\screen</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\plugin\common\gl_core_3_3.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\plugin\common\gl_screen_3_3.h">
+    <ClInclude Include="..\src\plugin\common\gl_screen.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

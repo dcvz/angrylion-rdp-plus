@@ -1,7 +1,4 @@
-#include "gl_screen_3_3.h"
 #include "gl_core_3_3.h"
-
-#include "core/msg.h"
 
 #include <stdlib.h>
 #include <string.h>

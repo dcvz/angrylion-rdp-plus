@@ -1,9 +1,6 @@
-#include "gl_screen.h"
 #include <GLES3/gl3.h>
 #include <memory.h>
 #include <malloc.h>
-
-#include "core/msg.h"
 
 bool isGLError(const char* test)
 {
