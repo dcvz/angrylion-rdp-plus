@@ -14,7 +14,7 @@
     <ClCompile Include="..\src\plugin\common\gl_core_3_3.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\plugin\common\gl_screen.c">
+    <ClCompile Include="..\src\plugin\common\gl_screen_3_3.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -22,7 +22,7 @@
     <ClInclude Include="..\src\plugin\common\gl_core_3_3.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\plugin\common\gl_screen.h">
+    <ClInclude Include="..\src\plugin\common\gl_screen_3_3.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

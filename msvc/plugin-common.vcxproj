@@ -20,11 +20,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\plugin\common\gl_core_3_3.c" />
-    <ClCompile Include="..\src\plugin\common\gl_screen.c" />
+    <ClCompile Include="..\src\plugin\common\gl_screen_3_3.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\plugin\common\gl_core_3_3.h" />
-    <ClInclude Include="..\src\plugin\common\gl_screen.h" />
+    <ClInclude Include="..\src\plugin\common\gl_screen_3_3.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{13F7DDD7-2282-408A-AEF9-72266E0236DC}</ProjectGuid>
