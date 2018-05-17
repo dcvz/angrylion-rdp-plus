@@ -46,6 +46,28 @@ void win32_client_resize(HWND hWnd, HWND hStatus, int32_t nWidth, int32_t nHeigh
     MoveWindow(hWnd, rwin.left, rwin.top, nWidth + pdiff.x, nHeight + pdiff.y, TRUE);
 }
 
+static int TestPointer(const PROC pTest)
+{
+    if (!pTest) {
+        return 0;
+    }
+
+    ptrdiff_t iTest = (ptrdiff_t)pTest;
+
+    return iTest != 1 && iTest != 2 && iTest != 3 && iTest != -1;
+}
+
+void* IntGetProcAddress(const char *name)
+{
+    HMODULE glMod = NULL;
+    PROC pFunc = wglGetProcAddress((LPCSTR)name);
+    if (TestPointer(pFunc)) {
+        return pFunc;
+    }
+    glMod = GetModuleHandleA("OpenGL32.dll");
+    return (PROC)GetProcAddress(glMod, (LPCSTR)name);
+}
+
 void screen_init(struct rdp_config* config)
 {
     // make window resizable for the user

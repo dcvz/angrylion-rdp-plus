@@ -28,6 +28,11 @@ int32_t window_width;
 int32_t window_height;
 int32_t window_fullscreen;
 
+void* IntGetProcAddress(const char *name)
+{
+    return CoreVideo_GL_GetProcAddress(name);
+}
+
 void screen_init(struct rdp_config* config)
 {
     /* Get the core Video Extension function pointers from the library handle */
