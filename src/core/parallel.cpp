@@ -17,7 +17,7 @@ public:
     {
         // mask for m_tasks_done when all workers have finished their task
         // except for worker 0, which runs in the main thread
-        m_all_tasks_done = ((1Ui64 << m_num_workers) - 1) & ~1;
+        m_all_tasks_done = ((1LL << m_num_workers) - 1) & ~1;
 
         // give workers an empty task
         m_task = [](std::uint32_t) {};
@@ -93,7 +93,7 @@ private:
     }
 
     void do_work(std::uint32_t worker_id) {
-        const std::uint64_t worker_mask = 1Ui64 << worker_id;
+        const std::uint64_t worker_mask = 1LL << worker_id;
 
         while (m_accept_work) {
             // do the work
