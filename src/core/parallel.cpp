@@ -77,9 +77,9 @@ private:
     std::mutex m_signal_mutex;
     std::condition_variable m_signal_work;
     std::condition_variable m_signal_done;
-    std::atomic_uint64_t m_tasks_done;
+    std::atomic<uint64_t> m_tasks_done;
     std::uint64_t m_all_tasks_done;
-    std::atomic_bool m_accept_work;
+    std::atomic<bool> m_accept_work;
     const std::uint32_t m_num_workers;
 
     void start_work() {
