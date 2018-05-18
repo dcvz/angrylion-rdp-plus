@@ -1,7 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stddef.h>
-#include "gl_core_3_3.h"
 
 void* IntGetProcAddress(const char *name);
 

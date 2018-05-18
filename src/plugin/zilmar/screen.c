@@ -1,7 +1,6 @@
 #include "gfx_1.3.h"
 
 #include "plugin/common/gl_screen.h"
-#include "plugin/common/gl_core_3_3.h"
 #include "wgl_ext.h"
 
 #include "core/screen.h"

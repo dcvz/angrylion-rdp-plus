@@ -1,5 +1,3 @@
-#include "gl_core_3_3.h"
-
 #include <stdlib.h>
 #include <string.h>
 
