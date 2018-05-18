@@ -1,13 +1,3 @@
-static void vi_fetch_filter16(struct ccvg* res, uint32_t fboffset, uint32_t cur_x, union vi_reg_ctrl ctrl, uint32_t vres, uint32_t fetchstate);
-static void vi_fetch_filter32(struct ccvg* res, uint32_t fboffset, uint32_t cur_x, union vi_reg_ctrl ctrl, uint32_t vres, uint32_t fetchstate);
-
-static void (*vi_fetch_filter_func[2])(struct ccvg*, uint32_t, uint32_t, union vi_reg_ctrl, uint32_t, uint32_t) =
-{
-    vi_fetch_filter16, vi_fetch_filter32
-};
-
-void (*vi_fetch_filter_ptr)(struct ccvg*, uint32_t, uint32_t, union vi_reg_ctrl, uint32_t, uint32_t);
-
 static void vi_fetch_filter16(struct ccvg* res, uint32_t fboffset, uint32_t cur_x, union vi_reg_ctrl ctrl, uint32_t hres, uint32_t fetchstate)
 {
     int r, g, b;

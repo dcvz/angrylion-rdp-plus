@@ -62,6 +62,7 @@ struct ccvg
 #include "vi/fetch.c"
 
 // states
+static void(*vi_fetch_filter_ptr)(struct ccvg*, uint32_t, uint32_t, union vi_reg_ctrl, uint32_t, uint32_t);
 static uint32_t prevvicurrent;
 static int32_t emucontrolsvicurrent;
 static bool prevserrate;
@@ -138,7 +139,7 @@ static bool vi_process_start(void)
 {
     uint32_t final = 0;
 
-    vi_fetch_filter_ptr = vi_fetch_filter_func[ctrl.type & 1];
+    vi_fetch_filter_ptr = ctrl.type & 1 ? vi_fetch_filter32 : vi_fetch_filter16;
 
     ispal = v_sync > (V_SYNC_NTSC + 25);
     h_start -= (ispal ? 128 : 108);
