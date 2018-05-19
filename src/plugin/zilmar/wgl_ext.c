@@ -5,85 +5,98 @@
 
 void* IntGetProcAddress(const char *name);
 
-int wgl_ext_EXT_swap_control = 0;
-int wgl_ext_ARB_create_context = 0;
-int wgl_ext_ARB_create_context_profile = 0;
+int wgl_ext_EXT_swap_control = wgl_LOAD_FAILED;
+int wgl_ext_ARB_create_context = wgl_LOAD_FAILED;
+int wgl_ext_ARB_create_context_profile = wgl_LOAD_FAILED;
 
-/* Extension: EXT_swap_control*/
-typedef int (CODEGEN_FUNCPTR *PFN_PTRC_WGLGETSWAPINTERVALEXTPROC)(void);
-static int CODEGEN_FUNCPTR Switch_GetSwapIntervalEXT(void);
-typedef BOOL (CODEGEN_FUNCPTR *PFN_PTRC_WGLSWAPINTERVALEXTPROC)(int);
-static BOOL CODEGEN_FUNCPTR Switch_SwapIntervalEXT(int interval);
+int (CODEGEN_FUNCPTR *_ptrc_wglGetSwapIntervalEXT)(void) = NULL;
+BOOL (CODEGEN_FUNCPTR *_ptrc_wglSwapIntervalEXT)(int interval) = NULL;
 
-/* Extension: ARB_create_context*/
-typedef HGLRC (CODEGEN_FUNCPTR *PFN_PTRC_WGLCREATECONTEXTATTRIBSARBPROC)(HDC, HGLRC, const int *);
-static HGLRC CODEGEN_FUNCPTR Switch_CreateContextAttribsARB(HDC hDC, HGLRC hShareContext, const int * attribList);
-
-
-/* Extension: EXT_swap_control*/
-PFN_PTRC_WGLGETSWAPINTERVALEXTPROC _ptrc_wglGetSwapIntervalEXT = Switch_GetSwapIntervalEXT;
-PFN_PTRC_WGLSWAPINTERVALEXTPROC _ptrc_wglSwapIntervalEXT = Switch_SwapIntervalEXT;
-
-/* Extension: ARB_create_context*/
-PFN_PTRC_WGLCREATECONTEXTATTRIBSARBPROC _ptrc_wglCreateContextAttribsARB = Switch_CreateContextAttribsARB;
-
-
-/* Extension: EXT_swap_control*/
-static int CODEGEN_FUNCPTR Switch_GetSwapIntervalEXT(void)
+static int Load_EXT_swap_control(void)
 {
-	_ptrc_wglGetSwapIntervalEXT = (PFN_PTRC_WGLGETSWAPINTERVALEXTPROC)IntGetProcAddress("wglGetSwapIntervalEXT");
-	return _ptrc_wglGetSwapIntervalEXT();
+	int numFailed = 0;
+	_ptrc_wglGetSwapIntervalEXT = (int (CODEGEN_FUNCPTR *)(void))IntGetProcAddress("wglGetSwapIntervalEXT");
+	if(!_ptrc_wglGetSwapIntervalEXT) numFailed++;
+	_ptrc_wglSwapIntervalEXT = (BOOL (CODEGEN_FUNCPTR *)(int))IntGetProcAddress("wglSwapIntervalEXT");
+	if(!_ptrc_wglSwapIntervalEXT) numFailed++;
+	return numFailed;
 }
 
-static BOOL CODEGEN_FUNCPTR Switch_SwapIntervalEXT(int interval)
+HGLRC (CODEGEN_FUNCPTR *_ptrc_wglCreateContextAttribsARB)(HDC hDC, HGLRC hShareContext, const int * attribList) = NULL;
+
+static int Load_ARB_create_context(void)
 {
-	_ptrc_wglSwapIntervalEXT = (PFN_PTRC_WGLSWAPINTERVALEXTPROC)IntGetProcAddress("wglSwapIntervalEXT");
-	return _ptrc_wglSwapIntervalEXT(interval);
+	int numFailed = 0;
+	_ptrc_wglCreateContextAttribsARB = (HGLRC (CODEGEN_FUNCPTR *)(HDC, HGLRC, const int *))IntGetProcAddress("wglCreateContextAttribsARB");
+	if(!_ptrc_wglCreateContextAttribsARB) numFailed++;
+	return numFailed;
 }
 
 
-/* Extension: ARB_create_context*/
-static HGLRC CODEGEN_FUNCPTR Switch_CreateContextAttribsARB(HDC hDC, HGLRC hShareContext, const int * attribList)
+static const char * (CODEGEN_FUNCPTR *_ptrc_wglGetExtensionsStringARB)(HDC hdc) = NULL;
+
+typedef int (*PFN_LOADFUNCPOINTERS)(void);
+typedef struct wgl_StrToExtMap_s
 {
-	_ptrc_wglCreateContextAttribsARB = (PFN_PTRC_WGLCREATECONTEXTATTRIBSARBPROC)IntGetProcAddress("wglCreateContextAttribsARB");
-	return _ptrc_wglCreateContextAttribsARB(hDC, hShareContext, attribList);
-}
+	char *extensionName;
+	int *extensionVariable;
+	PFN_LOADFUNCPOINTERS LoadExtension;
+} wgl_StrToExtMap;
 
-
-
-static void ClearExtensionVariables(void)
-{
-	wgl_ext_EXT_swap_control = 0;
-	wgl_ext_ARB_create_context = 0;
-	wgl_ext_ARB_create_context_profile = 0;
-}
-
-typedef struct wgl_MapTable_s
-{
-	char *extName;
-	int *extVariable;
-}wgl_MapTable;
-
-static wgl_MapTable g_mappingTable[3] = 
-{
-	{"WGL_EXT_swap_control", &wgl_ext_EXT_swap_control},
-	{"WGL_ARB_create_context", &wgl_ext_ARB_create_context},
-	{"WGL_ARB_create_context_profile", &wgl_ext_ARB_create_context_profile},
+static wgl_StrToExtMap ExtensionMap[3] = {
+	{"WGL_EXT_swap_control", &wgl_ext_EXT_swap_control, Load_EXT_swap_control},
+	{"WGL_ARB_create_context", &wgl_ext_ARB_create_context, Load_ARB_create_context},
+	{"WGL_ARB_create_context_profile", &wgl_ext_ARB_create_context_profile, NULL},
 };
+
+static int g_extensionMapSize = 3;
+
+static wgl_StrToExtMap *FindExtEntry(const char *extensionName)
+{
+	int loop;
+	wgl_StrToExtMap *currLoc = ExtensionMap;
+	for(loop = 0; loop < g_extensionMapSize; ++loop, ++currLoc)
+	{
+		if(strcmp(extensionName, currLoc->extensionName) == 0)
+			return currLoc;
+	}
+	
+	return NULL;
+}
+
+static void ClearExtensionVars(void)
+{
+	wgl_ext_EXT_swap_control = wgl_LOAD_FAILED;
+	wgl_ext_ARB_create_context = wgl_LOAD_FAILED;
+	wgl_ext_ARB_create_context_profile = wgl_LOAD_FAILED;
+}
+
 
 static void LoadExtByName(const char *extensionName)
 {
-	wgl_MapTable *tableEnd = &g_mappingTable[3];
-	wgl_MapTable *entry = &g_mappingTable[0];
-	for(; entry != tableEnd; ++entry)
+	wgl_StrToExtMap *entry = NULL;
+	entry = FindExtEntry(extensionName);
+	if(entry)
 	{
-		if(strcmp(entry->extName, extensionName) == 0)
-			break;
+		if(entry->LoadExtension)
+		{
+			int numFailed = entry->LoadExtension();
+			if(numFailed == 0)
+			{
+				*(entry->extensionVariable) = wgl_LOAD_SUCCEEDED;
+			}
+			else
+			{
+				*(entry->extensionVariable) = wgl_LOAD_SUCCEEDED + numFailed;
+			}
+		}
+		else
+		{
+			*(entry->extensionVariable) = wgl_LOAD_SUCCEEDED;
+		}
 	}
-	
-	if(entry != tableEnd)
-		*(entry->extVariable) = 1;
 }
+
 
 static void ProcExtsFromExtString(const char *strExtList)
 {
@@ -119,14 +132,14 @@ static void ProcExtsFromExtString(const char *strExtList)
 	}
 }
 
-void wgl_CheckExtensions(HDC hdc)
+int wgl_LoadFunctions(HDC hdc)
 {
-	ClearExtensionVariables();
+	ClearExtensionVars();
 	
-	{
-		typedef const char * (CODEGEN_FUNCPTR *MYGETEXTSTRINGPROC)(HDC);
-		MYGETEXTSTRINGPROC InternalGetExtensionString = (MYGETEXTSTRINGPROC)IntGetProcAddress("wglGetExtensionsStringARB");
-		if(!InternalGetExtensionString) return;
-		ProcExtsFromExtString((const char *)InternalGetExtensionString(hdc));
-	}
+	_ptrc_wglGetExtensionsStringARB = (const char * (CODEGEN_FUNCPTR *)(HDC))IntGetProcAddress("wglGetExtensionsStringARB");
+	if(!_ptrc_wglGetExtensionsStringARB) return wgl_LOAD_FAILED;
+	
+	ProcExtsFromExtString((const char *)_ptrc_wglGetExtensionsStringARB(hdc));
+	return wgl_LOAD_SUCCEEDED;
 }
+

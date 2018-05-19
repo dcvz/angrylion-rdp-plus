@@ -100,6 +100,9 @@ static GLuint gl_shader_link(GLuint vert, GLuint frag)
 
 void gl_screen_init(struct rdp_config* config)
 {
+    // load OpenGL function pointers
+    ogl_LoadFunctions();
+
     // shader sources for drawing a clipped full-screen triangle. the geometry
     // is defined by the vertex ID, so a VBO is not required.
     const GLchar* vert_shader =

@@ -123,6 +123,9 @@ void screen_init(struct rdp_config* config)
         msg_error("Can't create OpenGL context.");
     }
 
+    // load wgl extension
+    wgl_LoadFunctions(dc);
+
     // attributes for a 3.3 core profile without all the legacy stuff
     GLint attribs[] = {
         WGL_CONTEXT_MAJOR_VERSION_ARB, 3,
