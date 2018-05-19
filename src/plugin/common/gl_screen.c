@@ -2,7 +2,7 @@
 #include "core/msg.h"
 
 #ifdef GLES
-#include "screen/gl_screen_es_3_0.c"
+#include "gles_3_0/gl_screen_es_3_0.c"
 #else
 #include "gl_3_3/gl_core_3_3.h"
 #include "gl_3_3/gl_core_3_3.c"
