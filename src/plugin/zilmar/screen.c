@@ -142,6 +142,9 @@ void screen_init(struct rdp_config* config)
         msg_warning("Can't create OpenGL 3.3 core context.");
     }
 
+    // enable vsync
+    wglSwapIntervalEXT(1);
+
     gl_screen_init(config);
 }
 
