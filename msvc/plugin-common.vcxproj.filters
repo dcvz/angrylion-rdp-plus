@@ -26,7 +26,7 @@
     <ClCompile Include="..\src\plugin\common\gl_3_3\gl_screen_3_3.c">
       <Filter>Source Files\gl_3_3</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\plugin\common\gles_3_3\gl_screen_es_3_0.c">
+    <ClCompile Include="..\src\plugin\common\gles_3_0\gl_screen_es_3_0.c">
       <Filter>Source Files\gles_3_0</Filter>
     </ClCompile>
   </ItemGroup>
