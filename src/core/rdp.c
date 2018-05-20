@@ -13,6 +13,7 @@
 
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
+#define CLAMP(x, lo, hi) (((x) > (hi)) ? (hi) : (((x) < (lo)) ? (lo) : (x)))
 
 #define SIGN16(x)   ((int16_t)(x))
 #define SIGN8(x)    ((int8_t)(x))
