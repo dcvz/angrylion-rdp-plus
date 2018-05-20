@@ -26,7 +26,7 @@ static STRICTINLINE uint32_t z_decompress(uint32_t zb)
 static INLINE void z_build_com_table(void)
 {
 
-   int z;
+    int z;
     uint16_t altmem = 0;
     for(z = 0; z < 0x40000; z++)
     {
@@ -378,7 +378,7 @@ static void rdp_set_mask_image(struct rdp_state* rdp, const uint32_t* args)
 
 void z_init_lut(void)
 {
-   int i;
+    int i;
     z_build_com_table();
 
     uint32_t exponent;

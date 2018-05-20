@@ -458,7 +458,7 @@ static STRICTINLINE void combiner_2cycle(struct rdp_state* rdp, int adseed, uint
 
 static void combiner_init_lut(void)
 {
-   int i;
+    int i;
     for(i = 0; i < 0x200; i++)
     {
         switch((i >> 7) & 3)

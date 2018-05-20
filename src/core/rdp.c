@@ -453,7 +453,7 @@ void rdp_config_defaults(struct rdp_config* config)
 
 void rdp_init_worker(uint32_t worker_id)
 {
-   int i;
+    int i;
     struct rdp_state* rdp = &rdp_states[worker_id];
     memset(rdp, 0, sizeof(*rdp));
 

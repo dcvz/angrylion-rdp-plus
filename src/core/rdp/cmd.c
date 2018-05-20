@@ -174,7 +174,7 @@ static void cmd_run(struct rdp_state* rdp, const uint32_t* arg)
 
 static void cmd_run_buffered(uint32_t worker_id)
 {
-   uint32_t pos;
+    uint32_t pos;
     for (pos = 0; pos < rdp_cmd_buf_pos; pos++) {
         cmd_run(&rdp_states[worker_id], rdp_cmd_buf[pos]);
     }

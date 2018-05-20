@@ -60,7 +60,7 @@ static STRICTINLINE void gamma_filters(uint32_t* r, uint32_t* g, uint32_t* b, un
 
 void vi_gamma_init(void)
 {
-   int i;
+    int i;
     for (i = 0; i < 256; i++)
     {
         gamma_table[i] = vi_integer_sqrt(i << 6);
