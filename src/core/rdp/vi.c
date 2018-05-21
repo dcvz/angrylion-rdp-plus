@@ -496,7 +496,7 @@ static void vi_process(uint32_t worker_id)
             gamma_filters(&r, &g, &b, ctrl, seed);
 
             if (x >= minhpass && x < maxhpass) {
-                d[x] = (r << 16) | (g << 8) | b;
+                d[x] = (b << 16) | (g << 8) | r;
             } else {
                 d[x] = 0;
             }
@@ -644,7 +644,7 @@ static void vi_process_fast(uint32_t worker_id)
 
             gamma_filters(&r, &g, &b, ctrl, &rdp_states[worker_id].seed_vi);
 
-            dst[x] = (r << 16) | (g << 8) | b;
+            dst[x] = (b << 16) | (g << 8) | r;
         }
     }
 }

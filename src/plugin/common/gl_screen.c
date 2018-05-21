@@ -132,9 +132,6 @@ void gl_screen_init(struct rdp_config* config)
         "uniform sampler2D tex0;\n"
         "void main(void) {\n"
         "    color = texture(tex0, uv);\n"
-        "    lowp float r = color.b;\n"
-        "    color.b = color.r;\n"
-        "    color.r = r;\n"
         "}\n";
 
     // compile and link OpenGL program
