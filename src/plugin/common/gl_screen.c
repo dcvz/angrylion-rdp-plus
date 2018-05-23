@@ -25,9 +25,9 @@ static int32_t tex_height;
 
 static int32_t tex_display_height;
 
+#ifdef _DEBUG
 static void gl_check_errors(void)
 {
-#ifdef _DEBUG
     GLenum err;
     static int32_t invalid_op_count = 0;
     while ((err = glGetError()) != GL_NO_ERROR) {
@@ -65,8 +65,10 @@ static void gl_check_errors(void)
         }
         msg_debug("gl_check_errors: %d (%s)", err, err_str);
     }
-#endif
 }
+#else
+#define gl_check_errors(...)
+#endif
 
 static GLuint gl_shader_compile(GLenum type, const GLchar* source)
 {
