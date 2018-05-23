@@ -5,7 +5,7 @@
 
 static char filter_char(char c)
 {
-    if (isalnum(c) || c == '_' || c == '-' || c == '.') {
+    if (isalnum(c) || c == '_' || c == '-') {
         return c;
     } else {
         return ' ';
