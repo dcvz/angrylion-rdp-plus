@@ -211,7 +211,7 @@ void gl_screen_read(struct rdp_frame_buffer* fb, bool rgb)
     fb->pitch = fb->width;
 
     if (fb->pixels) {
-        glReadPixels(vp[0], vp[1], vp[2], vp[3], TEX_FORMAT, TEX_TYPE, fb->pixels);
+        glReadPixels(vp[0], vp[1], vp[2], vp[3], rgb ? GL_RGB : TEX_FORMAT, TEX_TYPE, fb->pixels);
     }
 }
 
