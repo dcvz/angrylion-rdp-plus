@@ -115,6 +115,11 @@ void gl_screen_init(struct rdp_config* config)
     ogl_LoadFunctions();
 #endif
 
+    msg_debug("%s: GL_VERSION='%s'", __FUNCTION__, glGetString(GL_VERSION));
+    msg_debug("%s: GL_VENDOR='%s'", __FUNCTION__, glGetString(GL_VENDOR));
+    msg_debug("%s: GL_RENDERER='%s'", __FUNCTION__, glGetString(GL_RENDERER));
+    msg_debug("%s: GL_SHADING_LANGUAGE_VERSION='%s'", __FUNCTION__, glGetString(GL_SHADING_LANGUAGE_VERSION));
+
     // shader sources for drawing a clipped full-screen triangle. the geometry
     // is defined by the vertex ID, so a VBO is not required.
     const GLchar* vert_shader =
@@ -181,7 +186,7 @@ bool gl_screen_write(struct rdp_frame_buffer* fb, int32_t output_height)
         glTexImage2D(GL_TEXTURE_2D, 0, TEX_INTERNAL_FORMAT, tex_width,
             tex_height, 0, TEX_FORMAT, TEX_TYPE, fb->pixels);
 
-        msg_debug("screen: resized framebuffer texture: %dx%d", tex_width, tex_height);
+        msg_debug("%s: resized framebuffer texture: %dx%d", __FUNCTION__, tex_width, tex_height);
     } else {
         // copy local buffer to GPU texture buffer
         glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, tex_width, tex_height,
