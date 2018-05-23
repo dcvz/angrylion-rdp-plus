@@ -6,7 +6,7 @@
 
 #ifdef GLES
 #include <GLES3/gl3.h>
-#define SHADER_HEADER "#version 300 es\n"
+#define SHADER_HEADER "#version 300 es\nprecision lowp float;\n"
 #else
 #include "gl_core_3_3/gl_core_3_3.c"
 #define SHADER_HEADER "#version 330 core\n"
@@ -119,7 +119,7 @@ void gl_screen_init(struct rdp_config* config)
     // is defined by the vertex ID, so a VBO is not required.
     const GLchar* vert_shader =
         SHADER_HEADER
-        "out lowp vec2 uv;\n"
+        "out vec2 uv;\n"
         "void main(void) {\n"
         "    uv = vec2((gl_VertexID << 1) & 2, gl_VertexID & 2);\n"
         "    gl_Position = vec4(uv * vec2(2.0, -2.0) + vec2(-1.0, 1.0), 0.0, 1.0);\n"
@@ -127,8 +127,8 @@ void gl_screen_init(struct rdp_config* config)
 
     const GLchar* frag_shader =
         SHADER_HEADER
-        "in lowp vec2 uv;\n"
-        "layout(location = 0) out lowp vec4 color;\n"
+        "in vec2 uv;\n"
+        "layout(location = 0) out vec4 color;\n"
         "uniform sampler2D tex0;\n"
         "void main(void) {\n"
         "    color = texture(tex0, uv);\n"
