@@ -51,6 +51,13 @@ static void write_screenshot(char* path)
 
     fb.pixels = malloc(ihdr.biSizeImage);
     screen_read(&fb, false);
+
+    // convert RGBA to BGRA
+    for (uint32_t i = 0; i < fb.width * fb.height; i++) {
+        uint32_t pixel = fb.pixels[i];
+        fb.pixels[i] = (pixel & 0xff) << 16 | (pixel & 0xff0000) >> 16 | (pixel & 0xff00ff00);
+    }
+
     fwrite(fb.pixels, ihdr.biSizeImage, 1, fp);
     free(fb.pixels);
 
