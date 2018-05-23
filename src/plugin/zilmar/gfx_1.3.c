@@ -74,11 +74,10 @@ EXPORT void CALL CaptureScreen(char* directory)
 
     for (int32_t i = 0; i < 10000; i++) {
         sprintf(screenshot_path, "%s\\%s_%04d.bmp", directory, rom_name, i);
-        FILE* fp = fopen(screenshot_path, "rb");
-        if (!fp) {
+        DWORD dwAttrib = GetFileAttributes(screenshot_path);
+        if (dwAttrib == INVALID_FILE_ATTRIBUTES || (dwAttrib & FILE_ATTRIBUTE_DIRECTORY)) {
             break;
         }
-        fclose(fp);
     }
 }
 
