@@ -1,6 +1,13 @@
 cmake_minimum_required(VERSION 2.8)
 
+option(GLES "Set to ON to use OpenGL ES 3.0 renderer instead of OpenGL 3.3 core")
+
 project(angrylion-plus)
+
+if(GLES)
+    message("OpenGL ES 3.0 renderer enabled")
+    add_definitions(-DGLES)
+endif(GLES)
 
 # set policy CMP0042 for MacOS X
 set(CMAKE_MACOSX_RPATH 1)
