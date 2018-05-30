@@ -87,9 +87,9 @@ void screen_write(struct rdp_frame_buffer* buffer, int32_t output_height)
     gl_screen_write(buffer, output_height);
 }
 
-void screen_read(struct rdp_frame_buffer* buffer, bool rgb)
+void screen_read(struct rdp_frame_buffer* buffer, bool alpha)
 {
-    gl_screen_read(buffer, rgb);
+    gl_screen_read(buffer, alpha);
 }
 
 void screen_set_fullscreen(bool _fullscreen)

@@ -19,7 +19,7 @@ GFX_INFO gfx;
 static void write_screenshot(char* path)
 {
     struct rdp_frame_buffer fb = { 0 };
-    screen_read(&fb, false);
+    screen_read(&fb, true);
 
     // prepare bitmap headers
     BITMAPINFOHEADER ihdr = {0};
@@ -50,7 +50,7 @@ static void write_screenshot(char* path)
     fseek(fp, fhdr.bfOffBits, SEEK_SET);
 
     fb.pixels = malloc(ihdr.biSizeImage);
-    screen_read(&fb, false);
+    screen_read(&fb, true);
 
     // convert RGBA to BGRA
     for (uint32_t i = 0; i < fb.width * fb.height; i++) {

@@ -205,7 +205,7 @@ bool gl_screen_write(struct rdp_frame_buffer* fb, int32_t output_height)
     return buffer_size_changed;
 }
 
-void gl_screen_read(struct rdp_frame_buffer* fb, bool rgb)
+void gl_screen_read(struct rdp_frame_buffer* fb, bool alpha)
 {
     GLint vp[4];
     glGetIntegerv(GL_VIEWPORT, vp);
@@ -215,7 +215,7 @@ void gl_screen_read(struct rdp_frame_buffer* fb, bool rgb)
     fb->pitch = fb->width;
 
     if (fb->pixels) {
-        glReadPixels(vp[0], vp[1], vp[2], vp[3], rgb ? GL_RGB : GL_RGBA, TEX_TYPE, fb->pixels);
+        glReadPixels(vp[0], vp[1], vp[2], vp[3], alpha ? GL_RGBA : GL_RGB, TEX_TYPE, fb->pixels);
     }
 }
 
