@@ -7,14 +7,14 @@
 #ifdef GLES
 #include <GLES3/gl3.h>
 #define SHADER_HEADER "#version 300 es\nprecision lowp float;\n"
+#define TEX_FORMAT GL_RGBA
+#define TEX_TYPE GL_UNSIGNED_BYTE
 #else
 #include "gl_core_3_3/gl_core_3_3.c"
 #define SHADER_HEADER "#version 330 core\n"
+#define TEX_FORMAT GL_BGRA
+#define TEX_TYPE GL_UNSIGNED_INT_8_8_8_8_REV
 #endif
-
-#define TEX_INTERNAL_FORMAT GL_RGBA
-#define TEX_FORMAT GL_RGBA
-#define TEX_TYPE GL_UNSIGNED_BYTE
 
 static GLuint program;
 static GLuint vao;
@@ -138,7 +138,11 @@ void gl_screen_init(struct rdp_config* config)
         "layout(location = 0) out vec4 color;\n"
         "uniform sampler2D tex0;\n"
         "void main(void) {\n"
+#ifdef GLES
         "    color = texture(tex0, uv);\n"
+#else
+        "    color.bgra = texture(tex0, uv);\n"
+#endif
         "}\n";
 
     // compile and link OpenGL program
@@ -185,7 +189,7 @@ bool gl_screen_write(struct rdp_frame_buffer* fb, int32_t output_height)
         glPixelStorei(GL_UNPACK_ROW_LENGTH, fb->pitch);
 
         // reallocate texture buffer on GPU
-        glTexImage2D(GL_TEXTURE_2D, 0, TEX_INTERNAL_FORMAT, tex_width,
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex_width,
             tex_height, 0, TEX_FORMAT, TEX_TYPE, fb->pixels);
 
         msg_debug("%s: resized framebuffer texture: %dx%d", __FUNCTION__, tex_width, tex_height);
@@ -211,7 +215,7 @@ void gl_screen_read(struct rdp_frame_buffer* fb, bool rgb)
     fb->pitch = fb->width;
 
     if (fb->pixels) {
-        glReadPixels(vp[0], vp[1], vp[2], vp[3], rgb ? GL_RGB : TEX_FORMAT, TEX_TYPE, fb->pixels);
+        glReadPixels(vp[0], vp[1], vp[2], vp[3], rgb ? GL_RGB : GL_RGBA, TEX_TYPE, fb->pixels);
     }
 }
 
