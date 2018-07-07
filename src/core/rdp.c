@@ -459,7 +459,7 @@ void rdp_init_worker(uint32_t worker_id)
     memset(rdp, 0, sizeof(*rdp));
 
     rdp->worker_id = worker_id;
-    rdp->seed_dp = rdp->seed_vi = 3;
+    rdp->seed_dp = rdp->seed_vi = 3 << worker_id;
 
     uint32_t tmp[2] = {0};
     rdp_set_other_modes(rdp, tmp);
