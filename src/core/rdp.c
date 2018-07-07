@@ -306,8 +306,8 @@ struct rdp_state
     int32_t min_level;
 
     // irand
-    int32_t seed_dp;
-    int32_t seed_vi;
+    uint32_t rand_dp;
+    uint32_t rand_vi;
 
     // blender
     int32_t *blender1a_r[2];
@@ -421,11 +421,15 @@ static STRICTINLINE int32_t clamp(int32_t value, int32_t min, int32_t max)
         return value;
 }
 
-static STRICTINLINE int32_t irand(int32_t* seed)
+static STRICTINLINE uint32_t irand(uint32_t* state)
 {
-    *seed *= 0x343fd;
-    *seed += 0x269ec3;
-    return ((*seed >> 16) & 0x7fff);
+    // based on xorshift32 implementation on Wikipedia
+    uint32_t x = *state;
+    x ^= x << 13;
+    x ^= x >> 17;
+    x ^= x << 5;
+    *state = x;
+    return x;
 }
 
 static void deduce_derivatives(struct rdp_state* rdp);
@@ -459,7 +463,7 @@ void rdp_init_worker(uint32_t worker_id)
     memset(rdp, 0, sizeof(*rdp));
 
     rdp->worker_id = worker_id;
-    rdp->seed_dp = rdp->seed_vi = 3 << worker_id;
+    rdp->rand_dp = rdp->rand_vi = 3 + worker_id * 13;
 
     uint32_t tmp[2] = {0};
     rdp_set_other_modes(rdp, tmp);

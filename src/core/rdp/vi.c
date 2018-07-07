@@ -351,7 +351,7 @@ static void vi_process(uint32_t worker_id)
 
     pixels = 0;
 
-    int32_t* seed = &rdp_states[worker_id].seed_vi;
+    int32_t* seed = &rdp_states[worker_id].rand_vi;
 
     int32_t y_begin = 0;
     int32_t y_end = vres;
@@ -642,7 +642,7 @@ static void vi_process_fast(uint32_t worker_id)
                     assert(false);
             }
 
-            gamma_filters(&r, &g, &b, ctrl, &rdp_states[worker_id].seed_vi);
+            gamma_filters(&r, &g, &b, ctrl, &rdp_states[worker_id].rand_vi);
 
             dst[x] = (b << 16) | (g << 8) | r;
         }
