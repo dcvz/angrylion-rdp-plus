@@ -137,8 +137,6 @@ static void vi_init(void)
 
 static bool vi_process_start(void)
 {
-    uint32_t final = 0;
-
     vi_fetch_filter_ptr = ctrl.type & 1 ? vi_fetch_filter32 : vi_fetch_filter16;
 
     ispal = v_sync > (V_SYNC_NTSC + 25);
