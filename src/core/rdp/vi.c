@@ -139,19 +139,6 @@ static bool vi_process_start(void)
 {
     vi_fetch_filter_ptr = ctrl.type & 1 ? vi_fetch_filter32 : vi_fetch_filter16;
 
-    ispal = v_sync > (V_SYNC_NTSC + 25);
-    h_start -= (ispal ? 128 : 108);
-
-    bool h_start_clamped = false;
-
-    if (h_start < 0) {
-        x_start += (x_add * (-h_start));
-        hres += h_start;
-
-        h_start = 0;
-        h_start_clamped = true;
-    }
-
     bool isblank = (ctrl.type & 2) == 0;
     bool validinterlace = !isblank && ctrl.serrate;
 
@@ -176,49 +163,9 @@ static bool vi_process_start(void)
 
     prevserrate = validinterlace;
 
-    uint32_t lineshifter = !ctrl.serrate;
-
-    int32_t vstartoffset = ispal ? 44 : 34;
-    v_start = (v_start - vstartoffset) / 2;
-
-    if (v_start < 0) {
-        y_start += (y_add * (uint32_t)(-v_start));
-        v_start = 0;
-    }
-
-    bool hres_clamped = false;
-
-    if ((hres + h_start) > PRESCALE_WIDTH) {
-        hres = PRESCALE_WIDTH - h_start;
-        hres_clamped = true;
-    }
-
-    if ((vres + v_start) > PRESCALE_HEIGHT) {
-        vres = PRESCALE_HEIGHT - v_start;
-        msg_warning("vres = %d v_start = %d v_video_start = %d", vres, v_start, (*vi_reg_ptr[VI_V_START] >> 16) & 0x3ff);
-    }
-
+    bool validh = hres > 0 && h_start < PRESCALE_WIDTH;
     int32_t h_end = hres + h_start; // note: the result appears to be different to VI_H_END
     int32_t hrightblank = PRESCALE_WIDTH - h_end;
-
-    vactivelines = v_sync - vstartoffset;
-    if (vactivelines > PRESCALE_HEIGHT) {
-        msg_error("VI_V_SYNC_REG too big");
-    }
-    if (vactivelines < 0) {
-        return false;
-    }
-    vactivelines >>= lineshifter;
-
-    bool validh = hres > 0 && h_start < PRESCALE_WIDTH;
-
-    uint32_t pix = 0;
-    uint8_t cur_cvg = 0;
-
-    int32_t *d = 0;
-
-    minhpass = h_start_clamped ? 0 : 8;
-    maxhpass =  hres_clamped ? hres : (hres - 7);
 
     if (isblank && prevwasblank) {
         return false;
@@ -655,8 +602,17 @@ static void vi_process_end_fast(void)
     fb.height = vres_raw;
     fb.pitch = hres_raw;
 
+    // get display size of filtered mode
+    int32_t filtered_width = maxhpass - minhpass;
     int32_t filtered_height = (vres << 1) * V_SYNC_NTSC / v_sync;
-    int32_t output_height = hres_raw * filtered_height / hres;
+
+    // re-calculate cropped 8 pixel area on the left and right from filtered mode
+    int32_t border_width = (hres - filtered_width) * hres_raw / hres;
+    fb.pixels += (border_width / 2) + 1;
+    fb.width -= border_width;
+
+    // force aspect ratio of filtered mode
+    int32_t output_height = fb.width * filtered_height / filtered_width;
 
     if (config.vi.widescreen) {
         output_height = output_height * 3 / 4;
@@ -730,6 +686,57 @@ void rdp_update_vi(void)
                     "to the hardware! Emulation will now continue.");
         vbusclock = true;
     }
+
+    // adjust sizes and offsets
+    ispal = v_sync > (V_SYNC_NTSC + 25);
+    h_start -= (ispal ? 128 : 108);
+
+    bool h_start_clamped = false;
+
+    if (h_start < 0) {
+        x_start += (x_add * (-h_start));
+        hres += h_start;
+
+        h_start = 0;
+        h_start_clamped = true;
+    }
+
+    int32_t vstartoffset = ispal ? 44 : 34;
+    v_start = (v_start - vstartoffset) / 2;
+
+    if (v_start < 0) {
+        y_start += (y_add * (uint32_t)(-v_start));
+        v_start = 0;
+    }
+
+    bool hres_clamped = false;
+
+    if ((hres + h_start) > PRESCALE_WIDTH) {
+        hres = PRESCALE_WIDTH - h_start;
+        hres_clamped = true;
+    }
+
+    if ((vres + v_start) > PRESCALE_HEIGHT) {
+        vres = PRESCALE_HEIGHT - v_start;
+        msg_warning("vres = %d v_start = %d v_video_start = %d", vres, v_start, (*vi_reg_ptr[VI_V_START] >> 16) & 0x3ff);
+    }
+
+    vactivelines = v_sync - vstartoffset;
+
+    if (vactivelines > PRESCALE_HEIGHT) {
+        msg_error("VI_V_SYNC_REG too big");
+    }
+
+    if (vactivelines < 0) {
+        screen_swap(true);
+        return;
+    }
+
+    uint32_t lineshifter = !ctrl.serrate;
+    vactivelines >>= lineshifter;
+
+    minhpass = h_start_clamped ? 0 : 8;
+    maxhpass = hres_clamped ? hres : (hres - 7);
 
     // try to init VI frame, abort if there's nothing to display
     if (!vi_process_start_ptr()) {
