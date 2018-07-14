@@ -12,7 +12,7 @@ static STRICTINLINE int32_t normalize_dzpix(int32_t sum)
     for(count = 0x2000; count > 0; count >>= 1)
     {
         if (sum & count)
-            return(count << 1);
+            return (count << 1);
     }
     msg_error("normalize_dzpix: invalid codepath taken");
     return 0;

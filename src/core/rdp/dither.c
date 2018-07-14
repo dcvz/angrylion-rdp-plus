@@ -67,6 +67,8 @@ static STRICTINLINE void get_dither_noise(struct rdp_state* rdp, int x, int y, i
     if (!rdp->other_modes.f.getditherlevel)
         rdp->noise = ((irand(&rdp->rand_dp) & 7) << 6) | 0x20;
 
+    y >>= rdp->scfield;
+
     int dithindex;
     switch(rdp->other_modes.f.rgb_alpha_dither)
     {
