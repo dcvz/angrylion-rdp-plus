@@ -278,16 +278,13 @@ static STRICTINLINE void combiner_1cycle(struct rdp_state* rdp, int adseed, uint
             rdp->pixel_color.a = 0xff;
     }
 
-    rdp->shade_color.a += adseed;
-    if (rdp->shade_color.a & 0x100)
-        rdp->shade_color.a = 0xff;
+    rdp->blender_shade_alpha = rdp->shade_color.a + adseed;
+    if (rdp->blender_shade_alpha & 0x100)
+        rdp->blender_shade_alpha = 0xff;
 }
 
-static STRICTINLINE void combiner_2cycle(struct rdp_state* rdp, int adseed, uint32_t* curpixel_cvg, int32_t* acalpha)
+static STRICTINLINE void combiner_2cycle_cycle0(struct rdp_state* rdp, int adseed, uint32_t cvg, uint32_t* acalpha)
 {
-    int32_t keyalpha, temp;
-    struct color chromabypass;
-
     if (rdp->combiner_rgbmul_r[0] != &zero_color)
     {
         rdp->combined_color.r = color_combiner_equation(*rdp->combiner_rgbsub_a_r[0],*rdp->combiner_rgbsub_b_r[0],*rdp->combiner_rgbmul_r[0],*rdp->combiner_rgbadd_r[0]);
@@ -310,33 +307,23 @@ static STRICTINLINE void combiner_2cycle(struct rdp_state* rdp, int adseed, uint
 
     if (rdp->other_modes.alpha_compare_en)
     {
-        if (rdp->other_modes.key_en)
-            keyalpha = chroma_key_min(rdp, &rdp->combined_color);
-
         int32_t preacalpha = special_9bit_clamptable[rdp->combined_color.a];
         if (preacalpha == 0xff)
             preacalpha = 0x100;
 
-        if (rdp->other_modes.cvg_times_alpha)
-            temp = (preacalpha * (*curpixel_cvg) + 4) >> 3;
-
         if (!rdp->other_modes.alpha_cvg_select)
         {
-            if (!rdp->other_modes.key_en)
-            {
-                preacalpha += adseed;
-                if (preacalpha & 0x100)
-                    preacalpha = 0xff;
-            }
-            else
-                preacalpha = keyalpha;
+            preacalpha += adseed;
+            if (preacalpha & 0x100)
+                preacalpha = 0xff;
         }
         else
         {
             if (rdp->other_modes.cvg_times_alpha)
-                preacalpha = temp;
+                preacalpha = (preacalpha * cvg + 4) >> 3;
             else
-                preacalpha = (*curpixel_cvg) << 5;
+                preacalpha = cvg << 5;
+
             if (preacalpha > 0xff)
                 preacalpha = 0xff;
         }
@@ -352,6 +339,15 @@ static STRICTINLINE void combiner_2cycle(struct rdp_state* rdp, int adseed, uint
     rdp->combined_color.g >>= 8;
     rdp->combined_color.b >>= 8;
 
+    rdp->blender_shade_alpha = rdp->shade_color.a + adseed;
+    if (rdp->blender_shade_alpha & 0x100)
+        rdp->blender_shade_alpha = 0xff;
+}
+
+static STRICTINLINE void combiner_2cycle_cycle1(struct rdp_state* rdp, int adseed, uint32_t* curpixel_cvg)
+{
+    int32_t keyalpha, temp;
+    struct color chromabypass;
 
     rdp->texel0_color = rdp->texel1_color;
     rdp->texel1_color = rdp->nexttexel_color;
@@ -451,9 +447,9 @@ static STRICTINLINE void combiner_2cycle(struct rdp_state* rdp, int adseed, uint
             rdp->pixel_color.a = 0xff;
     }
 
-    rdp->shade_color.a += adseed;
-    if (rdp->shade_color.a & 0x100)
-        rdp->shade_color.a = 0xff;
+    rdp->blender_shade_alpha = rdp->shade_color.a + adseed;
+    if (rdp->blender_shade_alpha & 0x100)
+        rdp->blender_shade_alpha = 0xff;
 }
 
 static void combiner_init_lut(void)

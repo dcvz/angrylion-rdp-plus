@@ -18,8 +18,8 @@
 #define SIGN16(x)   ((int16_t)(x))
 #define SIGN8(x)    ((int8_t)(x))
 
-#define SIGN(x, numb)   (((x) & ((1 << numb) - 1)) | -((x) & (1 << (numb - 1))))
-#define SIGNF(x, numb)  ((x) | -((x) & (1 << (numb - 1))))
+#define SIGN(x, numb)	(((x) & ((1 << (numb)) - 1)) | -((x) & (1 << ((numb) - 1))))
+#define SIGNF(x, numb)	((x) | -((x) & (1 << ((numb) - 1))))
 
 #define TRELATIVE(x, y)     ((x) - ((y) << 3))
 
@@ -179,7 +179,6 @@ struct other_modes
 
 struct spansigs
 {
-    int startspan;
     int endspan;
     int preendspan;
     int nextspan;
@@ -318,6 +317,8 @@ struct rdp_state
     int32_t *blender2a_g[2];
     int32_t *blender2a_b[2];
     int32_t *blender2b_a[2];
+
+    int32_t blender_shade_alpha;
 
     struct color blend_color;
     struct color fog_color;
@@ -636,6 +637,7 @@ static void deduce_derivatives(struct rdp_state* rdp)
     int texel1_used_in_cc1 = 0, texel0_used_in_cc1 = 0, texel0_used_in_cc0 = 0, texel1_used_in_cc0 = 0;
     int texels_in_cc0 = 0, texels_in_cc1 = 0;
     int lod_frac_used_in_cc1 = 0, lod_frac_used_in_cc0 = 0;
+    int texels_or_lf_used_in_ac0 = 0, texel0_used_in_ac0 = 0, texel1_used_in_ac0 = 0;
 
     if ((rdp->combiner_rgbmul_r[1] == &rdp->lod_frac) || (rdp->combiner_alphamul[1] == &rdp->lod_frac))
         lod_frac_used_in_cc1 = 1;
@@ -650,14 +652,17 @@ static void deduce_derivatives(struct rdp_state* rdp)
         rdp->combiner_alphamul[1] == &rdp->texel0_color.a || rdp->combiner_alphasub_a[1] == &rdp->texel0_color.a || rdp->combiner_alphasub_b[1] == &rdp->texel0_color.a || rdp->combiner_alphaadd[1] == &rdp->texel0_color.a || \
         rdp->combiner_rgbmul_r[1] == &rdp->texel0_color.a)
         texel0_used_in_cc1 = 1;
+    if (rdp->combiner_alphamul[0] == &rdp->texel1_color.a || rdp->combiner_alphasub_a[0] == &rdp->texel1_color.a || rdp->combiner_alphasub_b[0] == &rdp->texel1_color.a || rdp->combiner_alphaadd[0] == &rdp->texel1_color.a)
+        texel1_used_in_ac0 = 1;
+    if (rdp->combiner_alphamul[0] == &rdp->texel0_color.a || rdp->combiner_alphasub_a[0] == &rdp->texel0_color.a || rdp->combiner_alphasub_b[0] == &rdp->texel0_color.a || rdp->combiner_alphaadd[0] == &rdp->texel0_color.a)
+        texel0_used_in_ac0 = 1;
     if (rdp->combiner_rgbmul_r[0] == &rdp->texel1_color.r || rdp->combiner_rgbsub_a_r[0] == &rdp->texel1_color.r || rdp->combiner_rgbsub_b_r[0] == &rdp->texel1_color.r || rdp->combiner_rgbadd_r[0] == &rdp->texel1_color.r || \
-        rdp->combiner_alphamul[0] == &rdp->texel1_color.a || rdp->combiner_alphasub_a[0] == &rdp->texel1_color.a || rdp->combiner_alphasub_b[0] == &rdp->texel1_color.a || rdp->combiner_alphaadd[0] == &rdp->texel1_color.a || \
-        rdp->combiner_rgbmul_r[0] == &rdp->texel1_color.a)
+        texel1_used_in_ac0 || rdp->combiner_rgbmul_r[0] == &rdp->texel1_color.a)
         texel1_used_in_cc0 = 1;
     if (rdp->combiner_rgbmul_r[0] == &rdp->texel0_color.r || rdp->combiner_rgbsub_a_r[0] == &rdp->texel0_color.r || rdp->combiner_rgbsub_b_r[0] == &rdp->texel0_color.r || rdp->combiner_rgbadd_r[0] == &rdp->texel0_color.r || \
-        rdp->combiner_alphamul[0] == &rdp->texel0_color.a || rdp->combiner_alphasub_a[0] == &rdp->texel0_color.a || rdp->combiner_alphasub_b[0] == &rdp->texel0_color.a || rdp->combiner_alphaadd[0] == &rdp->texel0_color.a || \
-        rdp->combiner_rgbmul_r[0] == &rdp->texel0_color.a)
+        texel0_used_in_ac0 || rdp->combiner_rgbmul_r[0] == &rdp->texel0_color.a)
         texel0_used_in_cc0 = 1;
+    texels_or_lf_used_in_ac0 = texel0_used_in_ac0 || texel1_used_in_ac0 || (rdp->combiner_alphamul[0] == &rdp->lod_frac);
     texels_in_cc0 = texel0_used_in_cc0 || texel1_used_in_cc0;
     texels_in_cc1 = texel0_used_in_cc1 || texel1_used_in_cc1;
 
@@ -669,7 +674,7 @@ static void deduce_derivatives(struct rdp_state* rdp)
     else
         rdp->other_modes.f.textureuselevel0 = 2;
 
-    if (texel1_used_in_cc1)
+    if (texel1_used_in_cc1 || (rdp->other_modes.alpha_compare_en && texels_or_lf_used_in_ac0))
         rdp->other_modes.f.textureuselevel1 = 0;
     else if (texel1_used_in_cc0 || texel0_used_in_cc1)
         rdp->other_modes.f.textureuselevel1 = 1;
