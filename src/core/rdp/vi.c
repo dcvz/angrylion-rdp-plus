@@ -173,7 +173,7 @@ static bool vi_process_start(void)
 
     prevwasblank = isblank;
 
-    linecount = ctrl.serrate ? (PRESCALE_WIDTH << 1) : PRESCALE_WIDTH;
+    linecount = PRESCALE_WIDTH << ctrl.serrate;
     prescale_ptr = v_start * linecount + h_start + (lowerfield ? PRESCALE_WIDTH : 0);
 
     int32_t i;
