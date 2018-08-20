@@ -531,6 +531,8 @@ static void vi_process_fast_parallel(uint32_t worker_id)
                         default:
                             assert(false);
                     }
+
+                    gamma_filters(&r, &g, &b, ctrl, &rdp_states[worker_id].rand_vi);
                     break;
 
                 case VI_MODE_DEPTH: {
@@ -550,8 +552,6 @@ static void vi_process_fast_parallel(uint32_t worker_id)
                 default:
                     assert(false);
             }
-
-            gamma_filters(&r, &g, &b, ctrl, &rdp_states[worker_id].rand_vi);
 
             dst[x] = (b << 16) | (g << 8) | r;
         }
