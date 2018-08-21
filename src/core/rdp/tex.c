@@ -1,6 +1,3 @@
-#include "tex/tmem.c"
-#include "tex/tcoord.c"
-
 static STRICTINLINE void tcmask(struct rdp_state* rdp, int32_t* S, int32_t* T, int32_t num)
 {
     int32_t wrap;

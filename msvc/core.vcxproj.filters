@@ -12,38 +12,11 @@
       <UniqueIdentifier>{142a5325-573c-4fde-9d8f-af10cb6e28e5}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe</Extensions>
     </Filter>
-    <Filter Include="Source Files\rdp\vi">
-      <UniqueIdentifier>{4391fe2f-d358-4664-8618-36742b05b445}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\rdp\tex">
-      <UniqueIdentifier>{ed171682-9258-4601-8318-f621e6bbf26d}</UniqueIdentifier>
+    <Filter Include="Source Files\vi">
+      <UniqueIdentifier>{c4aba2c5-1231-411c-a721-4895a830810e}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\core\rdp\tex\tcoord.c">
-      <Filter>Source Files\rdp\tex</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\core\rdp\tex\tmem.c">
-      <Filter>Source Files\rdp\tex</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\core\rdp\vi\divot.c">
-      <Filter>Source Files\rdp\vi</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\core\rdp\vi\fetch.c">
-      <Filter>Source Files\rdp\vi</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\core\rdp\vi\gamma.c">
-      <Filter>Source Files\rdp\vi</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\core\rdp\vi\lerp.c">
-      <Filter>Source Files\rdp\vi</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\core\rdp\vi\restore.c">
-      <Filter>Source Files\rdp\vi</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\core\rdp\vi\video.c">
-      <Filter>Source Files\rdp\vi</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\core\rdp\blender.c">
       <Filter>Source Files\rdp</Filter>
     </ClCompile>
@@ -71,9 +44,6 @@
     <ClCompile Include="..\src\core\rdp\tex.c">
       <Filter>Source Files\rdp</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\core\rdp\vi.c">
-      <Filter>Source Files\rdp</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\core\rdp\zbuffer.c">
       <Filter>Source Files\rdp</Filter>
     </ClCompile>
@@ -88,6 +58,33 @@
     </ClCompile>
     <ClCompile Include="..\src\core\screen.c">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\vi\vi.c">
+      <Filter>Source Files\vi</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\vi\divot.c">
+      <Filter>Source Files\vi</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\vi\fetch.c">
+      <Filter>Source Files\vi</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\vi\gamma.c">
+      <Filter>Source Files\vi</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\vi\lerp.c">
+      <Filter>Source Files\vi</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\vi\restore.c">
+      <Filter>Source Files\vi</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\vi\video.c">
+      <Filter>Source Files\vi</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\rdp\tcoord.c">
+      <Filter>Source Files\rdp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\rdp\tmem.c">
+      <Filter>Source Files\rdp</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -443,9 +443,11 @@ static void deduce_derivatives(struct rdp_state* rdp);
 #include "rdp/coverage.c"
 #include "rdp/zbuffer.c"
 #include "rdp/fbuffer.c"
+#include "rdp/tmem.c"
+#include "rdp/tcoord.c"
 #include "rdp/tex.c"
 #include "rdp/rasterizer.c"
-#include "rdp/vi.c"
+#include "vi/vi.c"
 
 void rdp_config_defaults(struct rdp_config* config)
 {
