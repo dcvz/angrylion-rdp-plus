@@ -890,7 +890,7 @@ static void edgewalker_for_loads(struct rdp_state* rdp, int32_t* lewdata)
     loading_pipeline(rdp, yhlimit >> 2, yllimit >> 2, tilenum, coord_quad, ltlut);
 }
 
-static void rdp_set_tile_size(struct rdp_state* rdp, const uint32_t* args)
+void rdp_set_tile_size(struct rdp_state* rdp, const uint32_t* args)
 {
     int tilenum = (args[1] >> 24) & 0x7;
     rdp->tile[tilenum].sl = (args[0] >> 12) & 0xfff;
@@ -901,7 +901,7 @@ static void rdp_set_tile_size(struct rdp_state* rdp, const uint32_t* args)
     calculate_clamp_diffs(&rdp->tile[tilenum]);
 }
 
-static void rdp_load_block(struct rdp_state* rdp, const uint32_t* args)
+void rdp_load_block(struct rdp_state* rdp, const uint32_t* args)
 {
     int tilenum = (args[1] >> 24) & 0x7;
     int sl, sh, tl, dxt;
@@ -963,17 +963,17 @@ static void tile_tlut_common_cs_decoder(struct rdp_state* rdp, const uint32_t* a
     edgewalker_for_loads(rdp, lewdata);
 }
 
-static void rdp_load_tlut(struct rdp_state* rdp, const uint32_t* args)
+void rdp_load_tlut(struct rdp_state* rdp, const uint32_t* args)
 {
     tile_tlut_common_cs_decoder(rdp, args);
 }
 
-static void rdp_load_tile(struct rdp_state* rdp, const uint32_t* args)
+void rdp_load_tile(struct rdp_state* rdp, const uint32_t* args)
 {
     tile_tlut_common_cs_decoder(rdp, args);
 }
 
-static void rdp_set_tile(struct rdp_state* rdp, const uint32_t* args)
+void rdp_set_tile(struct rdp_state* rdp, const uint32_t* args)
 {
     int tilenum = (args[1] >> 24) & 0x7;
 
@@ -1005,7 +1005,7 @@ static void rdp_set_texture_image(struct rdp_state* rdp, const uint32_t* args)
 
 }
 
-static void rdp_set_convert(struct rdp_state* rdp, const uint32_t* args)
+void rdp_set_convert(struct rdp_state* rdp, const uint32_t* args)
 {
     int32_t k0 = (args[0] >> 13) & 0x1ff;
     int32_t k1 = (args[0] >> 4) & 0x1ff;

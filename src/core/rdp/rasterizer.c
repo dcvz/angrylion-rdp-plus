@@ -2316,7 +2316,7 @@ static void rasterizer_init(struct rdp_state* rdp)
     rdp->clip.yh = 0x2000;
 }
 
-static void rdp_tri_noshade(struct rdp_state* rdp, const uint32_t* args)
+void rdp_tri_noshade(struct rdp_state* rdp, const uint32_t* args)
 {
     int32_t ewdata[CMD_MAX_INTS];
     memcpy(&ewdata[0], args, 8 * sizeof(int32_t));
@@ -2324,7 +2324,7 @@ static void rdp_tri_noshade(struct rdp_state* rdp, const uint32_t* args)
     edgewalker_for_prims(rdp, ewdata);
 }
 
-static void rdp_tri_noshade_z(struct rdp_state* rdp, const uint32_t* args)
+void rdp_tri_noshade_z(struct rdp_state* rdp, const uint32_t* args)
 {
     int32_t ewdata[CMD_MAX_INTS];
     memcpy(&ewdata[0], args, 8 * sizeof(int32_t));
@@ -2333,7 +2333,7 @@ static void rdp_tri_noshade_z(struct rdp_state* rdp, const uint32_t* args)
     edgewalker_for_prims(rdp, ewdata);
 }
 
-static void rdp_tri_tex(struct rdp_state* rdp, const uint32_t* args)
+void rdp_tri_tex(struct rdp_state* rdp, const uint32_t* args)
 {
     int32_t ewdata[CMD_MAX_INTS];
     memcpy(&ewdata[0], args, 8 * sizeof(int32_t));
@@ -2343,7 +2343,7 @@ static void rdp_tri_tex(struct rdp_state* rdp, const uint32_t* args)
     edgewalker_for_prims(rdp, ewdata);
 }
 
-static void rdp_tri_tex_z(struct rdp_state* rdp, const uint32_t* args)
+void rdp_tri_tex_z(struct rdp_state* rdp, const uint32_t* args)
 {
     int32_t ewdata[CMD_MAX_INTS];
     memcpy(&ewdata[0], args, 8 * sizeof(int32_t));
@@ -2361,7 +2361,7 @@ static void rdp_tri_tex_z(struct rdp_state* rdp, const uint32_t* args)
 
 }
 
-static void rdp_tri_shade(struct rdp_state* rdp, const uint32_t* args)
+void rdp_tri_shade(struct rdp_state* rdp, const uint32_t* args)
 {
     int32_t ewdata[CMD_MAX_INTS];
     memcpy(&ewdata[0], args, 24 * sizeof(int32_t));
@@ -2369,7 +2369,7 @@ static void rdp_tri_shade(struct rdp_state* rdp, const uint32_t* args)
     edgewalker_for_prims(rdp, ewdata);
 }
 
-static void rdp_tri_shade_z(struct rdp_state* rdp, const uint32_t* args)
+void rdp_tri_shade_z(struct rdp_state* rdp, const uint32_t* args)
 {
     int32_t ewdata[CMD_MAX_INTS];
     memcpy(&ewdata[0], args, 24 * sizeof(int32_t));
@@ -2378,7 +2378,7 @@ static void rdp_tri_shade_z(struct rdp_state* rdp, const uint32_t* args)
     edgewalker_for_prims(rdp, ewdata);
 }
 
-static void rdp_tri_texshade(struct rdp_state* rdp, const uint32_t* args)
+void rdp_tri_texshade(struct rdp_state* rdp, const uint32_t* args)
 {
     int32_t ewdata[CMD_MAX_INTS];
     memcpy(&ewdata[0], args, 40 * sizeof(int32_t));
@@ -2386,7 +2386,7 @@ static void rdp_tri_texshade(struct rdp_state* rdp, const uint32_t* args)
     edgewalker_for_prims(rdp, ewdata);
 }
 
-static void rdp_tri_texshade_z(struct rdp_state* rdp, const uint32_t* args)
+void rdp_tri_texshade_z(struct rdp_state* rdp, const uint32_t* args)
 {
     int32_t ewdata[CMD_MAX_INTS];
     memcpy(&ewdata[0], args, CMD_MAX_SIZE);
@@ -2400,7 +2400,7 @@ static void rdp_tri_texshade_z(struct rdp_state* rdp, const uint32_t* args)
 
 }
 
-static void rdp_tex_rect(struct rdp_state* rdp, const uint32_t* args)
+void rdp_tex_rect(struct rdp_state* rdp, const uint32_t* args)
 {
     uint32_t tilenum    = (args[1] >> 24) & 0x7;
     uint32_t xl = (args[0] >> 12) & 0xfff;
@@ -2456,7 +2456,7 @@ static void rdp_tex_rect(struct rdp_state* rdp, const uint32_t* args)
 
 }
 
-static void rdp_tex_rect_flip(struct rdp_state* rdp, const uint32_t* args)
+void rdp_tex_rect_flip(struct rdp_state* rdp, const uint32_t* args)
 {
     uint32_t tilenum    = (args[1] >> 24) & 0x7;
     uint32_t xl = (args[0] >> 12) & 0xfff;
@@ -2510,7 +2510,7 @@ static void rdp_tex_rect_flip(struct rdp_state* rdp, const uint32_t* args)
     edgewalker_for_prims(rdp, ewdata);
 }
 
-static void rdp_fill_rect(struct rdp_state* rdp, const uint32_t* args)
+void rdp_fill_rect(struct rdp_state* rdp, const uint32_t* args)
 {
     uint32_t xl = (args[0] >> 12) & 0xfff;
     uint32_t yl = (args[0] >>  0) & 0xfff;
@@ -2537,7 +2537,7 @@ static void rdp_fill_rect(struct rdp_state* rdp, const uint32_t* args)
     edgewalker_for_prims(rdp, ewdata);
 }
 
-static void rdp_set_prim_depth(struct rdp_state* rdp, const uint32_t* args)
+void rdp_set_prim_depth(struct rdp_state* rdp, const uint32_t* args)
 {
     rdp->primitive_z = args[1] & (0x7fff << 16);
 
@@ -2545,7 +2545,7 @@ static void rdp_set_prim_depth(struct rdp_state* rdp, const uint32_t* args)
     rdp->primitive_delta_z = (uint16_t)(args[1]);
 }
 
-static void rdp_set_scissor(struct rdp_state* rdp, const uint32_t* args)
+void rdp_set_scissor(struct rdp_state* rdp, const uint32_t* args)
 {
     rdp->clip.xh = (args[0] >> 12) & 0xfff;
     rdp->clip.yh = (args[0] >>  0) & 0xfff;

@@ -499,7 +499,7 @@ static void combiner_init(struct rdp_state* rdp)
     rdp->combiner_alphaadd[0] = rdp->combiner_alphaadd[1] = &one_color;
 }
 
-static void rdp_set_prim_color(struct rdp_state* rdp, const uint32_t* args)
+void rdp_set_prim_color(struct rdp_state* rdp, const uint32_t* args)
 {
     rdp->min_level = (args[0] >> 8) & 0x1f;
     rdp->primitive_lod_frac = args[0] & 0xff;
@@ -509,7 +509,7 @@ static void rdp_set_prim_color(struct rdp_state* rdp, const uint32_t* args)
     rdp->prim_color.a = RGBA32_A(args[1]);
 }
 
-static void rdp_set_env_color(struct rdp_state* rdp, const uint32_t* args)
+void rdp_set_env_color(struct rdp_state* rdp, const uint32_t* args)
 {
     rdp->env_color.r = RGBA32_R(args[1]);
     rdp->env_color.g = RGBA32_G(args[1]);
@@ -517,7 +517,7 @@ static void rdp_set_env_color(struct rdp_state* rdp, const uint32_t* args)
     rdp->env_color.a = RGBA32_A(args[1]);
 }
 
-static void rdp_set_combine(struct rdp_state* rdp, const uint32_t* args)
+void rdp_set_combine(struct rdp_state* rdp, const uint32_t* args)
 {
     rdp->combine.sub_a_rgb0  = (args[0] >> 20) & 0xf;
     rdp->combine.mul_rgb0    = (args[0] >> 15) & 0x1f;
@@ -559,7 +559,7 @@ static void rdp_set_combine(struct rdp_state* rdp, const uint32_t* args)
     rdp->other_modes.f.stalederivs = 1;
 }
 
-static void rdp_set_key_gb(struct rdp_state* rdp, const uint32_t* args)
+void rdp_set_key_gb(struct rdp_state* rdp, const uint32_t* args)
 {
     rdp->key_width.g = (args[0] >> 12) & 0xfff;
     rdp->key_width.b = args[0] & 0xfff;
@@ -569,7 +569,7 @@ static void rdp_set_key_gb(struct rdp_state* rdp, const uint32_t* args)
     rdp->key_scale.b = args[1] & 0xff;
 }
 
-static void rdp_set_key_r(struct rdp_state* rdp, const uint32_t* args)
+void rdp_set_key_r(struct rdp_state* rdp, const uint32_t* args)
 {
     rdp->key_width.r = (args[1] >> 16) & 0xfff;
     rdp->key_center.r = (args[1] >> 8) & 0xff;

@@ -329,7 +329,7 @@ static void blender_init_lut(void)
     }
 }
 
-static void rdp_set_fog_color(struct rdp_state* rdp, const uint32_t* args)
+void rdp_set_fog_color(struct rdp_state* rdp, const uint32_t* args)
 {
     rdp->fog_color.r = RGBA32_R(args[1]);
     rdp->fog_color.g = RGBA32_G(args[1]);
@@ -337,7 +337,7 @@ static void rdp_set_fog_color(struct rdp_state* rdp, const uint32_t* args)
     rdp->fog_color.a = RGBA32_A(args[1]);
 }
 
-static void rdp_set_blend_color(struct rdp_state* rdp, const uint32_t* args)
+void rdp_set_blend_color(struct rdp_state* rdp, const uint32_t* args)
 {
     rdp->blend_color.r = RGBA32_R(args[1]);
     rdp->blend_color.g = RGBA32_G(args[1]);

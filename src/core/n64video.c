@@ -1,4 +1,5 @@
 #include "n64video.h"
+#include "rdp.h"
 #include "common.h"
 #include "plugin.h"
 #include "msg.h"
@@ -530,27 +531,27 @@ void rdp_update_config(struct rdp_config* config)
     config_update = true;
 }
 
-static void rdp_invalid(struct rdp_state* rdp, const uint32_t* args)
+void rdp_invalid(struct rdp_state* rdp, const uint32_t* args)
 {
 }
 
-static void rdp_noop(struct rdp_state* rdp, const uint32_t* args)
+void rdp_noop(struct rdp_state* rdp, const uint32_t* args)
 {
 }
 
-static void rdp_sync_load(struct rdp_state* rdp, const uint32_t* args)
+void rdp_sync_load(struct rdp_state* rdp, const uint32_t* args)
 {
 }
 
-static void rdp_sync_pipe(struct rdp_state* rdp, const uint32_t* args)
+void rdp_sync_pipe(struct rdp_state* rdp, const uint32_t* args)
 {
 }
 
-static void rdp_sync_tile(struct rdp_state* rdp, const uint32_t* args)
+void rdp_sync_tile(struct rdp_state* rdp, const uint32_t* args)
 {
 }
 
-static void rdp_sync_full(struct rdp_state* rdp, const uint32_t* args)
+void rdp_sync_full(struct rdp_state* rdp, const uint32_t* args)
 {
     // update config if set
     if (config_update) {
@@ -564,7 +565,7 @@ static void rdp_sync_full(struct rdp_state* rdp, const uint32_t* args)
     plugin_sync_dp();
 }
 
-static void rdp_set_other_modes(struct rdp_state* rdp, const uint32_t* args)
+void rdp_set_other_modes(struct rdp_state* rdp, const uint32_t* args)
 {
     rdp->other_modes.cycle_type          = (args[0] >> 20) & 3;
     rdp->other_modes.persp_tex_en        = (args[0] >> 19) & 1;

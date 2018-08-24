@@ -371,7 +371,7 @@ static STRICTINLINE uint32_t z_compare(struct rdp_state* rdp, uint32_t zcurpixel
     }
 }
 
-static void rdp_set_mask_image(struct rdp_state* rdp, const uint32_t* args)
+void rdp_set_mask_image(struct rdp_state* rdp, const uint32_t* args)
 {
     rdp->zb_address  = args[1] & 0x0ffffff;
 }
