@@ -2,7 +2,7 @@
 #include "config.h"
 #include "resource.h"
 
-#include "core/rdp.h"
+#include "core/n64video.h"
 #include "core/screen.h"
 #include "core/version.h"
 #include "core/msg.h"

@@ -1,6 +1,6 @@
 #include "gfx_1.3.h"
 
-#include "core/rdp.h"
+#include "core/n64video.h"
 #include "core/plugin.h"
 
 #include <stdbool.h>

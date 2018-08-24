@@ -1,4 +1,4 @@
-#include "rdp.h"
+#include "n64video.h"
 #include "common.h"
 #include "plugin.h"
 #include "msg.h"

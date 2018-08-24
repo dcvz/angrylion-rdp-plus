@@ -53,9 +53,6 @@
     <ClCompile Include="..\src\core\plugin.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\core\rdp.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\core\screen.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -86,6 +83,9 @@
     <ClCompile Include="..\src\core\rdp\tmem.c">
       <Filter>Source Files\rdp</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\core\n64video.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\core\common.h">
@@ -100,10 +100,10 @@
     <ClInclude Include="..\src\core\plugin.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\core\rdp.h">
+    <ClInclude Include="..\src\core\screen.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\core\screen.h">
+    <ClInclude Include="..\src\core\n64video.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/rdp.h"
+#include "core/n64video.h"
 
 #include <Windows.h>
 
