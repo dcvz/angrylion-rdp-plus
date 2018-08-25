@@ -51,6 +51,9 @@
 
 struct rdp_state;
 
+void rdp_create(struct rdp_state** rdp, uint32_t stride, uint32_t offset);
+void rdp_destroy(struct rdp_state* rdp);
+
 void rdp_invalid(struct rdp_state* rdp, const uint32_t* args);
 void rdp_noop(struct rdp_state* rdp, const uint32_t* args);
 void rdp_tri_noshade(struct rdp_state* rdp, const uint32_t* args);

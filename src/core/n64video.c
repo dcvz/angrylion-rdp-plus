@@ -40,7 +40,7 @@
 // maximum number of commands to buffer for parallel processing
 #define CMD_BUFFER_SIZE 1024
 
-static struct rdp_state* rdp_states;
+static struct rdp_state** rdp_states;
 static struct n64video_config config;
 static struct plugin_api* plugin;
 
@@ -155,7 +155,7 @@ static void cmd_run_buffered(uint32_t worker_id)
 {
     uint32_t pos;
     for (pos = 0; pos < rdp_cmd_buf_pos; pos++) {
-        rdp_cmd(&rdp_states[worker_id], rdp_cmd_buf[pos]);
+        rdp_cmd(rdp_states[worker_id], rdp_cmd_buf[pos]);
     }
 }
 
@@ -189,26 +189,7 @@ void n64video_config_defaults(struct n64video_config* config)
 
 void rdp_init_worker(uint32_t worker_id)
 {
-    int i;
-    struct rdp_state* rdp = &rdp_states[worker_id];
-    memset(rdp, 0, sizeof(*rdp));
-
-    rdp->worker_id = worker_id;
-    rdp->rand_dp = rdp->rand_vi = 3 + worker_id * 13;
-
-    uint32_t tmp[2] = {0};
-    rdp_set_other_modes(rdp, tmp);
-
-    for (i = 0; i < 8; i++)
-    {
-        calculate_tile_derivs(&rdp->tile[i]);
-        calculate_clamp_diffs(&rdp->tile[i]);
-    }
-
-    fb_init(rdp);
-    combiner_init(rdp);
-    tex_init(rdp);
-    rasterizer_init(rdp);
+    rdp_create(&rdp_states[worker_id], parallel_num_workers(), worker_id);
 }
 
 void n64video_init(struct n64video_config* _config)
@@ -242,11 +223,11 @@ void n64video_init(struct n64video_config* _config)
 
     if (config.parallel) {
         parallel_init(config.num_workers);
-        rdp_states = malloc(parallel_num_workers() * sizeof(struct rdp_state));
+        rdp_states = calloc(parallel_num_workers(), sizeof(struct rdp_state*));
         parallel_run(rdp_init_worker);
     } else {
-        rdp_states = malloc(sizeof(struct rdp_state));
-        rdp_init_worker(0);
+        rdp_states = calloc(1, sizeof(struct rdp_state*));
+        rdp_create(&rdp_states[0], 0, 0);
     }
 }
 
@@ -315,7 +296,7 @@ void n64video_process_list(void)
                 }
             } else {
                 // run command directly
-                rdp_cmd(&rdp_states[0], cmd_buf);
+                rdp_cmd(rdp_states[0], cmd_buf);
             }
 
             // reset current command buffer to prepare for the next one
@@ -335,6 +316,10 @@ void n64video_close(void)
     screen_close();
 
     if (rdp_states) {
+        for (uint32_t i = 0; i < config.num_workers; i++) {
+            rdp_destroy(rdp_states[i]);
+        }
+
         free(rdp_states);
         rdp_states = NULL;
     }

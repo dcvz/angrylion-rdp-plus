@@ -179,7 +179,8 @@ struct combiner_inputs
 
 struct rdp_state
 {
-    uint32_t worker_id;
+    uint32_t stride;
+    uint32_t offset;
 
     int blshifta;
     int blshiftb;
@@ -507,6 +508,39 @@ static void deduce_derivatives(struct rdp_state* rdp)
         rdp->other_modes.f.getditherlevel = 2;
 
     rdp->other_modes.f.dolod = rdp->other_modes.tex_lod_en || lodfracused;
+}
+
+void rdp_create(struct rdp_state** rdp, uint32_t stride, uint32_t offset)
+{
+    int i;
+    struct rdp_state* state = calloc(1, sizeof(struct rdp_state));
+
+    state->stride = stride;
+    state->offset = offset;
+    state->rand_dp = state->rand_vi = 3 + offset * 13;
+
+    uint32_t tmp[2] = { 0 };
+    rdp_set_other_modes(state, tmp);
+
+    for (i = 0; i < 8; i++)
+    {
+        calculate_tile_derivs(&state->tile[i]);
+        calculate_clamp_diffs(&state->tile[i]);
+    }
+
+    fb_init(state);
+    combiner_init(state);
+    tex_init(state);
+    rasterizer_init(state);
+
+    *rdp = state;
+}
+
+void rdp_destroy(struct rdp_state* rdp)
+{
+    if (rdp) {
+        free(rdp);
+    }
 }
 
 void rdp_invalid(struct rdp_state* rdp, const uint32_t* args)

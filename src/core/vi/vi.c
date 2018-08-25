@@ -138,7 +138,7 @@ static void vi_process_full_parallel(uint32_t worker_id)
 
     pixels = 0;
 
-    int32_t* rstate = &rdp_states[worker_id].rand_vi;
+    int32_t* rstate = &rdp_states[worker_id]->rand_vi;
 
     int32_t y_begin = 0;
     int32_t y_end = vres;
@@ -532,11 +532,11 @@ static void vi_process_fast_parallel(uint32_t worker_id)
                             assert(false);
                     }
 
-                    gamma_filters(&r, &g, &b, ctrl, &rdp_states[worker_id].rand_vi);
+                    gamma_filters(&r, &g, &b, ctrl, &rdp_states[worker_id]->rand_vi);
                     break;
 
                 case VI_MODE_DEPTH: {
-                    r = g = b = rdram_read_idx16((rdp_states[0].zb_address >> 1) + line + x) >> 8;
+                    r = g = b = rdram_read_idx16((rdp_states[0]->zb_address >> 1) + line + x) >> 8;
                     break;
                 }
 
