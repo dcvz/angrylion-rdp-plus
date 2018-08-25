@@ -1,4 +1,5 @@
 #include "gfx_1.3.h"
+#include "config.h"
 
 #include "core/n64video.h"
 #include "core/plugin.h"
@@ -57,6 +58,8 @@ void plugin_init(void)
 
 void plugin_sync_dp(void)
 {
+    config_update();
+
     *gfx.MI_INTR_REG |= DP_INTERRUPT;
     gfx.CheckInterrupts();
 }

@@ -50,11 +50,9 @@
 
 static struct rdp_state* rdp_states;
 static struct n64video_config config;
-static struct n64video_config config_new;
 static struct plugin_api* plugin;
 
 static bool init_lut;
-static bool config_update;
 
 static struct
 {
@@ -139,7 +137,7 @@ void n64video_init(struct n64video_config* _config)
     }
 
     // init externals
-    screen_init(_config);
+    screen_init(&config);
     plugin_init();
 
     // init internals
@@ -158,14 +156,6 @@ void n64video_init(struct n64video_config* _config)
         rdp_states = malloc(sizeof(struct rdp_state));
         rdp_init_worker(0);
     }
-}
-
-void n64video_update_config(struct n64video_config* config)
-{
-    // updating the config directly would be dangerous and can cause crashes,
-    // so wait for the next sync_full before applying it
-    config_new = *config;
-    config_update = true;
 }
 
 void rdp_invalid(struct rdp_state* rdp, const uint32_t* args)
@@ -190,14 +180,6 @@ void rdp_sync_tile(struct rdp_state* rdp, const uint32_t* args)
 
 void rdp_sync_full(struct rdp_state* rdp, const uint32_t* args)
 {
-    // update config if set
-    if (config_update) {
-        n64video_close();
-        n64video_init(&config_new);
-
-        config_update = false;
-    }
-
     // signal plugin to handle interrupts
     plugin_sync_dp();
 }

@@ -25,6 +25,7 @@
 
 static HINSTANCE inst;
 static struct n64video_config config;
+static bool config_stale;
 static char config_path[MAX_PATH + 1];
 
 static HWND dlg_combo_vi_mode;
@@ -134,8 +135,7 @@ INT_PTR CALLBACK config_dialog_proc(HWND hwnd, UINT iMessage, WPARAM wParam, LPA
                     config.vi.hide_overscan = SendMessage(dlg_check_vi_overscan, BM_GETCHECK, 0, 0);
                     config.parallel = SendMessage(dlg_check_multithread, BM_GETCHECK, 0, 0);
                     config.num_workers = GetDlgItemInt(hwnd, IDC_EDIT_WORKERS, FALSE, FALSE);
-
-                    n64video_update_config(&config);
+                    config_stale = true;
                     config_save();
 
                     // don't close dialog if "Apply" was pressed
@@ -276,4 +276,13 @@ bool config_save(void)
     fclose(fp);
 
     return true;
+}
+
+void config_update(void)
+{
+    if (config_stale) {
+        n64video_close();
+        n64video_init(&config);
+        config_stale = false;
+    }
 }
