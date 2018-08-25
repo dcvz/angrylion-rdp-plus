@@ -20,9 +20,6 @@
     <ClCompile Include="..\src\core\rdp\blender.c">
       <Filter>Source Files\rdp</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\core\rdp\cmd.c">
-      <Filter>Source Files\rdp</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\core\rdp\combiner.c">
       <Filter>Source Files\rdp</Filter>
     </ClCompile>

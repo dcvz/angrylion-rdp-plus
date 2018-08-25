@@ -41,3 +41,4 @@ void rdp_set_combine(struct rdp_state* rdp, const uint32_t* args);
 void rdp_set_texture_image(struct rdp_state* rdp, const uint32_t* args);
 void rdp_set_mask_image(struct rdp_state* rdp, const uint32_t* args);
 void rdp_set_color_image(struct rdp_state* rdp, const uint32_t* args);
+void rdp_cmd(struct rdp_state* rdp, const uint32_t* args);
