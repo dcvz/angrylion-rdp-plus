@@ -176,7 +176,7 @@ void gl_screen_init(struct n64video_config* config)
     gl_check_errors();
 }
 
-bool gl_screen_write(struct rdp_frame_buffer* fb, int32_t output_height)
+bool gl_screen_write(struct frame_buffer* fb, int32_t output_height)
 {
     bool buffer_size_changed = tex_width != fb->width || tex_height != fb->height;
 
@@ -205,7 +205,7 @@ bool gl_screen_write(struct rdp_frame_buffer* fb, int32_t output_height)
     return buffer_size_changed;
 }
 
-void gl_screen_read(struct rdp_frame_buffer* fb, bool alpha)
+void gl_screen_read(struct frame_buffer* fb, bool alpha)
 {
     GLint vp[4];
     glGetIntegerv(GL_VIEWPORT, vp);

@@ -65,14 +65,6 @@ struct n64video_config
     uint32_t num_workers;
 };
 
-struct rdp_frame_buffer
-{
-    uint32_t* pixels;
-    uint32_t width;
-    uint32_t height;
-    uint32_t pitch;
-};
-
 void n64video_config_defaults(struct n64video_config* config);
 
 void n64video_init(struct n64video_config* config);

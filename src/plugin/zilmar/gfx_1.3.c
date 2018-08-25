@@ -18,7 +18,7 @@ GFX_INFO gfx;
 
 static void write_screenshot(char* path)
 {
-    struct rdp_frame_buffer fb = { 0 };
+    struct frame_buffer fb = { 0 };
     screen_read(&fb, true);
 
     // prepare bitmap headers

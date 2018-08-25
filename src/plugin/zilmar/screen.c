@@ -148,12 +148,12 @@ void screen_init(struct n64video_config* config)
     gl_screen_init(config);
 }
 
-void screen_write(struct rdp_frame_buffer* buffer, int32_t output_height)
+void screen_write(struct frame_buffer* buffer, int32_t output_height)
 {
     gl_screen_write(buffer, output_height);
 }
 
-void screen_read(struct rdp_frame_buffer* buffer, bool alpha)
+void screen_read(struct frame_buffer* buffer, bool alpha)
 {
     gl_screen_read(buffer, alpha);
 }
