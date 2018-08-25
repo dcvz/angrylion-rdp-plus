@@ -1619,7 +1619,7 @@ static void render_spans_fill(struct rdp_state* rdp, int start, int end, int fli
                 if (!onetimewarnings.fillmbitcrashes)
                     msg_warning("render_spans_fill: image_read_en %x z_update_en %x z_compare_en %x. RDP crashed",
                     rdp->other_modes.image_read_en, rdp->other_modes.z_update_en, rdp->other_modes.z_compare_en);
-                onetimewarnings.fillmbitcrashes = 1;
+                onetimewarnings.fillmbitcrashes = true;
                 rdp_pipeline_crashed = 1;
                 return;
             }

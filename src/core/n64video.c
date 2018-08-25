@@ -58,7 +58,7 @@ static bool config_update;
 
 static struct
 {
-    int copymstrangecrashes, fillmcrashes, fillmbitcrashes, syncfullcrash;
+    bool fillmbitcrashes, vbusclock, nolerp;
 } onetimewarnings;
 
 static int rdp_pipeline_crashed = 0;

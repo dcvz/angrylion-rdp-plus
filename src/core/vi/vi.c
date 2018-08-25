@@ -655,25 +655,23 @@ void rdp_update_vi(void)
     }
 
     // warn about AA glitches in certain cases
-    static bool nolerp;
     if (ctrl.aa_mode == VI_AA_REPLICATE && ctrl.type == VI_TYPE_RGBA5551 &&
-        h_start < 0x80 && x_add <= 0x200 && !nolerp) {
+        h_start < 0x80 && x_add <= 0x200 && !onetimewarnings.nolerp) {
         msg_warning("vi_update: Disabling VI interpolation in 16-bit color "
                     "modes causes glitches on hardware if h_start is less than "
                     "128 pixels and x_scale is less or equal to 0x200.");
-        nolerp = true;
+        onetimewarnings.nolerp = true;
     }
 
     // check for the dangerous vbus_clock_enable flag. it was introduced to
     // configure Ultra 64 prototypes and enabling it on final hardware will
     // enable two output drivers on the same bus at the same time
-    static bool vbusclock;
-    if (ctrl.vbus_clock_enable && !vbusclock) {
+    if (ctrl.vbus_clock_enable && !onetimewarnings.vbusclock) {
         msg_warning("vi_update: vbus_clock_enable bit set in VI_CONTROL_REG "
                     "register. Never run this code on your N64! It's rumored "
                     "that turning this bit on will result in permanent damage "
                     "to the hardware! Emulation will now continue.");
-        vbusclock = true;
+        onetimewarnings.vbusclock = true;
     }
 
     // adjust sizes and offsets
