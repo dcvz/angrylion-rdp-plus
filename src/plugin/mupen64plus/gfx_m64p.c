@@ -58,7 +58,7 @@ static bool warn_hle;
 static bool plugin_initialized;
 void (*debug_callback)(void *, int, const char *);
 void *debug_call_context;
-static struct rdp_config config;
+static struct n64video_config config;
 
 m64p_dynlib_handle CoreLibHandle;
 GFX_INFO gfx;
@@ -97,7 +97,7 @@ EXPORT m64p_error CALL PluginStartup(m64p_dynlib_handle _CoreLibHandle, void *Co
     ConfigSetDefaultInt(configVideoGeneral, KEY_SCREEN_WIDTH, 640, "Width of output window or fullscreen width");
     ConfigSetDefaultInt(configVideoGeneral, KEY_SCREEN_HEIGHT, 480, "Height of output window or fullscreen height");
 
-    rdp_config_defaults(&config);
+    n64video_config_defaults(&config);
 
     ConfigSetDefaultBool(configVideoAngrylionPlus, KEY_PARALLEL, config.parallel, "Distribute rendering between multiple processors if True");
     ConfigSetDefaultInt(configVideoAngrylionPlus, KEY_NUM_WORKERS, config.num_workers, "Rendering Workers (0=Use all logical processors)");
@@ -174,7 +174,7 @@ EXPORT void CALL ProcessDList(void)
 
 EXPORT void CALL ProcessRDPList(void)
 {
-    rdp_update();
+    n64video_process_list();
 }
 
 EXPORT int CALL RomOpen (void)
@@ -190,13 +190,13 @@ EXPORT int CALL RomOpen (void)
     config.vi.widescreen = ConfigGetParamBool(configVideoAngrylionPlus, KEY_VI_WIDESCREEN);
     config.vi.hide_overscan = ConfigGetParamBool(configVideoAngrylionPlus, KEY_VI_HIDE_OVERSCAN);
 
-    rdp_init(&config);
+    n64video_init(&config);
     return 1;
 }
 
 EXPORT void CALL RomClosed (void)
 {
-    rdp_close();
+    n64video_close();
 }
 
 EXPORT void CALL ShowCFB (void)
@@ -205,7 +205,7 @@ EXPORT void CALL ShowCFB (void)
 
 EXPORT void CALL UpdateScreen (void)
 {
-    rdp_update_vi();
+    n64video_update_screen();
 }
 
 EXPORT void CALL ViStatusChanged (void)

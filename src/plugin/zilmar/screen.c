@@ -67,7 +67,7 @@ void* IntGetProcAddress(const char *name)
     return (PROC)GetProcAddress(glMod, (LPCSTR)name);
 }
 
-void screen_init(struct rdp_config* config)
+void screen_init(struct n64video_config* config)
 {
     // make window resizable for the user
     if (!fullscreen) {

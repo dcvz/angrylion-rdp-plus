@@ -160,7 +160,7 @@ static void cmd_init(void)
     rdp_cmd_len = CMD_MAX_INTS;
 }
 
-void rdp_update(void)
+void n64video_process_list(void)
 {
     uint32_t** dp_reg = plugin_get_dp_registers();
     uint32_t dp_current_al = (*dp_reg[DP_CURRENT] & ~7) >> 2;

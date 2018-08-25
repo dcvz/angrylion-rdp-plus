@@ -24,7 +24,7 @@
 #define CONFIG_FILE_NAME CORE_SIMPLE_NAME "-config.ini"
 
 static HINSTANCE inst;
-static struct rdp_config config;
+static struct n64video_config config;
 static char config_path[MAX_PATH + 1];
 
 static HWND dlg_combo_vi_mode;
@@ -65,7 +65,7 @@ INT_PTR CALLBACK config_dialog_proc(HWND hwnd, UINT iMessage, WPARAM wParam, LPA
             SetWindowText(hwnd, CORE_BASE_NAME " Config");
 
             if (!config_load()) {
-                rdp_config_defaults(&config);
+                n64video_config_defaults(&config);
             }
 
             char* vi_mode_strings[] = {
@@ -135,7 +135,7 @@ INT_PTR CALLBACK config_dialog_proc(HWND hwnd, UINT iMessage, WPARAM wParam, LPA
                     config.parallel = SendMessage(dlg_check_multithread, BM_GETCHECK, 0, 0);
                     config.num_workers = GetDlgItemInt(hwnd, IDC_EDIT_WORKERS, FALSE, FALSE);
 
-                    rdp_update_config(&config);
+                    n64video_update_config(&config);
                     config_save();
 
                     // don't close dialog if "Apply" was pressed
@@ -192,7 +192,7 @@ void config_dialog(HWND hParent)
     DialogBox(inst, MAKEINTRESOURCE(IDD_DIALOG1), hParent, config_dialog_proc);
 }
 
-struct rdp_config* config_get(void)
+struct n64video_config* config_get(void)
 {
     return &config;
 }

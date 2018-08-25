@@ -610,7 +610,7 @@ static bool vi_process_fast(void)
     return true;
 }
 
-void rdp_update_vi(void)
+void n64video_update_screen(void)
 {
     // check for configuration errors
     if (config.vi.mode >= VI_MODE_NUM) {

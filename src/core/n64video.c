@@ -49,8 +49,8 @@
 #endif
 
 static struct rdp_state* rdp_states;
-static struct rdp_config config;
-static struct rdp_config config_new;
+static struct n64video_config config;
+static struct n64video_config config_new;
 static struct plugin_api* plugin;
 
 static bool init_lut;
@@ -87,7 +87,7 @@ static STRICTINLINE uint32_t irand(uint32_t* state)
 #include "rdp/rdp.c"
 #include "vi/vi.c"
 
-void rdp_config_defaults(struct rdp_config* config)
+void n64video_config_defaults(struct n64video_config* config)
 {
     config->parallel = true;
     config->num_workers = 0;
@@ -121,7 +121,7 @@ void rdp_init_worker(uint32_t worker_id)
     rasterizer_init(rdp);
 }
 
-void rdp_init(struct rdp_config* _config)
+void n64video_init(struct n64video_config* _config)
 {
     if (_config) {
         config = *_config;
@@ -160,7 +160,7 @@ void rdp_init(struct rdp_config* _config)
     }
 }
 
-void rdp_update_config(struct rdp_config* config)
+void n64video_update_config(struct n64video_config* config)
 {
     // updating the config directly would be dangerous and can cause crashes,
     // so wait for the next sync_full before applying it
@@ -192,8 +192,8 @@ void rdp_sync_full(struct rdp_state* rdp, const uint32_t* args)
 {
     // update config if set
     if (config_update) {
-        rdp_close();
-        rdp_init(&config_new);
+        n64video_close();
+        n64video_init(&config_new);
 
         config_update = false;
     }
@@ -253,7 +253,7 @@ void rdp_set_other_modes(struct rdp_state* rdp, const uint32_t* args)
     rdp->other_modes.f.stalederivs = 1;
 }
 
-void rdp_close(void)
+void n64video_close(void)
 {
     vi_close();
     parallel_close();

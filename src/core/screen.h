@@ -5,7 +5,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-void screen_init(struct rdp_config* config);
+void screen_init(struct n64video_config* config);
 void screen_swap(bool blank);
 void screen_write(struct rdp_frame_buffer* fb, int32_t output_height);
 void screen_read(struct rdp_frame_buffer* fb, bool rgb);

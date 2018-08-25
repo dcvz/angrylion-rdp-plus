@@ -110,7 +110,7 @@ static GLuint gl_shader_link(GLuint vert, GLuint frag)
     return program;
 }
 
-void gl_screen_init(struct rdp_config* config)
+void gl_screen_init(struct n64video_config* config)
 {
 #ifndef GLES
     // load OpenGL function pointers

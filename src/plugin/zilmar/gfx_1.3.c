@@ -154,18 +154,18 @@ EXPORT void CALL ProcessDList(void)
 
 EXPORT void CALL ProcessRDPList(void)
 {
-    rdp_update();
+    n64video_process_list();
 }
 
 EXPORT void CALL RomClosed(void)
 {
-    rdp_close();
+    n64video_close();
 }
 
 EXPORT void CALL RomOpen(void)
 {
     config_load();
-    rdp_init(config_get());
+    n64video_init(config_get());
 }
 
 EXPORT void CALL ShowCFB(void)
@@ -174,7 +174,7 @@ EXPORT void CALL ShowCFB(void)
 
 EXPORT void CALL UpdateScreen(void)
 {
-    rdp_update_vi();
+    n64video_update_screen();
 
     // write screenshot file if requested
     if (screenshot_path[0]) {

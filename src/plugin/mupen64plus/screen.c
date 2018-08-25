@@ -32,7 +32,7 @@ void* IntGetProcAddress(const char *name)
     return CoreVideo_GL_GetProcAddress(name);
 }
 
-void screen_init(struct rdp_config* config)
+void screen_init(struct n64video_config* config)
 {
     /* Get the core Video Extension function pointers from the library handle */
     CoreVideo_Init = (ptr_VidExt_Init) DLSYM(CoreLibHandle, "VidExt_Init");
