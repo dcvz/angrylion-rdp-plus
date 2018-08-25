@@ -37,17 +37,6 @@
 #define RGBA32_B(x) (((x) >> 8) & 0xff)
 #define RGBA32_A(x) ((x) & 0xff)
 
-// inlining
-#define INLINE inline
-
-#ifdef _MSC_VER
-#define STRICTINLINE __forceinline
-#elif defined(__GNUC__)
-#define STRICTINLINE __attribute__((always_inline))
-#else
-#define STRICTINLINE inline
-#endif
-
 // maximum number of commands to buffer for parallel processing
 #define CMD_BUFFER_SIZE 1024
 
