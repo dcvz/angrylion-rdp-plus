@@ -86,6 +86,9 @@
     <ClCompile Include="..\src\core\n64video.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\core\rdp\rdp.c">
+      <Filter>Source Files\rdp</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\core\common.h">
