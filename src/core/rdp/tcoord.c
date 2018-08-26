@@ -314,7 +314,7 @@ static STRICTINLINE void lodfrac_lodtile_signals(struct rdp_state* rdp, int lodc
     {
 
         mag = 0;
-
+        ltil = 0;
         dis = 1;
         lf = 0xff;
     }
