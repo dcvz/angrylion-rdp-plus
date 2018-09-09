@@ -512,7 +512,6 @@ static void deduce_derivatives(struct rdp_state* rdp)
 
 void rdp_create(struct rdp_state** rdp, uint32_t stride, uint32_t offset)
 {
-    int i;
     struct rdp_state* state = calloc(1, sizeof(struct rdp_state));
 
     state->stride = stride;
@@ -521,12 +520,6 @@ void rdp_create(struct rdp_state** rdp, uint32_t stride, uint32_t offset)
 
     uint32_t tmp[2] = { 0 };
     rdp_set_other_modes(state, tmp);
-
-    for (i = 0; i < 8; i++)
-    {
-        calculate_tile_derivs(&state->tile[i]);
-        calculate_clamp_diffs(&state->tile[i]);
-    }
 
     fb_init(state);
     combiner_init(state);

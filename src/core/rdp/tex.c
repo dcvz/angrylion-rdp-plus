@@ -1027,5 +1027,12 @@ static void tex_init_lut(void)
 
 static void tex_init(struct rdp_state* rdp)
 {
+    int i;
     tcoord_init(rdp);
+
+    for (i = 0; i < 8; i++)
+    {
+        calculate_tile_derivs(&rdp->tile[i]);
+        calculate_clamp_diffs(&rdp->tile[i]);
+    }
 }
