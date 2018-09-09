@@ -21,7 +21,7 @@ static uint32_t vi_integer_sqrt(uint32_t a)
     return res;
 }
 
-static STRICTINLINE void gamma_filters(uint32_t* r, uint32_t* g, uint32_t* b, union vi_reg_ctrl ctrl, int32_t* rstate)
+static STRICTINLINE void gamma_filters(uint32_t* r, uint32_t* g, uint32_t* b, struct vi_reg_ctrl ctrl, int32_t* rstate)
 {
     int cdith, dith;
 

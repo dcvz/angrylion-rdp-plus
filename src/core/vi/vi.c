@@ -30,23 +30,20 @@ enum vi_aa
     VI_AA_REPLICATE             // replicate pixels, no interpolation
 };
 
-union vi_reg_ctrl
+struct vi_reg_ctrl
 {
-    struct {
-        uint32_t type : 2;
-        uint32_t gamma_dither_enable : 1;
-        uint32_t gamma_enable : 1;
-        uint32_t divot_enable : 1;
-        uint32_t vbus_clock_enable : 1;
-        uint32_t serrate : 1;
-        uint32_t test_mode : 1;
-        uint32_t aa_mode : 2;
-        uint32_t reserved : 1;
-        uint32_t kill_we : 1;
-        uint32_t pixel_advance : 4;
-        uint32_t dither_filter_enable : 1;
-    };
-    uint32_t raw;
+    uint8_t type;
+    bool gamma_dither_enable;
+    bool gamma_enable;
+    bool divot_enable;
+    bool vbus_clock_enable;
+    bool serrate;
+    uint8_t test_mode;
+    uint8_t aa_mode;
+    bool reserved;
+    bool kill_we;
+    uint8_t pixel_advance;
+    bool dither_filter_enable;
 };
 
 struct ccvg
@@ -62,7 +59,7 @@ struct ccvg
 #include "fetch.c"
 
 // states
-static void(*vi_fetch_filter_ptr)(struct ccvg*, uint32_t, uint32_t, union vi_reg_ctrl, uint32_t, uint32_t);
+static void(*vi_fetch_filter_ptr)(struct ccvg*, uint32_t, uint32_t, struct vi_reg_ctrl, uint32_t, uint32_t);
 static uint32_t prevvicurrent;
 static int32_t emucontrolsvicurrent;
 static bool prevserrate;
@@ -89,7 +86,7 @@ static int32_t linecount;
 
 // parsed VI registers
 static uint32_t** vi_reg_ptr;
-static union vi_reg_ctrl ctrl;
+static struct vi_reg_ctrl ctrl;
 static int32_t hres, vres;
 static int32_t hres_raw, vres_raw;
 static int32_t v_start;
@@ -647,7 +644,20 @@ void n64video_update_screen(void)
         return;
     }
 
-    ctrl.raw = *vi_reg_ptr[VI_STATUS];
+    // split up VI_CONTROL bits
+    uint32_t vi_control = *vi_reg_ptr[VI_STATUS];
+    ctrl.type = vi_control & 3;
+    ctrl.gamma_dither_enable = (vi_control >> 2) & 1;
+    ctrl.gamma_enable = (vi_control >> 3) & 1;
+    ctrl.divot_enable = (vi_control >> 4) & 1;
+    ctrl.vbus_clock_enable = (vi_control >> 5) & 1;
+    ctrl.serrate = (vi_control >> 6) & 1;
+    ctrl.test_mode = (vi_control >> 7) & 1;
+    ctrl.aa_mode = (vi_control >> 8) & 3;
+    ctrl.reserved = (vi_control >> 9) & 1;
+    ctrl.kill_we = (vi_control >> 10) & 1;
+    ctrl.pixel_advance = (vi_control >> 12) & 0xf;
+    ctrl.dither_filter_enable = (vi_control >> 16) & 1;
 
     // check for unexpected VI type bits set
     if (ctrl.type & ~3) {
