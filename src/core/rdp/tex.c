@@ -994,7 +994,7 @@ void rdp_set_tile(struct rdp_state* rdp, const uint32_t* args)
     calculate_tile_derivs(&rdp->tile[tilenum]);
 }
 
-static void rdp_set_texture_image(struct rdp_state* rdp, const uint32_t* args)
+void rdp_set_texture_image(struct rdp_state* rdp, const uint32_t* args)
 {
     rdp->ti_format   = (args[0] >> 21) & 0x7;
     rdp->ti_size     = (args[0] >> 19) & 0x3;
