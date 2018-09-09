@@ -526,7 +526,7 @@ static void vi_process_fast_parallel(uint32_t worker_id)
                         }
 
                         default:
-                            assert(false);
+                            return;
                     }
 
                     gamma_filters(&r, &g, &b, ctrl, &rdp_states[worker_id]->rand_vi);
@@ -547,7 +547,7 @@ static void vi_process_fast_parallel(uint32_t worker_id)
                 }
 
                 default:
-                    assert(false);
+                    return;
             }
 
             dst[x] = (b << 16) | (g << 8) | r;
