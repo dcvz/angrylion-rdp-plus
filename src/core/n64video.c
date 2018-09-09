@@ -64,13 +64,8 @@ static STRICTINLINE int32_t clamp(int32_t value, int32_t min, int32_t max)
 
 static STRICTINLINE uint32_t irand(uint32_t* state)
 {
-    // based on xorshift32 implementation on Wikipedia
-    uint32_t x = *state;
-    x ^= x << 13;
-    x ^= x >> 17;
-    x ^= x << 5;
-    *state = x;
-    return x;
+    *state = *state * 0x343fd + 0x269ec3;
+    return ((*state >> 16) & 0x7fff);
 }
 
 #include "rdp/rdp.c"
