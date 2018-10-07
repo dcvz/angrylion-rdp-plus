@@ -77,7 +77,7 @@ static STRICTINLINE int alpha_compare(struct rdp_state* rdp, int32_t comb_alpha)
         if (!rdp->other_modes.dither_alpha_en)
             threshold = rdp->blend_color.a;
         else
-            threshold = irand(&rdp->rand_dp) & 0xff;
+            threshold = irand(&rdp->rseed) & 0xff;
 
 
         if (comb_alpha >= threshold)

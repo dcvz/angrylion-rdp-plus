@@ -1771,7 +1771,7 @@ static void render_spans_copy(struct rdp_state* rdp, int start, int end, int til
             else if (rdp->fb_size == PIXEL_SIZE_8BIT)
             {
                 alphamask = 0;
-                threshold = (rdp->other_modes.dither_alpha_en) ? (irand(&rdp->rand_dp) & 0xff) : rdp->blend_color.a;
+                threshold = (rdp->other_modes.dither_alpha_en) ? (irand(&rdp->rseed) & 0xff) : rdp->blend_color.a;
                 if (rdp->other_modes.dither_alpha_en)
                 {
                     currthreshold = threshold;

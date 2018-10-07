@@ -243,8 +243,7 @@ struct rdp_state
     int32_t min_level;
 
     // irand
-    uint32_t rand_dp;
-    uint32_t rand_vi;
+    uint32_t rseed;
 
     // blender
     int32_t *blender1a_r[2];
@@ -516,7 +515,7 @@ void rdp_create(struct rdp_state** rdp, uint32_t stride, uint32_t offset)
 
     state->stride = stride;
     state->offset = offset;
-    state->rand_dp = state->rand_vi = 3 + offset * 13;
+    state->rseed = 3 + offset * 13;
 
     uint32_t tmp[2] = { 0 };
     rdp_set_other_modes(state, tmp);

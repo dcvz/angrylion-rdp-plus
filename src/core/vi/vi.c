@@ -92,6 +92,7 @@ static int32_t hres_raw, vres_raw;
 static int32_t v_start;
 static int32_t h_start;
 static int32_t v_current_line;
+static uint32_t rseed;
 
 static void vi_init(void)
 {
@@ -105,6 +106,7 @@ static void vi_init(void)
     prevserrate = false;
     oldvstart = 1337;
     prevwasblank = false;
+    rseed = 3;
 }
 
 static void vi_process_full_parallel(uint32_t worker_id)
@@ -134,8 +136,6 @@ static void vi_process_full_parallel(uint32_t worker_id)
     bool cache_init = false;
 
     pixels = 0;
-
-    int32_t* rstate = &rdp_states[worker_id]->rand_vi;
 
     int32_t y_begin = 0;
     int32_t y_end = vres;
@@ -277,7 +277,7 @@ static void vi_process_full_parallel(uint32_t worker_id)
             g = color.g;
             b = color.b;
 
-            gamma_filters(&r, &g, &b, ctrl, rstate);
+            gamma_filters(&r, &g, &b, ctrl, &rseed);
 
             if (x >= minhpass && x < maxhpass) {
                 d[x] = (b << 16) | (g << 8) | r;
@@ -529,7 +529,7 @@ static void vi_process_fast_parallel(uint32_t worker_id)
                             return;
                     }
 
-                    gamma_filters(&r, &g, &b, ctrl, &rdp_states[worker_id]->rand_vi);
+                    gamma_filters(&r, &g, &b, ctrl, &rseed);
                     break;
 
                 case VI_MODE_DEPTH: {
