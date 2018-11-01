@@ -16,6 +16,9 @@ extern GFX_INFO gfx;
 #define WINDOW_DEFAULT_WIDTH 640
 #define WINDOW_DEFAULT_HEIGHT 480
 
+static int32_t window_width;
+static int32_t window_height;
+
 // context states
 static HDC dc;
 static HGLRC glrc;
@@ -69,28 +72,25 @@ void* IntGetProcAddress(const char *name)
 
 void screen_init(struct n64video_config* config)
 {
+    // reset windowed size state
+    window_width = 0;
+    window_height = 0;
+
     // make window resizable for the user
     if (!fullscreen) {
         LONG style = GetWindowLong(gfx.hWnd, GWL_STYLE);
-        style |= WS_SIZEBOX | WS_MAXIMIZEBOX;
-        SetWindowLong(gfx.hWnd, GWL_STYLE, style);
 
-        BOOL zoomed = IsZoomed(gfx.hWnd);
+        if ((style & (WS_SIZEBOX | WS_MAXIMIZEBOX)) == 0) {
+            style |= WS_SIZEBOX | WS_MAXIMIZEBOX;
+            SetWindowLong(gfx.hWnd, GWL_STYLE, style);
 
-        if (zoomed) {
-            ShowWindow(gfx.hWnd, SW_RESTORE);
-        }
-
-        // Fix client size after changing the window style, otherwise the PJ64
-        // menu will be displayed incorrectly.
-        // For some reason, this needs to be called twice, probably because the
-        // style set above isn't applied immediately.
-        for (int i = 0; i < 2; i++) {
-            win32_client_resize(gfx.hWnd, gfx.hStatusBar, WINDOW_DEFAULT_WIDTH, WINDOW_DEFAULT_HEIGHT);
-        }
-
-        if (zoomed) {
-            ShowWindow(gfx.hWnd, SW_MAXIMIZE);
+            // Fix client size after changing the window style, otherwise the PJ64
+            // menu will be displayed incorrectly.
+            // For some reason, this needs to be called twice, probably because the
+            // style set above isn't applied immediately.
+            for (int i = 0; i < 2; i++) {
+                win32_client_resize(gfx.hWnd, gfx.hStatusBar, WINDOW_DEFAULT_WIDTH, WINDOW_DEFAULT_HEIGHT);
+            }
         }
     }
 
@@ -150,6 +150,21 @@ void screen_init(struct n64video_config* config)
 
 void screen_write(struct frame_buffer* buffer, int32_t output_height)
 {
+    // adjust windowed size after the output size has changed so that
+    // the output remains pixel-perfect until the user changes the window size
+    if (window_width != buffer->width || window_height != output_height) {
+        window_width = buffer->width;
+        window_height = output_height;
+
+        WINDOWPLACEMENT wndpl = { 0 };
+        GetWindowPlacement(gfx.hWnd, &wndpl);
+
+        // only fix size if windowed and not maximized
+        if (!fullscreen && wndpl.showCmd != SW_MAXIMIZE) {
+            win32_client_resize(gfx.hWnd, gfx.hStatusBar, window_width, window_height);
+        }
+    }
+
     gl_screen_write(buffer, output_height);
 }
 
