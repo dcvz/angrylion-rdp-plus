@@ -38,7 +38,7 @@ struct vi_reg_ctrl
     bool divot_enable;
     bool vbus_clock_enable;
     bool serrate;
-    uint8_t test_mode;
+    bool test_mode;
     uint8_t aa_mode;
     bool reserved;
     bool kill_we;
