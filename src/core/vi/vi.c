@@ -78,6 +78,8 @@ static int32_t v_sync;
 static int32_t vi_width_low;
 static uint32_t frame_buffer;
 static uint32_t tvfadeoutstate[PRESCALE_HEIGHT];
+static uint32_t rseed;
+static uint32_t zb_address;
 
 // prescale buffer
 static uint32_t prescale[PRESCALE_WIDTH * PRESCALE_HEIGHT];
@@ -92,7 +94,6 @@ static int32_t hres_raw, vres_raw;
 static int32_t v_start;
 static int32_t h_start;
 static int32_t v_current_line;
-static uint32_t rseed;
 
 static void vi_init(void)
 {
@@ -107,6 +108,7 @@ static void vi_init(void)
     oldvstart = 1337;
     prevwasblank = false;
     rseed = 3;
+    zb_address = 0;
 }
 
 static void vi_process_full_parallel(uint32_t worker_id)
@@ -533,7 +535,9 @@ static void vi_process_fast_parallel(uint32_t worker_id)
                     break;
 
                 case VI_MODE_DEPTH: {
-                    r = g = b = rdram_read_idx16((rdp_states[0]->zb_address >> 1) + line + x) >> 8;
+                    if (zb_address) {
+                        r = g = b = rdram_read_idx16((zb_address >> 1) + line + x) >> 8;
+                    }
                     break;
                 }
 
@@ -605,6 +609,11 @@ static bool vi_process_fast(void)
 
     screen_write(&fb, output_height);
     return true;
+}
+
+void vi_set_zbuffer_address(uint32_t address)
+{
+    zb_address = address;
 }
 
 void n64video_update_screen(void)

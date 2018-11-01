@@ -293,6 +293,11 @@ void n64video_process_list(void)
                 rdp_cmd(rdp_states[0], cmd_buf);
             }
 
+            // send Z-buffer address to VI for "depth" output mode
+            if (rdp_cmd_id == CMD_ID_SET_MASK_IMAGE) {
+                vi_set_zbuffer_address(cmd_buf[1] & 0x0ffffff);
+            }
+
             // reset current command buffer to prepare for the next one
             cmd_init();
         }
