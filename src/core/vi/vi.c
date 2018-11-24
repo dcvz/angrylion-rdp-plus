@@ -51,6 +51,8 @@ struct ccvg
     uint8_t r, g, b, cvg;
 };
 
+typedef void(*vi_fetch_filter_func)(struct ccvg*, uint32_t, uint32_t, struct vi_reg_ctrl, uint32_t, uint32_t);
+
 #include "gamma.c"
 #include "lerp.c"
 #include "divot.c"
@@ -59,7 +61,6 @@ struct ccvg
 #include "fetch.c"
 
 // states
-static void(*vi_fetch_filter_ptr)(struct ccvg*, uint32_t, uint32_t, struct vi_reg_ctrl, uint32_t, uint32_t);
 static uint32_t prevvicurrent;
 static int32_t emucontrolsvicurrent;
 static bool prevserrate;
@@ -126,6 +127,8 @@ static void vi_process_full_parallel(uint32_t worker_id)
     struct ccvg *divot_cache_next = &divot_array[0xa10];
 
     struct ccvg color, nextcolor, scancolor, scannextcolor;
+
+    vi_fetch_filter_func vi_fetch_filter_ptr = ctrl.type & 1 ? vi_fetch_filter32 : vi_fetch_filter16;
 
     uint32_t pixels = 0, nextpixels = 0, fetchbugstate = 0;
 
@@ -310,8 +313,6 @@ static void vi_process_full_parallel(uint32_t worker_id)
 
 static bool vi_process_full(void)
 {
-    vi_fetch_filter_ptr = ctrl.type & 1 ? vi_fetch_filter32 : vi_fetch_filter16;
-
     bool isblank = (ctrl.type & 2) == 0;
     bool validinterlace = !isblank && ctrl.serrate;
 
