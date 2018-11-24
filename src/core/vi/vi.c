@@ -507,7 +507,9 @@ static void vi_process_fast_parallel(uint32_t worker_id)
         uint32_t* dst = prescale + y * hres_raw;
 
         for (x = 0; x < hres_raw; x++) {
-            uint32_t r, g, b;
+            uint32_t r = 0;
+            uint32_t g = 0;
+            uint32_t b = 0;
 
             switch (config.vi.mode) {
                 case VI_MODE_COLOR:
