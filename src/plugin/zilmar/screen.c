@@ -153,15 +153,24 @@ void screen_write(struct frame_buffer* buffer, int32_t output_height)
     // adjust windowed size after the output size has changed so that
     // the output remains pixel-perfect until the user changes the window size
     if (window_width != buffer->width || window_height != output_height) {
-        window_width = buffer->width;
-        window_height = output_height;
+        int window_display_width = window_width = buffer->width;
+        int window_display_height = window_height = output_height;
+
+        // double resolution for very small frame sizes, typically when
+        // unfiltered option is enabled
+        if (window_display_width <= 320) {
+            window_display_width <<= 1;
+            window_display_height <<= 1;
+        }
 
         WINDOWPLACEMENT wndpl = { 0 };
         GetWindowPlacement(gfx.hWnd, &wndpl);
 
         // only fix size if windowed and not maximized
         if (!fullscreen && wndpl.showCmd != SW_MAXIMIZE) {
-            win32_client_resize(gfx.hWnd, gfx.hStatusBar, window_width, window_height);
+            win32_client_resize(gfx.hWnd, gfx.hStatusBar,
+                window_display_width,
+                window_display_height);
         }
     }
 
