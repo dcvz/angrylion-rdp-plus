@@ -1,5 +1,5 @@
 #include "gl_screen.h"
-#include "core/msg.h"
+#include "msg.h"
 
 #include <stdlib.h>
 #include <string.h>

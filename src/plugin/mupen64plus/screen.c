@@ -1,8 +1,7 @@
 #include "screen.h"
 #include "gfx_m64p.h"
 
-#include "plugin/common/gl_screen.h"
-
+#include "core/gl_screen.h"
 #include "core/msg.h"
 
 #include <stdlib.h>

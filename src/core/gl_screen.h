@@ -1,7 +1,7 @@
 #pragma once
 
-#include "core/n64video.h"
-#include "core/screen.h"
+#include "n64video.h"
+#include "screen.h"
 
 #include <stdint.h>
 #include <stdbool.h>

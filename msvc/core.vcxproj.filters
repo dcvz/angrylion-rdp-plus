@@ -15,6 +15,9 @@
     <Filter Include="Source Files\vi">
       <UniqueIdentifier>{c4aba2c5-1231-411c-a721-4895a830810e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\gl_core_3_3">
+      <UniqueIdentifier>{00bb1f12-70c3-4c4e-b2c6-646d5a89aa8e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\core\rdp\blender.c">
@@ -86,6 +89,12 @@
     <ClCompile Include="..\src\core\rdp\rdp.c">
       <Filter>Source Files\rdp</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\core\gl_screen.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\gl_core_3_3\gl_core_3_3.c">
+      <Filter>Source Files\gl_core_3_3</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\core\common.h">
@@ -108,6 +117,12 @@
     </ClInclude>
     <ClInclude Include="..\src\core\rdp.h">
       <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\core\gl_screen.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\core\gl_core_3_3\gl_core_3_3.h">
+      <Filter>Source Files\gl_core_3_3</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

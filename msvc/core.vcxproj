@@ -19,6 +19,13 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\src\core\gl_core_3_3\gl_core_3_3.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\src\core\gl_screen.c" />
     <ClCompile Include="..\src\core\parallel.cpp" />
     <ClCompile Include="..\src\core\plugin.c" />
     <ClCompile Include="..\src\core\n64video.c" />
@@ -140,6 +147,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\core\common.h" />
+    <ClInclude Include="..\src\core\gl_core_3_3\gl_core_3_3.h" />
+    <ClInclude Include="..\src\core\gl_screen.h" />
     <ClInclude Include="..\src\core\msg.h" />
     <ClInclude Include="..\src\core\parallel.h" />
     <ClInclude Include="..\src\core\plugin.h" />
