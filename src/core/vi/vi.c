@@ -594,6 +594,30 @@ static bool vi_process_fast(struct frame_buffer* fb, uint32_t* output_height)
     return true;
 }
 
+void vi_process_gamma(struct frame_buffer* fb)
+{
+    // check if gamma pass is necessary
+    if (!ctrl.gamma_enable && !ctrl.gamma_dither_enable) {
+        return;
+    }
+
+    // skip gamma pass for special output modes
+    if (config.vi.mode != VI_MODE_NORMAL && config.vi.mode != VI_MODE_COLOR) {
+        return;
+    }
+
+    for (uint32_t y = 0; y < fb->height; y++) {
+        for (uint32_t x = 0; x < fb->width; x++) {
+            uint32_t* rgb = fb->pixels + (y * fb->pitch + x);
+            uint32_t r = *rgb & 0xff;
+            uint32_t g = (*rgb >> 8) & 0xff;
+            uint32_t b = (*rgb >> 16) & 0xff;
+            gamma_filters(&r, &g, &b, ctrl, &rseed);
+            *rgb = (b << 16) | (g << 8) | r;
+        }
+    }
+}
+
 void vi_set_zbuffer_address(uint32_t address)
 {
     zb_address = address;
@@ -735,21 +759,10 @@ void n64video_update_screen(void)
         }
 
         if (valid) {
-            // do gamma correction and dithering postproc for color modes
-            if (config.vi.mode == VI_MODE_NORMAL || config.vi.mode == VI_MODE_COLOR) {
-                for (uint32_t y = 0; y < fb.height; y++) {
-                    for (uint32_t x = 0; x < fb.width; x++) {
-                        uint32_t* rgb = fb.pixels + (y * fb.pitch + x);
-                        uint32_t r = *rgb & 0xff;
-                        uint32_t g = (*rgb >> 8) & 0xff;
-                        uint32_t b = (*rgb >> 16) & 0xff;
-                        gamma_filters(&r, &g, &b, ctrl, &rseed);
-                        *rgb = (b << 16) | (g << 8) | r;
-                    }
-                }
-            }
+            // do gamma correction and dithering postproc
+            vi_process_gamma(&fb);
 
-            // convert to 16:9 if enabled
+            // stretch to 16:9 if enabled
             if (config.vi.widescreen) {
                 output_height = output_height * 3 / 4;
             }
