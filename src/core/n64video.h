@@ -67,7 +67,7 @@ struct n64video_config
     uint32_t num_workers;
 };
 
-void n64video_config_defaults(struct n64video_config* config);
+void n64video_config_init(struct n64video_config* config);
 void n64video_init(struct n64video_config* config);
 void n64video_update_screen(void);
 void n64video_process_list(void);

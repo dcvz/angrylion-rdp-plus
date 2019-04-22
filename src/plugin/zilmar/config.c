@@ -72,7 +72,7 @@ INT_PTR CALLBACK config_dialog_proc(HWND hwnd, UINT iMessage, WPARAM wParam, LPA
             SetWindowText(hwnd, CORE_BASE_NAME " Config");
 
             if (!config_load()) {
-                n64video_config_defaults(&config);
+                n64video_config_init(&config);
             }
 
             char* vi_mode_strings[] = {

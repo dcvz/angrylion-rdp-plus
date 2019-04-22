@@ -171,7 +171,7 @@ static void cmd_init(void)
     rdp_cmd_len = CMD_MAX_INTS;
 }
 
-void n64video_config_defaults(struct n64video_config* config)
+void n64video_config_init(struct n64video_config* config)
 {
     config->parallel = true;
     config->num_workers = 0;
