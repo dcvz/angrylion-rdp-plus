@@ -179,6 +179,8 @@ void n64video_config_defaults(struct n64video_config* config)
     config->vi.mode = VI_MODE_NORMAL;
     config->vi.widescreen = false;
     config->vi.hide_overscan = false;
+    config->vi.exclusive = false;
+    config->vi.vsync = true;
 }
 
 void rdp_init_worker(uint32_t worker_id)

@@ -25,6 +25,9 @@ static HGLRC glrc;
 static HGLRC glrc_core;
 static bool fullscreen;
 
+// config states
+static bool exclusive;
+
 // Win32 helpers
 void win32_client_resize(HWND hWnd, HWND hStatus, int32_t nWidth, int32_t nHeight)
 {
@@ -72,6 +75,8 @@ void* IntGetProcAddress(const char *name)
 
 void screen_init(struct n64video_config* config)
 {
+    exclusive = config->vi.exclusive;
+
     // reset windowed size state
     window_width = 0;
     window_height = 0;
@@ -142,8 +147,10 @@ void screen_init(struct n64video_config* config)
         msg_warning("Can't create OpenGL 3.3 core context.");
     }
 
-    // enable vsync
-    wglSwapIntervalEXT(1);
+    if (config->vi.vsync) {
+        // enable vsync
+        wglSwapIntervalEXT(1);
+    }
 
     gl_screen_init(config);
 }
@@ -250,7 +257,11 @@ void screen_set_fullscreen(bool _fullscreen)
         // disable all styles to get a borderless window and save it to restore
         // it later
         old_style = GetWindowLong(gfx.hWnd, GWL_STYLE);
-        SetWindowLong(gfx.hWnd, GWL_STYLE, WS_VISIBLE);
+        LONG style = WS_VISIBLE;
+        if (exclusive) {
+            style |= WS_POPUP;
+        }
+        SetWindowLong(gfx.hWnd, GWL_STYLE, style);
 
         // resize window so it covers the entire virtual screen
         SetWindowPos(gfx.hWnd, HWND_TOP, 0, 0, vs_width, vs_height, SWP_SHOWWINDOW);

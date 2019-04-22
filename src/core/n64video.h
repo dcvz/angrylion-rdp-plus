@@ -60,6 +60,8 @@ struct n64video_config
         enum vi_interp interp;
         bool widescreen;
         bool hide_overscan;
+        bool vsync;
+        bool exclusive;
     } vi;
     bool parallel;
     uint32_t num_workers;
