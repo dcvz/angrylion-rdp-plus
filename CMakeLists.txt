@@ -43,9 +43,8 @@ find_package(OpenGL REQUIRED)
 
 set(PATH_SRC "src")
 
-# RDP core library and shared plugin library
+# RDP core library
 set(PATH_CORE "${PATH_SRC}/core")
-set(PATH_PLUGIN_COMMON "${PATH_SRC}/plugin/common")
 
 # run script to generate version.h
 set(PATH_VERSION "${PATH_CORE}/version.h")
@@ -59,10 +58,8 @@ add_custom_command(
 )
 
 file(GLOB SOURCES_CORE "${PATH_CORE}/*.c" "${PATH_CORE}/*.cpp")
-file(GLOB SOURCES_PLUGIN_COMMON "${PATH_PLUGIN_COMMON}/*.c")
 
 add_library(alp-core STATIC ${SOURCES_CORE} ${PATH_VERSION})
-add_library(alp-plugin-common STATIC ${SOURCES_PLUGIN_COMMON})
 
 if(MINGW)
     # link libgcc/libstdc++ statically, fixes cryptic "_ZNSt13runtime_errorC1EPKc" error
@@ -70,7 +67,6 @@ if(MINGW)
 else(MINGW)
     # set PIC option for non-MinGW targets
     set_target_properties(alp-core PROPERTIES POSITION_INDEPENDENT_CODE ON)
-    set_target_properties(alp-plugin-common PROPERTIES POSITION_INDEPENDENT_CODE ON)
 endif(MINGW)
 
 # set IPO option, if supported
@@ -90,7 +86,7 @@ if(WIN32)
 
     set_target_properties(${NAME_PLUGIN_ZILMAR} PROPERTIES PREFIX "")
 
-    target_link_libraries(${NAME_PLUGIN_ZILMAR} alp-core alp-plugin-common shlwapi ${OPENGL_LIBRARIES})
+    target_link_libraries(${NAME_PLUGIN_ZILMAR} alp-core shlwapi ${OPENGL_LIBRARIES})
 endif(WIN32)
 
 # Mupen64Plus GFX plugin
@@ -102,4 +98,4 @@ add_library(${NAME_PLUGIN_M64P} SHARED ${SOURCES_PLUGIN_M64P})
 
 set_target_properties(${NAME_PLUGIN_M64P} PROPERTIES PREFIX "")
 
-target_link_libraries(${NAME_PLUGIN_M64P} alp-core alp-plugin-common ${OPENGL_LIBRARIES})
+target_link_libraries(${NAME_PLUGIN_M64P} alp-core ${OPENGL_LIBRARIES})
