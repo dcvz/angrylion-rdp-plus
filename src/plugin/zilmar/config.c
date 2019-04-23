@@ -20,6 +20,8 @@
 #define KEY_VI_INTERP "interpolation"
 #define KEY_VI_WIDESCREEN "widescreen"
 #define KEY_VI_HIDE_OVERSCAN "hide_overscan"
+#define KEY_VI_EXCLUSIVE "exclusive"
+#define KEY_VI_VSYNC "vsync"
 
 #define CONFIG_FILE_NAME CORE_SIMPLE_NAME "-config.ini"
 
@@ -177,6 +179,10 @@ static void config_handle(const char* key, const char* value, const char* sectio
             config.vi.widescreen = strtol(value, NULL, 0) != 0;
         } else if (!_strcmpi(key, KEY_VI_HIDE_OVERSCAN)) {
             config.vi.hide_overscan = strtol(value, NULL, 0) != 0;
+        } else if (!_strcmpi(key, KEY_VI_EXCLUSIVE)) {
+            config.vi.exclusive = strtol(value, NULL, 0) != 0;
+        } else if (!_strcmpi(key, KEY_VI_VSYNC)) {
+            config.vi.vsync = strtol(value, NULL, 0) != 0;
         }
     }
 }
@@ -277,6 +283,8 @@ bool config_save(void)
     config_write_int32(fp, KEY_VI_INTERP, config.vi.interp);
     config_write_int32(fp, KEY_VI_WIDESCREEN, config.vi.widescreen);
     config_write_int32(fp, KEY_VI_HIDE_OVERSCAN, config.vi.hide_overscan);
+    config_write_int32(fp, KEY_VI_EXCLUSIVE, config.vi.exclusive);
+    config_write_int32(fp, KEY_VI_VSYNC, config.vi.vsync);
 
     fclose(fp);
 
