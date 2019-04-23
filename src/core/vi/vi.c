@@ -467,7 +467,7 @@ static bool vi_process_full(struct frame_buffer* fb, uint32_t* output_height)
         *output_height = V_RES_NTSC;
     }
 
-    return true;
+    return fb->width > 0 && fb->height > 0;
 }
 
 static void vi_process_fast_parallel(uint32_t worker_id)
@@ -591,7 +591,7 @@ static bool vi_process_fast(struct frame_buffer* fb, uint32_t* output_height)
     // force aspect ratio of filtered mode
     *output_height = fb->width * filtered_height / filtered_width;
 
-    return true;
+    return fb->width > 0 && fb->height > 0;
 }
 
 void vi_process_gamma(struct frame_buffer* fb)
