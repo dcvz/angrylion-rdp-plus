@@ -282,6 +282,8 @@ static void vi_process_full_parallel(uint32_t worker_id)
             g = color.g;
             b = color.b;
 
+            gamma_filters(&r, &g, &b, ctrl, &rseed);
+
             if (x >= minhpass && x < maxhpass) {
                 d[x] = (b << 16) | (g << 8) | r;
             } else {
@@ -309,7 +311,7 @@ static void vi_process_full_parallel(uint32_t worker_id)
     }
 }
 
-static bool vi_process_full(struct frame_buffer* fb, uint32_t* output_height)
+static bool vi_process_full(void)
 {
     bool isblank = (ctrl.type & 2) == 0;
     bool validinterlace = !isblank && ctrl.serrate;
@@ -448,26 +450,35 @@ static bool vi_process_full(struct frame_buffer* fb, uint32_t* output_height)
         vi_process_full_parallel(0);
     }
 
-    // finish and configure frame buffer
-    fb->pixels = prescale;
-    fb->pitch = PRESCALE_WIDTH;
+    // finish and send buffer to screen
+    struct frame_buffer fb;
+    fb.pixels = prescale;
+    fb.pitch = PRESCALE_WIDTH;
+
+    int32_t output_height;
 
     if (config.vi.hide_overscan) {
         // crop away overscan area from prescale
-        fb->width = maxhpass - minhpass;
-        fb->height = vres << ctrl.serrate;
-        *output_height = (vres << 1) * V_SYNC_NTSC / v_sync;
+        fb.width = maxhpass - minhpass;
+        fb.height = vres << ctrl.serrate;
+        output_height = (vres << 1) * V_SYNC_NTSC / v_sync;
         int32_t x = h_start + minhpass;
         int32_t y = (v_start + (emucontrolsvicurrent ? lowerfield : 0)) << ctrl.serrate;
-        fb->pixels += x + y * fb->pitch;
+        fb.pixels += x + y * fb.pitch;
     } else {
         // use entire prescale buffer
-        fb->width = PRESCALE_WIDTH;
-        fb->height = (ispal ? V_RES_PAL : V_RES_NTSC) >> !ctrl.serrate;
-        *output_height = V_RES_NTSC;
+        fb.width = PRESCALE_WIDTH;
+        fb.height = (ispal ? V_RES_PAL : V_RES_NTSC) >> !ctrl.serrate;
+        output_height = V_RES_NTSC;
     }
 
-    return fb->width > 0 && fb->height > 0;
+    // convert to 16:9 if enabled
+    if (config.vi.widescreen) {
+        output_height = output_height * 3 / 4;
+    }
+
+    screen_write(&fb, output_height);
+    return fb.width > 0 && fb.height > 0;
 }
 
 static void vi_process_fast_parallel(uint32_t worker_id)
@@ -522,6 +533,8 @@ static void vi_process_fast_parallel(uint32_t worker_id)
                         default:
                             return;
                     }
+
+                    gamma_filters(&r, &g, &b, ctrl, &rseed);
                     break;
 
                 case VI_MODE_DEPTH: {
@@ -549,7 +562,7 @@ static void vi_process_fast_parallel(uint32_t worker_id)
     }
 }
 
-static bool vi_process_fast(struct frame_buffer* fb, uint32_t* output_height)
+static bool vi_process_fast(void)
 {
     // note: this is probably a very, very crude method to get the frame size,
     // but should hopefully work most of the time
@@ -574,10 +587,11 @@ static bool vi_process_fast(struct frame_buffer* fb, uint32_t* output_height)
     }
 
     // finish and send buffer to screen
-    fb->pixels = prescale;
-    fb->width = hres_raw;
-    fb->height = vres_raw;
-    fb->pitch = hres_raw;
+    struct frame_buffer fb;
+    fb.pixels = prescale;
+    fb.width = hres_raw;
+    fb.height = vres_raw;
+    fb.pitch = hres_raw;
 
     // get display size of filtered mode
     int32_t filtered_width = maxhpass - minhpass;
@@ -585,13 +599,19 @@ static bool vi_process_fast(struct frame_buffer* fb, uint32_t* output_height)
 
     // re-calculate cropped 8 pixel area on the left and right from filtered mode
     int32_t border_width = (hres - filtered_width) * hres_raw / hres;
-    fb->pixels += (border_width / 2) + 1;
-    fb->width -= border_width;
+    fb.pixels += (border_width / 2) + 1;
+    fb.width -= border_width;
 
     // force aspect ratio of filtered mode
-    *output_height = fb->width * filtered_height / filtered_width;
+    int32_t output_height = fb.width * filtered_height / filtered_width;
 
-    return fb->width > 0 && fb->height > 0;
+    // convert to 16:9 if enabled
+    if (config.vi.widescreen) {
+        output_height = output_height * 3 / 4;
+    }
+
+    screen_write(&fb, output_height);
+    return fb.width > 0 && fb.height > 0;
 }
 
 void vi_set_zbuffer_address(uint32_t address)
@@ -716,9 +736,7 @@ void n64video_update_screen(void)
         msg_error("VI_V_SYNC_REG too big");
     }
 
-    bool valid = true;
-    struct frame_buffer fb;
-    uint32_t output_height;
+    bool blank = true;
 
     if (vactivelines >= 0) {
         uint32_t lineshifter = !ctrl.serrate;
@@ -729,37 +747,14 @@ void n64video_update_screen(void)
 
         // run filter update in parallel if enabled
         if (config.vi.mode == VI_MODE_NORMAL) {
-            valid = vi_process_full(&fb, &output_height);
+            blank = !vi_process_full();
         } else {
-            valid = vi_process_fast(&fb, &output_height);
-        }
-
-        if (valid) {
-            // do gamma correction and dithering postproc for color modes
-            if (config.vi.mode == VI_MODE_NORMAL || config.vi.mode == VI_MODE_COLOR) {
-                for (uint32_t y = 0; y < fb.height; y++) {
-                    for (uint32_t x = 0; x < fb.width; x++) {
-                        uint32_t* rgb = fb.pixels + (y * fb.pitch + x);
-                        uint32_t r = *rgb & 0xff;
-                        uint32_t g = (*rgb >> 8) & 0xff;
-                        uint32_t b = (*rgb >> 16) & 0xff;
-                        gamma_filters(&r, &g, &b, ctrl, &rseed);
-                        *rgb = (b << 16) | (g << 8) | r;
-                    }
-                }
-            }
-
-            // convert to 16:9 if enabled
-            if (config.vi.widescreen) {
-                output_height = output_height * 3 / 4;
-            }
-
-            screen_write(&fb, output_height);
+            blank = !vi_process_fast();
         }
     }
 
     // render frame to screen or blank screen if the frame is invalid
-    screen_swap(!valid);
+    screen_swap(blank);
 }
 
 static void vi_close(void)
