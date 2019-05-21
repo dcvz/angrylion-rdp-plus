@@ -5,9 +5,17 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+struct rgba
+{
+    uint8_t r;
+    uint8_t g;
+    uint8_t b;
+    uint8_t a;
+};
+
 struct frame_buffer
 {
-    uint32_t* pixels;
+    struct rgba* pixels;
     uint32_t width;
     uint32_t height;
     uint32_t pitch;

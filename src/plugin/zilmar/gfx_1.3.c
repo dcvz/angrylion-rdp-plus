@@ -54,8 +54,10 @@ static void write_screenshot(char* path)
 
     // convert RGBA to BGRA
     for (uint32_t i = 0; i < fb.width * fb.height; i++) {
-        uint32_t pixel = fb.pixels[i];
-        fb.pixels[i] = (pixel & 0xff) << 16 | (pixel & 0xff0000) >> 16 | (pixel & 0xff00ff00);
+        struct rgba* pixel = &fb.pixels[i];
+        uint8_t tmp = pixel->r;
+        pixel->r = pixel->b;
+        pixel->b = tmp;
     }
 
     fwrite(fb.pixels, ihdr.biSizeImage, 1, fp);
