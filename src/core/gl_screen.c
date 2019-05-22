@@ -3,6 +3,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 #ifdef GLES
 #include <GLES3/gl3.h>
@@ -69,10 +70,34 @@ static void gl_check_errors(void)
 #define gl_check_errors(...)
 #endif
 
-static GLuint gl_shader_compile(GLenum type, const GLchar* source)
+static GLuint gl_shader_compile(GLenum type, const GLchar* source, const char* path)
 {
     GLuint shader = glCreateShader(type);
-    glShaderSource(shader, 1, &source, NULL);
+
+    // try to load external shader file first, otherwise use embedded fallback shader
+    FILE* fp = fopen(path, "rb");
+    if (fp) {
+        fseek(fp, 0, SEEK_END);
+        uint32_t size = ftell(fp);
+
+        GLchar* source_aux = malloc(size + 1);
+        if (source_aux == NULL) {
+            msg_error("Can't allocate memory for shader file");
+            return 0;
+        }
+
+        fseek(fp, 0, SEEK_SET);
+        fread(source_aux, size, 1, fp);
+        fclose(fp);
+
+        source_aux[size] = 0;
+
+        glShaderSource(shader, 1, &source_aux, NULL);
+        free(source_aux);
+    } else {
+        glShaderSource(shader, 1, &source, NULL);
+    }
+
     glCompileShader(shader);
 
     GLint param;
@@ -82,6 +107,7 @@ static GLuint gl_shader_compile(GLenum type, const GLchar* source)
         GLchar log[4096];
         glGetShaderInfoLog(shader, sizeof(log), NULL, log);
         msg_error("%s shader error: %s\n", type == GL_FRAGMENT_SHADER ? "Frag" : "Vert", log);
+        return 0;
     }
 
     return shader;
@@ -141,8 +167,8 @@ void gl_screen_init(struct n64video_config* config)
         "}\n";
 
     // compile and link OpenGL program
-    GLuint vert = gl_shader_compile(GL_VERTEX_SHADER, vert_shader);
-    GLuint frag = gl_shader_compile(GL_FRAGMENT_SHADER, frag_shader);
+    GLuint vert = gl_shader_compile(GL_VERTEX_SHADER, vert_shader, "alp_screen.vert");
+    GLuint frag = gl_shader_compile(GL_FRAGMENT_SHADER, frag_shader, "alp_screen.frag");
     program = gl_shader_link(vert, frag);
     glUseProgram(program);
 
