@@ -64,13 +64,16 @@ static int TestPointer(const PROC pTest)
 
 void* IntGetProcAddress(const char *name)
 {
-    HMODULE glMod = NULL;
     PROC pFunc = wglGetProcAddress((LPCSTR)name);
     if (TestPointer(pFunc)) {
         return pFunc;
     }
-    glMod = GetModuleHandleA("OpenGL32.dll");
-    return (PROC)GetProcAddress(glMod, (LPCSTR)name);
+    HMODULE glMod = GetModuleHandleA("OpenGL32.dll");
+    if (glMod == NULL) {
+        return glMod;
+    } else {
+        return (PROC)GetProcAddress(glMod, (LPCSTR)name);
+    }
 }
 
 void screen_init(struct n64video_config* config)
@@ -114,11 +117,13 @@ void screen_init(struct n64video_config* config)
     dc = GetDC(gfx.hWnd);
     if (!dc) {
         msg_error("Can't get device context.");
+        return;
     }
 
     int32_t win_pf = ChoosePixelFormat(dc, &win_pfd);
     if (!win_pf) {
         msg_error("Can't choose pixel format.");
+        return;
     }
     SetPixelFormat(dc, win_pf, &win_pfd);
 
@@ -126,6 +131,7 @@ void screen_init(struct n64video_config* config)
     glrc = wglCreateContext(dc);
     if (!glrc || !wglMakeCurrent(dc, glrc)) {
         msg_error("Can't create OpenGL context.");
+        return;
     }
 
     // load wgl extension
