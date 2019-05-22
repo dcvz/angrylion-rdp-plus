@@ -7,14 +7,13 @@
 #ifdef GLES
 #include <GLES3/gl3.h>
 #define SHADER_HEADER "#version 300 es\nprecision lowp float;\n"
-#define TEX_FORMAT GL_RGBA
-#define TEX_TYPE GL_UNSIGNED_BYTE
 #else
 #include "gl_core_3_3/gl_core_3_3.c"
 #define SHADER_HEADER "#version 330 core\n"
-#define TEX_FORMAT GL_BGRA
-#define TEX_TYPE GL_UNSIGNED_INT_8_8_8_8_REV
 #endif
+
+#define TEX_FORMAT GL_RGBA
+#define TEX_TYPE GL_UNSIGNED_BYTE
 
 static GLuint program;
 static GLuint vao;
@@ -138,11 +137,7 @@ void gl_screen_init(struct n64video_config* config)
         "layout(location = 0) out vec4 color;\n"
         "uniform sampler2D tex0;\n"
         "void main(void) {\n"
-#ifdef GLES
         "    color = texture(tex0, uv);\n"
-#else
-        "    color.bgra = texture(tex0, uv);\n"
-#endif
         "}\n";
 
     // compile and link OpenGL program
