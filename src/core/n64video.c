@@ -185,7 +185,7 @@ void n64video_config_init(struct n64video_config* config)
 
 void rdp_init_worker(uint32_t worker_id)
 {
-    rdp_create(&rdp_states[worker_id], parallel_num_workers(), worker_id);
+    rdp_states[worker_id] = rdp_create(parallel_num_workers(), worker_id);
 }
 
 void n64video_init(struct n64video_config* _config)
@@ -223,7 +223,7 @@ void n64video_init(struct n64video_config* _config)
         parallel_run(rdp_init_worker);
     } else {
         rdp_states = calloc(1, sizeof(struct rdp_state*));
-        rdp_create(&rdp_states[0], 0, 0);
+        rdp_states[0] = rdp_create(0, 0);
     }
 }
 

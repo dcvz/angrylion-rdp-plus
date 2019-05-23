@@ -509,7 +509,7 @@ static void deduce_derivatives(struct rdp_state* rdp)
     rdp->other_modes.f.dolod = rdp->other_modes.tex_lod_en || lodfracused;
 }
 
-void rdp_create(struct rdp_state** rdp, uint32_t stride, uint32_t offset)
+struct rdp_state* rdp_create(uint32_t stride, uint32_t offset)
 {
     struct rdp_state* state = calloc(1, sizeof(struct rdp_state));
 
@@ -525,7 +525,7 @@ void rdp_create(struct rdp_state** rdp, uint32_t stride, uint32_t offset)
     tex_init(state);
     rasterizer_init(state);
 
-    *rdp = state;
+    return state;
 }
 
 void rdp_destroy(struct rdp_state* rdp)
