@@ -32,15 +32,17 @@ static bool exclusive;
 void win32_client_resize(HWND hWnd, HWND hStatus, int32_t nWidth, int32_t nHeight)
 {
     RECT rclient;
-    GetClientRect(hWnd, &rclient);
+    if (!GetClientRect(hWnd, &rclient)) {
+        return;
+    }
 
     RECT rwin;
-    GetWindowRect(hWnd, &rwin);
+    if (!GetWindowRect(hWnd, &rwin)) {
+        return;
+    }
 
-    if (hStatus) {
-        RECT rstatus;
-        GetClientRect(hStatus, &rstatus);
-
+    RECT rstatus;
+    if (hStatus && GetClientRect(hStatus, &rstatus)) {
         rclient.bottom -= rstatus.bottom;
     }
 
@@ -205,15 +207,18 @@ void screen_swap(bool blank)
     // clear current buffer, indicating the start of a new frame
     gl_screen_clear();
 
+    // get size of window
     RECT rect;
-    GetClientRect(gfx.hWnd, &rect);
+    if (!GetClientRect(gfx.hWnd, &rect)) {
+        // window handle invalid?
+        return;
+    }
 
     // status bar covers the client area, so exclude it from calculation
     RECT statusrect;
     SetRectEmpty(&statusrect);
 
-    if (gfx.hStatusBar) {
-        GetClientRect(gfx.hStatusBar, &statusrect);
+    if (gfx.hStatusBar && GetClientRect(gfx.hStatusBar, &statusrect)) {
         rect.bottom -= statusrect.bottom;
     }
 
