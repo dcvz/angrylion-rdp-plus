@@ -68,8 +68,8 @@ static STRICTINLINE uint32_t irand(uint32_t* state)
     return ((*state >> 16) & 0x7fff);
 }
 
-#include "rdp/rdp.c"
-#include "vi/vi.c"
+#include "n64video/rdp/rdp.c"
+#include "n64video/vi/vi.c"
 
 static uint32_t rdp_cmd_buf[CMD_BUFFER_SIZE][CMD_MAX_INTS];
 static uint32_t rdp_cmd_buf_pos;

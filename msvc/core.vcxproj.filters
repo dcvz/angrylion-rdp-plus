@@ -5,48 +5,24 @@
       <UniqueIdentifier>{5467dd49-ff5e-4be4-93ad-8291721fc00d}</UniqueIdentifier>
       <Extensions>cpp;c;cxx;def;odl;idl;hpj;bat;asm</Extensions>
     </Filter>
-    <Filter Include="Source Files\rdp">
-      <UniqueIdentifier>{708e14fa-0950-4210-9679-64e4b25cd6ff}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Resource Files">
       <UniqueIdentifier>{142a5325-573c-4fde-9d8f-af10cb6e28e5}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe</Extensions>
     </Filter>
-    <Filter Include="Source Files\vi">
-      <UniqueIdentifier>{c4aba2c5-1231-411c-a721-4895a830810e}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\gl_core_3_3">
       <UniqueIdentifier>{00bb1f12-70c3-4c4e-b2c6-646d5a89aa8e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\n64video">
+      <UniqueIdentifier>{201fc67f-a10c-47a3-a9f6-47b9ccdf155a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\n64video\vi">
+      <UniqueIdentifier>{9ac263b1-1e35-44a3-8368-2c88ff3bb096}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\n64video\rdp">
+      <UniqueIdentifier>{0def43d5-fe85-4dc1-9b3e-264603cca8fa}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\core\rdp\blender.c">
-      <Filter>Source Files\rdp</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\core\rdp\combiner.c">
-      <Filter>Source Files\rdp</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\core\rdp\coverage.c">
-      <Filter>Source Files\rdp</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\core\rdp\dither.c">
-      <Filter>Source Files\rdp</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\core\rdp\fbuffer.c">
-      <Filter>Source Files\rdp</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\core\rdp\rasterizer.c">
-      <Filter>Source Files\rdp</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\core\rdp\rdram.c">
-      <Filter>Source Files\rdp</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\core\rdp\tex.c">
-      <Filter>Source Files\rdp</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\core\rdp\zbuffer.c">
-      <Filter>Source Files\rdp</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\core\parallel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -56,44 +32,71 @@
     <ClCompile Include="..\src\core\screen.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\core\vi\vi.c">
-      <Filter>Source Files\vi</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\core\vi\divot.c">
-      <Filter>Source Files\vi</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\core\vi\fetch.c">
-      <Filter>Source Files\vi</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\core\vi\gamma.c">
-      <Filter>Source Files\vi</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\core\vi\lerp.c">
-      <Filter>Source Files\vi</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\core\vi\restore.c">
-      <Filter>Source Files\vi</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\core\vi\video.c">
-      <Filter>Source Files\vi</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\core\rdp\tcoord.c">
-      <Filter>Source Files\rdp</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\core\rdp\tmem.c">
-      <Filter>Source Files\rdp</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\core\n64video.c">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\core\rdp\rdp.c">
-      <Filter>Source Files\rdp</Filter>
     </ClCompile>
     <ClCompile Include="..\src\core\gl_screen.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\src\core\gl_core_3_3\gl_core_3_3.c">
       <Filter>Source Files\gl_core_3_3</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\n64video\rdp\blender.c">
+      <Filter>Source Files\n64video\rdp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\n64video\rdp\combiner.c">
+      <Filter>Source Files\n64video\rdp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\n64video\rdp\coverage.c">
+      <Filter>Source Files\n64video\rdp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\n64video\rdp\dither.c">
+      <Filter>Source Files\n64video\rdp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\n64video\rdp\fbuffer.c">
+      <Filter>Source Files\n64video\rdp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\n64video\rdp\rasterizer.c">
+      <Filter>Source Files\n64video\rdp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\n64video\rdp\rdp.c">
+      <Filter>Source Files\n64video\rdp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\n64video\rdp\rdram.c">
+      <Filter>Source Files\n64video\rdp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\n64video\rdp\tcoord.c">
+      <Filter>Source Files\n64video\rdp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\n64video\rdp\tex.c">
+      <Filter>Source Files\n64video\rdp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\n64video\rdp\tmem.c">
+      <Filter>Source Files\n64video\rdp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\n64video\rdp\zbuffer.c">
+      <Filter>Source Files\n64video\rdp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\n64video\vi\divot.c">
+      <Filter>Source Files\n64video\vi</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\n64video\vi\fetch.c">
+      <Filter>Source Files\n64video\vi</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\n64video\vi\gamma.c">
+      <Filter>Source Files\n64video\vi</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\n64video\vi\lerp.c">
+      <Filter>Source Files\n64video\vi</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\n64video\vi\restore.c">
+      <Filter>Source Files\n64video\vi</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\n64video\vi\vi.c">
+      <Filter>Source Files\n64video\vi</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\n64video\vi\video.c">
+      <Filter>Source Files\n64video\vi</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
