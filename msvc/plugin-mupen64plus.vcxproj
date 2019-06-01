@@ -25,7 +25,6 @@
     <ClInclude Include="..\src\plugin\mupen64plus\api\m64p_types.h" />
     <ClInclude Include="..\src\plugin\mupen64plus\api\m64p_vidext.h" />
     <ClInclude Include="..\src\plugin\mupen64plus\gfx_m64p.h" />
-    <ClInclude Include="..\src\plugin\mupen64plus\screen.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\plugin\mupen64plus\gfx_m64p.c" />

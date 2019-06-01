@@ -3,7 +3,6 @@
 #include "wgl_ext.h"
 
 #include "core/screen.h"
-#include "core/gl_screen.h"
 #include "core/msg.h"
 
 #include <stdlib.h>
@@ -16,8 +15,9 @@ extern GFX_INFO gfx;
 #define WINDOW_DEFAULT_WIDTH 640
 #define WINDOW_DEFAULT_HEIGHT 480
 
-static int32_t window_width;
-static int32_t window_height;
+// previous size of the window
+static int32_t win_width;
+static int32_t win_height;
 
 // context states
 static HDC dc;
@@ -83,8 +83,8 @@ void screen_init(struct n64video_config* config)
     exclusive = config->vi.exclusive;
 
     // reset windowed size state
-    window_width = 0;
-    window_height = 0;
+    win_width = 0;
+    win_height = 0;
 
     // make window resizable for the user
     if (!fullscreen) {
@@ -159,54 +159,10 @@ void screen_init(struct n64video_config* config)
         // enable vsync
         wglSwapIntervalEXT(1);
     }
-
-    gl_screen_init(config);
 }
 
-void screen_write(struct frame_buffer* buffer, int32_t output_height)
+void screen_adjust(int32_t width_out, int32_t height_out, int32_t* width, int32_t* height, int32_t* x, int32_t* y)
 {
-    // adjust windowed size after the output size has changed so that
-    // the output remains pixel-perfect until the user changes the window size
-    if (window_width != buffer->width || window_height != output_height) {
-        int window_display_width = window_width = buffer->width;
-        int window_display_height = window_height = output_height;
-
-        // double resolution for very small frame sizes, typically when
-        // unfiltered option is enabled
-        if (window_display_width <= 320) {
-            window_display_width <<= 1;
-            window_display_height <<= 1;
-        }
-
-        WINDOWPLACEMENT wndpl = { 0 };
-        GetWindowPlacement(gfx.hWnd, &wndpl);
-
-        // only fix size if windowed and not maximized
-        if (!fullscreen && wndpl.showCmd != SW_MAXIMIZE) {
-            win32_client_resize(gfx.hWnd, gfx.hStatusBar,
-                window_display_width,
-                window_display_height);
-        }
-    }
-
-    gl_screen_write(buffer, output_height);
-}
-
-void screen_read(struct frame_buffer* buffer, bool alpha)
-{
-    gl_screen_read(buffer, alpha);
-}
-
-void screen_swap(bool blank)
-{
-    // don't render when the window is minimized
-    if (IsIconic(gfx.hWnd)) {
-        return;
-    }
-
-    // clear current buffer, indicating the start of a new frame
-    gl_screen_clear();
-
     // get size of window
     RECT rect;
     if (!GetClientRect(gfx.hWnd, &rect)) {
@@ -229,21 +185,53 @@ void screen_swap(bool blank)
     int32_t win_x = 0;
     int32_t win_y = statusrect.bottom;
 
-    if (!blank) {
-        gl_screen_render(win_width, win_height, win_x, win_y);
+    // adjust windowed size after the output size has changed so that
+    // the output remains pixel-perfect until the user changes the window size
+    if (win_width != win_width || win_height != win_height) {
+        int32_t win_width_tmp = win_width = win_width;
+        int32_t win_height_tmp = win_height = win_height;
+
+        // double resolution for very small frame sizes, typically when
+        // unfiltered option is enabled
+        if (win_width_tmp <= 320) {
+            win_width_tmp <<= 1;
+            win_height_tmp <<= 1;
+        }
+
+        WINDOWPLACEMENT wndpl = { 0 };
+        GetWindowPlacement(gfx.hWnd, &wndpl);
+
+        // only fix size if windowed and not maximized
+        if (!fullscreen && wndpl.showCmd != SW_MAXIMIZE) {
+            win32_client_resize(gfx.hWnd, gfx.hStatusBar,
+                win_width_tmp, win_height_tmp);
+        }
     }
 
-    // swap front and back buffers
-    SwapBuffers(dc);
+    *width = win_width;
+    *height = win_height;
+    *x = win_x;
+    *y = win_y;
 }
 
-void screen_set_fullscreen(bool _fullscreen)
+void screen_update(void)
+{
+    // don't render when the window is minimized
+    if (!IsIconic(gfx.hWnd)) {
+        // swap front and back buffers
+        SwapBuffers(dc);
+    }
+}
+
+void screen_toggle_fullscreen(void)
 {
     static HMENU old_menu;
     static LONG old_style;
     static WINDOWPLACEMENT old_pos;
 
-    if (_fullscreen) {
+    fullscreen = !fullscreen;
+
+    if (fullscreen) {
         // hide curser
         ShowCursor(FALSE);
 
@@ -276,7 +264,8 @@ void screen_set_fullscreen(bool _fullscreen)
 
         // resize window so it covers the entire virtual screen
         SetWindowPos(gfx.hWnd, HWND_TOP, 0, 0, vs_width, vs_height, SWP_SHOWWINDOW);
-    } else {
+    }
+    else {
         // restore cursor
         ShowCursor(TRUE);
 
@@ -297,19 +286,10 @@ void screen_set_fullscreen(bool _fullscreen)
         // restore window size and position
         SetWindowPlacement(gfx.hWnd, &old_pos);
     }
-
-    fullscreen = _fullscreen;
-}
-
-bool screen_get_fullscreen(void)
-{
-    return fullscreen;
 }
 
 void screen_close(void)
 {
-    gl_screen_close();
-
     if (glrc_core) {
         wglDeleteContext(glrc_core);
     }

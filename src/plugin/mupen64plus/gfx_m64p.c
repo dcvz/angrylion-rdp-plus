@@ -39,11 +39,12 @@
 #include <ctype.h>
 
 #include "gfx_m64p.h"
-#include "screen.h"
 
 #include "api/m64p_types.h"
 #include "api/m64p_config.h"
 
+#include "core/screen.h"
+#include "core/vdac.h"
 #include "core/version.h"
 #include "core/msg.h"
 
@@ -69,6 +70,10 @@ static m64p_handle configVideoAngrylionPlus = NULL;
 
 #define PLUGIN_VERSION              0x000100
 #define VIDEO_PLUGIN_API_VERSION    0x020200
+
+extern int32_t win_width;
+extern int32_t win_height;
+extern int32_t window_fullscreen;
 
 EXPORT m64p_error CALL PluginStartup(m64p_dynlib_handle _CoreLibHandle, void *Context,
                                      void (*DebugCallback)(void *, int, const char *))
@@ -180,8 +185,8 @@ EXPORT void CALL ProcessRDPList(void)
 EXPORT int CALL RomOpen (void)
 {
     window_fullscreen = ConfigGetParamBool(configVideoGeneral, KEY_FULLSCREEN);
-    window_width = ConfigGetParamInt(configVideoGeneral, KEY_SCREEN_WIDTH);
-    window_height = ConfigGetParamInt(configVideoGeneral, KEY_SCREEN_HEIGHT);
+    win_width = ConfigGetParamInt(configVideoGeneral, KEY_SCREEN_WIDTH);
+    win_height = ConfigGetParamInt(configVideoGeneral, KEY_SCREEN_HEIGHT);
 
     config.parallel = ConfigGetParamBool(configVideoAngrylionPlus, KEY_PARALLEL);
     config.num_workers = ConfigGetParamInt(configVideoAngrylionPlus, KEY_NUM_WORKERS);
@@ -224,15 +229,11 @@ EXPORT void CALL ChangeWindow(void)
 EXPORT void CALL ReadScreen2(void *dest, int *width, int *height, int front)
 {
     struct frame_buffer fb = { 0 };
-    screen_read(&fb, false);
+    fb.pixels = dest;
+    vdac_read(&fb, false);
 
     *width = fb.width;
     *height = fb.height;
-
-    if (dest) {
-        fb.pixels = dest;
-        screen_read(&fb, false);
-    }
 }
 
 EXPORT void CALL SetRenderingCallback(void (*callback)(int))
@@ -242,8 +243,8 @@ EXPORT void CALL SetRenderingCallback(void (*callback)(int))
 
 EXPORT void CALL ResizeVideoOutput(int width, int height)
 {
-    window_width = width;
-    window_height = height;
+    win_width = width;
+    win_height = height;
 }
 
 EXPORT void CALL FBWrite(unsigned int addr, unsigned int size)

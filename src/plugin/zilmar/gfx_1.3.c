@@ -4,6 +4,7 @@
 
 #include "core/n64video.h"
 #include "core/screen.h"
+#include "core/vdac.h"
 #include "core/version.h"
 #include "core/msg.h"
 #include "core/plugin.h"
@@ -19,7 +20,7 @@ GFX_INFO gfx;
 static void write_screenshot(char* path)
 {
     struct frame_buffer fb = { 0 };
-    screen_read(&fb, true);
+    vdac_read(&fb, true);
 
     // prepare bitmap headers
     BITMAPINFOHEADER ihdr = {0};
@@ -50,7 +51,7 @@ static void write_screenshot(char* path)
     fseek(fp, fhdr.bfOffBits, SEEK_SET);
 
     fb.pixels = malloc(ihdr.biSizeImage);
-    screen_read(&fb, true);
+    vdac_read(&fb, true);
 
     // convert RGBA to BGRA
     for (uint32_t i = 0; i < fb.width * fb.height; i++) {

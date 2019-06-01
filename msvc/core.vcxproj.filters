@@ -29,13 +29,7 @@
     <ClCompile Include="..\src\core\plugin.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\core\screen.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\core\n64video.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\core\gl_screen.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\src\core\gl_core_3_3\gl_core_3_3.c">
@@ -98,6 +92,9 @@
     <ClCompile Include="..\src\core\n64video\vi\video.c">
       <Filter>Source Files\n64video\vi</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\core\vdac.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\core\common.h">
@@ -121,11 +118,11 @@
     <ClInclude Include="..\src\core\rdp.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\core\gl_screen.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\core\gl_core_3_3\gl_core_3_3.h">
       <Filter>Source Files\gl_core_3_3</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\core\vdac.h">
+      <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

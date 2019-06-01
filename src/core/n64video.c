@@ -4,6 +4,7 @@
 #include "plugin.h"
 #include "msg.h"
 #include "screen.h"
+#include "vdac.h"
 #include "parallel.h"
 
 #include <memory.h>

@@ -1,4 +1,5 @@
-#include "gl_screen.h"
+#include "vdac.h"
+#include "screen.h"
 #include "msg.h"
 
 #include <stdlib.h>
@@ -23,7 +24,7 @@ static GLuint texture;
 static int32_t tex_width;
 static int32_t tex_height;
 
-static int32_t tex_display_height;
+static int32_t tex_height_out;
 
 #ifdef _DEBUG
 static void gl_check_errors(void)
@@ -135,7 +136,7 @@ static GLuint gl_shader_link(GLuint vert, GLuint frag)
     return program;
 }
 
-void gl_screen_init(struct n64video_config* config)
+void vdac_init(struct n64video_config* config)
 {
 #ifndef GLES
     // load OpenGL function pointers
@@ -197,7 +198,21 @@ void gl_screen_init(struct n64video_config* config)
     gl_check_errors();
 }
 
-bool gl_screen_write(struct frame_buffer* fb, int32_t output_height)
+void vdac_read(struct frame_buffer* fb, bool alpha)
+{
+    GLint vp[4];
+    glGetIntegerv(GL_VIEWPORT, vp);
+
+    fb->width = vp[2];
+    fb->height = vp[3];
+    fb->pitch = fb->width;
+
+    if (fb->pixels) {
+        glReadPixels(vp[0], vp[1], vp[2], vp[3], alpha ? GL_RGBA : GL_RGB, TEX_TYPE, fb->pixels);
+    }
+}
+
+void vdac_write(struct frame_buffer* fb)
 {
     bool buffer_size_changed = tex_width != fb->width || tex_height != fb->height;
 
@@ -221,34 +236,29 @@ bool gl_screen_write(struct frame_buffer* fb, int32_t output_height)
     }
 
     // update output size
-    tex_display_height = output_height;
-
-    return buffer_size_changed;
+    tex_height_out = fb->height_out;
 }
 
-void gl_screen_read(struct frame_buffer* fb, bool alpha)
+void vdac_sync(bool invalid)
 {
-    GLint vp[4];
-    glGetIntegerv(GL_VIEWPORT, vp);
+    // clear old buffers
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    fb->width = vp[2];
-    fb->height = vp[3];
-    fb->pitch = fb->width;
+    // get current window size and position
+    int32_t win_width;
+    int32_t win_height;
+    int32_t win_x;
+    int32_t win_y;
 
-    if (fb->pixels) {
-        glReadPixels(vp[0], vp[1], vp[2], vp[3], alpha ? GL_RGBA : GL_RGB, TEX_TYPE, fb->pixels);
-    }
-}
+    screen_adjust(tex_width, tex_height_out, &win_width, &win_height, &win_x, &win_y);
 
-void gl_screen_render(int32_t win_width, int32_t win_height, int32_t win_x, int32_t win_y)
-{
-    int32_t hw = tex_display_height * win_width;
+    int32_t hw = tex_height_out * win_width;
     int32_t wh = tex_width * win_height;
 
     // add letterboxes or pillarboxes if the window has a different aspect ratio
     // than the current display mode
     if (hw > wh) {
-        int32_t w_max = wh / tex_display_height;
+        int32_t w_max = wh / tex_height_out;
         win_x += (win_width - w_max) / 2;
         win_width = w_max;
     } else if (hw < wh) {
@@ -260,24 +270,25 @@ void gl_screen_render(int32_t win_width, int32_t win_height, int32_t win_x, int3
     // configure viewport
     glViewport(win_x, win_y, win_width, win_height);
 
-    // draw fullscreen triangle
-    glDrawArrays(GL_TRIANGLES, 0, 3);
+    // leave buffer blank if there's no valid input
+    if (!invalid) {
+        // draw fullscreen triangle
+        glDrawArrays(GL_TRIANGLES, 0, 3);
+    }
 
     // check if there was an error when using any of the commands above
     gl_check_errors();
+
+    // refresh screen with new frame
+    screen_update();
 }
 
-void gl_screen_clear(void)
-{
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-}
-
-void gl_screen_close(void)
+void vdac_close(void)
 {
     tex_width = 0;
     tex_height = 0;
 
-    tex_display_height = 0;
+    tex_height_out = 0;
 
     glDeleteTextures(1, &texture);
     glDeleteVertexArrays(1, &vao);
