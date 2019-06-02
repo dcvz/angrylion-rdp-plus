@@ -53,9 +53,6 @@
     <ClCompile Include="..\src\core\n64video\rdp\rasterizer.c">
       <Filter>Source Files\n64video\rdp</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\core\n64video\rdp\rdp.c">
-      <Filter>Source Files\n64video\rdp</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\core\n64video\rdp\rdram.c">
       <Filter>Source Files\n64video\rdp</Filter>
     </ClCompile>
@@ -86,14 +83,17 @@
     <ClCompile Include="..\src\core\n64video\vi\restore.c">
       <Filter>Source Files\n64video\vi</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\core\n64video\vi\vi.c">
-      <Filter>Source Files\n64video\vi</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\core\n64video\vi\video.c">
       <Filter>Source Files\n64video\vi</Filter>
     </ClCompile>
     <ClCompile Include="..\src\core\vdac.c">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\n64video\rdp.c">
+      <Filter>Source Files\n64video</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\n64video\vi.c">
+      <Filter>Source Files\n64video</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -48,12 +48,12 @@ struct vi_reg_ctrl
 
 typedef void(*vi_fetch_filter_func)(struct rgba*, uint32_t, uint32_t, struct vi_reg_ctrl, uint32_t, uint32_t);
 
-#include "gamma.c"
-#include "lerp.c"
-#include "divot.c"
-#include "video.c"
-#include "restore.c"
-#include "fetch.c"
+#include "vi/gamma.c"
+#include "vi/lerp.c"
+#include "vi/divot.c"
+#include "vi/video.c"
+#include "vi/restore.c"
+#include "vi/fetch.c"
 
 // states
 static uint32_t prevvicurrent;

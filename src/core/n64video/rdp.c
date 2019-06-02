@@ -408,17 +408,17 @@ static const struct
 
 static void deduce_derivatives(struct rdp_state* rdp);
 
-#include "rdram.c"
-#include "dither.c"
-#include "blender.c"
-#include "combiner.c"
-#include "coverage.c"
-#include "zbuffer.c"
-#include "fbuffer.c"
-#include "tmem.c"
-#include "tcoord.c"
-#include "tex.c"
-#include "rasterizer.c"
+#include "rdp/rdram.c"
+#include "rdp/dither.c"
+#include "rdp/blender.c"
+#include "rdp/combiner.c"
+#include "rdp/coverage.c"
+#include "rdp/zbuffer.c"
+#include "rdp/fbuffer.c"
+#include "rdp/tmem.c"
+#include "rdp/tcoord.c"
+#include "rdp/tex.c"
+#include "rdp/rasterizer.c"
 
 static void deduce_derivatives(struct rdp_state* rdp)
 {
