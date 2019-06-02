@@ -4,6 +4,8 @@ option(GLES "Set to ON to use OpenGL ES 3.0 renderer instead of OpenGL 3.3 core"
 
 project(angrylion-plus)
 
+set(OpenGL_GL_PREFERENCE GLVND)
+
 if(GLES)
     message("OpenGL ES 3.0 renderer enabled")
     add_definitions(-DGLES)
