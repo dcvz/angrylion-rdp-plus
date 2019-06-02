@@ -73,12 +73,11 @@ static void gl_check_errors(void)
 
 static bool gl_shader_load_file(GLuint shader, const char* path)
 {
-    bool success = true;
+    bool success = false;
     GLchar* source = NULL;
     FILE* fp = fopen(path, "rb");
     if (!fp) {
         // fail quietly
-        success = false;
         goto end;
     }
 
@@ -91,14 +90,12 @@ static bool gl_shader_load_file(GLuint shader, const char* path)
     source = malloc(source_size + 1);
     if (source == NULL) {
         msg_error("Can't allocate memory for shader file %s", path);
-        success = false;
         goto end;
     }
 
     // read shader code
     if (fread(source, source_size, 1, fp) != 1) {
         msg_warning("Can't read shader file %s", path);
-        success = false;
         goto end;
     }
 
@@ -108,6 +105,8 @@ static bool gl_shader_load_file(GLuint shader, const char* path)
     // send string to OpenGL
     const GLchar* source_ptr = source;
     glShaderSource(shader, 1, &source_ptr, NULL);
+
+    success = true;
 
 end:
     if (fp) {
