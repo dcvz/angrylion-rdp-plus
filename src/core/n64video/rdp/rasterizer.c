@@ -714,7 +714,7 @@ static void render_spans_2cycle_complete(struct rdp_state* rdp, int start, int e
     uint32_t prewrap;
     uint32_t curpixel_cvg, curpixel_cvbit, curpixel_memcvg;
     uint32_t nextpixel_cvg;
-    int32_t acalpha;
+    uint32_t acalpha;
 
 
 
@@ -986,7 +986,7 @@ static void render_spans_2cycle_notexelnext(struct rdp_state* rdp, int start, in
     uint32_t prewrap;
     uint32_t curpixel_cvg, curpixel_cvbit, curpixel_memcvg;
     uint32_t nextpixel_cvg;
-    int32_t acalpha;
+    uint32_t acalpha;
 
     int tile2 = (tilenum + 1) & 7;
     int tile1 = tilenum;
@@ -1202,7 +1202,7 @@ static void render_spans_2cycle_notexel1(struct rdp_state* rdp, int start, int e
     uint32_t prewrap;
     uint32_t curpixel_cvg, curpixel_cvbit, curpixel_memcvg;
     uint32_t nextpixel_cvg;
-    int32_t acalpha;
+    uint32_t acalpha;
 
     int tile1 = tilenum;
     int prim_tile = tilenum;
@@ -1415,7 +1415,7 @@ static void render_spans_2cycle_notex(struct rdp_state* rdp, int start, int end,
     uint32_t prewrap;
     uint32_t curpixel_cvg, curpixel_cvbit, curpixel_memcvg;
     uint32_t nextpixel_cvg;
-    int32_t acalpha;
+    uint32_t acalpha;
 
     int i, j;
 
