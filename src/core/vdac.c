@@ -71,31 +71,61 @@ static void gl_check_errors(void)
 #define gl_check_errors(...)
 #endif
 
+static bool gl_shader_load_file(GLuint shader, const char* path)
+{
+    bool success = true;
+    GLchar* source = NULL;
+    FILE* fp = fopen(path, "rb");
+    if (!fp) {
+        // fail quietly
+        success = false;
+        goto end;
+    }
+
+    // get file size
+    fseek(fp, 0, SEEK_END);
+    uint32_t source_size = ftell(fp);
+    fseek(fp, 0, SEEK_SET);
+
+    // allocate buffer for shader code
+    source = malloc(source_size + 1);
+    if (source == NULL) {
+        msg_error("Can't allocate memory for shader file %s", path);
+        success = false;
+        goto end;
+    }
+
+    // read shader code
+    if (fread(source, source_size, 1, fp) != 1) {
+        msg_warning("Can't read shader file %s", path);
+        success = false;
+        goto end;
+    }
+
+    // terminate shader code string
+    source[source_size] = 0;
+
+    // send string to OpenGL
+    const GLchar* source_ptr = source;
+    glShaderSource(shader, 1, &source_ptr, NULL);
+
+end:
+    if (fp) {
+        fclose(fp);
+    }
+    if (source) {
+        free(source);
+    }
+
+    return success;
+}
+
 static GLuint gl_shader_compile(GLenum type, const GLchar* source, const char* path)
 {
     GLuint shader = glCreateShader(type);
 
     // try to load external shader file first, otherwise use embedded fallback shader
-    FILE* fp = fopen(path, "rb");
-    if (fp) {
-        fseek(fp, 0, SEEK_END);
-        uint32_t size = ftell(fp);
-
-        GLchar* source_aux = malloc(size + 1);
-        if (source_aux == NULL) {
-            msg_error("Can't allocate memory for shader file");
-            return 0;
-        }
-
-        fseek(fp, 0, SEEK_SET);
-        fread(source_aux, size, 1, fp);
-        fclose(fp);
-
-        source_aux[size] = 0;
-
-        glShaderSource(shader, 1, &source_aux, NULL);
-        free(source_aux);
-    } else {
+    if (!gl_shader_load_file(shader, path)) {
         glShaderSource(shader, 1, &source, NULL);
     }
 
