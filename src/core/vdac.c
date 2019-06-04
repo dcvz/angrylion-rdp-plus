@@ -281,6 +281,17 @@ void vdac_sync(bool invalid)
 
     screen_adjust(tex_width, tex_height_out, &win_width, &win_height, &win_x, &win_y);
 
+    // if the screen is invalid or hidden, do nothing
+    if (win_width <= 0 || win_height <= 0) {
+        return;
+    }
+
+    // skip rendering and leave buffer blank if there's no valid input
+    if (invalid) {
+        screen_update();
+        return;
+    }
+
     int32_t hw = tex_height_out * win_width;
     int32_t wh = tex_width * win_height;
 
@@ -299,11 +310,8 @@ void vdac_sync(bool invalid)
     // configure viewport
     glViewport(win_x, win_y, win_width, win_height);
 
-    // leave buffer blank if there's no valid input
-    if (!invalid) {
-        // draw fullscreen triangle
-        glDrawArrays(GL_TRIANGLES, 0, 3);
-    }
+    // draw fullscreen triangle
+    glDrawArrays(GL_TRIANGLES, 0, 3);
 
     // check if there was an error when using any of the commands above
     gl_check_errors();
