@@ -167,6 +167,10 @@ void screen_adjust(int32_t width_out, int32_t height_out, int32_t* width, int32_
     RECT rect;
     if (!GetClientRect(gfx.hWnd, &rect)) {
         // window handle invalid?
+        *width = 0;
+        *height = 0;
+        *x = 0;
+        *y = 0;
         return;
     }
 
