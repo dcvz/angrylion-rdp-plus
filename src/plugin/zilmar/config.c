@@ -73,9 +73,7 @@ INT_PTR CALLBACK config_dialog_proc(HWND hwnd, UINT iMessage, WPARAM wParam, LPA
         case WM_INITDIALOG: {
             SetWindowText(hwnd, CORE_BASE_NAME " Config");
 
-            if (!config_load()) {
-                n64video_config_init(&config);
-            }
+            config_load();
 
             char* vi_mode_strings[] = {
                 "Filtered",   // VI_MODE_NORMAL
@@ -196,6 +194,9 @@ void config_init(HINSTANCE hInst)
     GetModuleFileName(inst, config_path, sizeof(config_path));
     PathRemoveFileSpec(config_path);
     PathAppend(config_path, CONFIG_FILE_NAME);
+
+    // load default config
+    n64video_config_init(&config);
 }
 
 void config_dialog(HWND hParent)
