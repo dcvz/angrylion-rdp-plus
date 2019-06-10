@@ -5,6 +5,7 @@
 
 #define RDRAM_MAX_SIZE 0x800000
 
+// register enums
 enum dp_register
 {
     DP_START,
@@ -37,6 +38,7 @@ enum vi_register
     VI_NUM_REG
 };
 
+// config enums
 enum vi_mode
 {
     VI_MODE_NORMAL,     // color buffer with VI filter
@@ -53,6 +55,14 @@ enum vi_interp
     VI_INTERP_NUM
 };
 
+enum dp_compat_profile
+{
+    DP_COMPAT_LOW,
+    DP_COMPAT_MEDIUM,
+    DP_COMPAT_HIGH,
+    DP_COMPAT_NUM
+};
+
 struct n64video_config
 {
     struct {
@@ -63,6 +73,9 @@ struct n64video_config
         bool vsync;
         bool exclusive;
     } vi;
+    struct {
+        enum dp_compat_profile compat;
+    } dp;
     bool parallel;
     uint32_t num_workers;
 };

@@ -79,72 +79,9 @@ static uint32_t rdp_cmd_pos;
 static uint32_t rdp_cmd_id;
 static uint32_t rdp_cmd_len;
 
-static bool rdp_cmd_sync[] = {
-    false, // No_Op
-    false, // ???
-    false, // ???
-    false, // ???
-    false, // ???
-    false, // ???
-    false, // ???
-    false, // ???
-    false, // Fill_Triangle
-    false, // Fill_ZBuffer_Triangle
-    false, // Texture_Triangle
-    false, // Texture_ZBuffer_Triangle
-    false, // Shade_Triangle
-    false, // Shade_ZBuffer_Triangle
-    false, // Shade_Texture_Triangle
-    false, // Shade_Texture_Z_Buffer_Triangle
-    false, // ???
-    false, // ???
-    false, // ???
-    false, // ???
-    false, // ???
-    false, // ???
-    false, // ???
-    false, // ???
-    false, // ???
-    false, // ???
-    false, // ???
-    false, // ???
-    false, // ???
-    false, // ???
-    false, // ???
-    false, // ???
-    false, // ???
-    false, // ???
-    false, // ???
-    false, // ???
-    false, // Texture_Rectangle
-    false, // Texture_Rectangle_Flip
-    false, // Sync_Load
-    false, // Sync_Pipe
-    false, // Sync_Tile
-    true,  // Sync_Full
-    false, // Set_Key_GB
-    false, // Set_Key_R
-    false, // Set_Convert
-    false, // Set_Scissor
-    false, // Set_Prim_Depth
-    false, // Set_Other_Modes
-    false, // Load_TLUT
-    false, // ???
-    false, // Set_Tile_Size
-    false, // Load_Block
-    false, // Load_Tile
-    false, // Set_Tile
-    false, // Fill_Rectangle
-    false, // Set_Fill_Color
-    false, // Set_Fog_Color
-    false, // Set_Blend_Color
-    false, // Set_Prim_Color
-    false, // Set_Env_Color
-    false, // Set_Combine
-    false, // Set_Texture_Image
-    true,  // Set_Mask_Image
-    true,  // Set_Color_Image
-};
+// table of commands that require thread synchronization in
+// multithreaded mode
+static bool rdp_cmd_sync[64];
 
 static void cmd_run_buffered(uint32_t worker_id)
 {
@@ -182,6 +119,7 @@ void n64video_config_init(struct n64video_config* config)
     config->vi.hide_overscan = false;
     config->vi.exclusive = false;
     config->vi.vsync = true;
+    config->dp.compat = DP_COMPAT_MEDIUM;
 }
 
 void rdp_init_worker(uint32_t worker_id)
@@ -204,6 +142,18 @@ void n64video_init(struct n64video_config* _config)
         z_init_lut();
 
         init_lut = true;
+    }
+
+    // enable sync switches depending on compatibility mode
+    memset(rdp_cmd_sync, 0, sizeof(rdp_cmd_sync));
+    switch (config.dp.compat) {
+        case DP_COMPAT_HIGH:
+            rdp_cmd_sync[CMD_ID_SET_TEXTURE_IMAGE] = true;
+        case DP_COMPAT_MEDIUM:
+            rdp_cmd_sync[CMD_ID_SET_MASK_IMAGE] = true;
+            rdp_cmd_sync[CMD_ID_SET_COLOR_IMAGE] = true;
+        case DP_COMPAT_LOW:
+            rdp_cmd_sync[CMD_ID_SYNC_FULL] = true;
     }
 
     // init externals

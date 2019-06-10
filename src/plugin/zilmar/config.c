@@ -12,6 +12,7 @@
 
 #define SECTION_GENERAL "General"
 #define SECTION_VIDEO_INTERFACE "VideoInterface"
+#define SECTION_DISPLAY_PROCESSOR "DisplayProcessor"
 
 #define KEY_GEN_PARALLEL "parallel"
 #define KEY_GEN_NUM_WORKERS "num_workers"
@@ -22,6 +23,8 @@
 #define KEY_VI_HIDE_OVERSCAN "hide_overscan"
 #define KEY_VI_EXCLUSIVE "exclusive"
 #define KEY_VI_VSYNC "vsync"
+
+#define KEY_DP_COMPAT "compat"
 
 #define CONFIG_FILE_NAME CORE_SIMPLE_NAME "-config.ini"
 
@@ -42,6 +45,7 @@ static HWND dlg_check_vi_widescreen;
 static HWND dlg_check_vi_overscan;
 static HWND dlg_check_vi_exclusive;
 static HWND dlg_check_vi_vsync;
+static HWND dlg_combo_dp_compat;
 static HWND dlg_spin_workers;
 static HWND dlg_edit_workers;
 
@@ -50,6 +54,7 @@ static void config_dialog_update_multithread(void)
     BOOL check = (BOOL)SendMessage(dlg_check_multithread, BM_GETCHECK, 0, 0);
     EnableWindow(dlg_spin_workers, check);
     EnableWindow(dlg_edit_workers, check);
+    EnableWindow(dlg_combo_dp_compat, check);
 }
 
 static void config_dialog_update_vi_mode(void)
@@ -92,6 +97,15 @@ INT_PTR CALLBACK config_dialog_proc(HWND hwnd, UINT iMessage, WPARAM wParam, LPA
 
             dlg_combo_vi_interp = GetDlgItem(hwnd, IDC_COMBO_VI_INTERP);
             config_dialog_fill_combo(dlg_combo_vi_interp, vi_interp_strings, VI_INTERP_NUM, config.vi.interp);
+
+            char* dp_compat_strings[] = {
+                "Fast, most glitches",      // DP_COMPAT_LOW
+                "Moderate, some glitches",  // DP_COMPAT_MEDIUM
+                "Slow, few glitches"        // DP_COMPAT_HIGH
+            };
+
+            dlg_combo_dp_compat = GetDlgItem(hwnd, IDC_COMBO_DP_COMPAT);
+            config_dialog_fill_combo(dlg_combo_dp_compat, dp_compat_strings, DP_COMPAT_NUM, config.dp.compat);
 
             CONFIG_DLG_INIT_CHECKBOX(IDC_CHECK_MULTITHREAD, dlg_check_multithread, config.parallel);
             CONFIG_DLG_INIT_CHECKBOX(IDC_CHECK_VI_WIDESCREEN, dlg_check_vi_widescreen, config.vi.widescreen);
@@ -138,6 +152,7 @@ INT_PTR CALLBACK config_dialog_proc(HWND hwnd, UINT iMessage, WPARAM wParam, LPA
                     config.vi.hide_overscan = SendMessage(dlg_check_vi_overscan, BM_GETCHECK, 0, 0);
                     config.vi.exclusive = SendMessage(dlg_check_vi_exclusive, BM_GETCHECK, 0, 0);
                     config.vi.vsync = SendMessage(dlg_check_vi_vsync, BM_GETCHECK, 0, 0);
+                    config.dp.compat = SendMessage(dlg_combo_dp_compat, CB_GETCURSEL, 0, 0);
                     config.parallel = SendMessage(dlg_check_multithread, BM_GETCHECK, 0, 0);
                     config.num_workers = GetDlgItemInt(hwnd, IDC_EDIT_WORKERS, FALSE, FALSE);
                     config_stale = true;
@@ -181,6 +196,10 @@ static void config_handle(const char* key, const char* value, const char* sectio
             config.vi.exclusive = strtol(value, NULL, 0) != 0;
         } else if (!_strcmpi(key, KEY_VI_VSYNC)) {
             config.vi.vsync = strtol(value, NULL, 0) != 0;
+        }
+    } else if (!_strcmpi(section, SECTION_DISPLAY_PROCESSOR)) {
+        if (!_strcmpi(key, KEY_DP_COMPAT)) {
+            config.dp.compat = strtol(value, NULL, 0);
         }
     }
 }
@@ -286,6 +305,9 @@ bool config_save(void)
     config_write_int32(fp, KEY_VI_HIDE_OVERSCAN, config.vi.hide_overscan);
     config_write_int32(fp, KEY_VI_EXCLUSIVE, config.vi.exclusive);
     config_write_int32(fp, KEY_VI_VSYNC, config.vi.vsync);
+
+    config_write_section(fp, SECTION_DISPLAY_PROCESSOR);
+    config_write_int32(fp, KEY_DP_COMPAT, config.dp.compat);
 
     fclose(fp);
 
