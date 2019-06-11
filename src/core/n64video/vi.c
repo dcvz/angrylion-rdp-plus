@@ -74,7 +74,7 @@ static int32_t v_sync;
 static int32_t vi_width_low;
 static uint32_t frame_buffer;
 static uint32_t tvfadeoutstate[PRESCALE_HEIGHT];
-static uint32_t rseed;
+static uint32_t rseed[PARALLEL_MAX_WORKERS];
 static uint32_t zb_address;
 
 // prescale buffer
@@ -105,8 +105,9 @@ static void vi_init(void)
     prevserrate = false;
     oldvstart = 1337;
     prevwasblank = false;
-    rseed = 3;
     zb_address = 0;
+
+    memset(rseed, 3, sizeof(rseed));
 }
 
 static void vi_process_full_parallel(uint32_t worker_id)
@@ -278,7 +279,7 @@ static void vi_process_full_parallel(uint32_t worker_id)
 
             if (x >= minhpass && x < maxhpass) {
                 *pixel = color;
-                gamma_filters(pixel, ctrl, &rseed);
+                gamma_filters(pixel, ctrl, &rseed[worker_id]);
             } else {
                 pixel->r = pixel->g = pixel->b = 0;
             }
@@ -525,7 +526,7 @@ static void vi_process_fast_parallel(uint32_t worker_id)
                             return;
                     }
 
-                    gamma_filters(pixel, ctrl, &rseed);
+                    gamma_filters(pixel, ctrl, &rseed[worker_id]);
                     break;
 
                 case VI_MODE_DEPTH: {
