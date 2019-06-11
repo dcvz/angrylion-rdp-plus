@@ -21,11 +21,11 @@ static uint32_t vi_integer_sqrt(uint32_t a)
     return res;
 }
 
-static STRICTINLINE void gamma_filters(struct rgba* pixel, struct vi_reg_ctrl ctrl, uint32_t* rstate)
+static STRICTINLINE void gamma_filters(struct rgba* pixel, bool gamma_enable, bool gamma_dither_enable, uint32_t* rstate)
 {
     int cdith, dith;
 
-    switch((ctrl.gamma_enable << 1) | ctrl.gamma_dither_enable)
+    switch((gamma_enable << 1) | gamma_dither_enable)
     {
     case 0: // no gamma, no dithering
         return;
