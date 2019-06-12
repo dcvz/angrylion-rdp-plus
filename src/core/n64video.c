@@ -42,7 +42,6 @@
 
 static struct rdp_state** rdp_states;
 static struct n64video_config config;
-static struct plugin_api* plugin;
 
 static bool init_lut;
 
