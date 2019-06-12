@@ -22,7 +22,7 @@ static ptr_VidExt_GL_SwapBuffers        CoreVideo_GL_SwapBuffers = NULL;
 // framebuffer texture states
 int32_t win_width;
 int32_t win_height;
-int32_t window_fullscreen;
+int32_t win_fullscreen;
 
 void* IntGetProcAddress(const char *name)
 {
@@ -56,7 +56,7 @@ void screen_init(struct n64video_config* config)
     CoreVideo_GL_SetAttribute(M64P_GL_CONTEXT_MINOR_VERSION, 0);
 #endif
 
-    CoreVideo_SetVideoMode(win_width, win_height, 0, window_fullscreen ? M64VIDEO_FULLSCREEN : M64VIDEO_WINDOWED, M64VIDEOFLAG_SUPPORT_RESIZING);
+    CoreVideo_SetVideoMode(win_width, win_height, 0, win_fullscreen ? M64VIDEO_FULLSCREEN : M64VIDEO_WINDOWED, M64VIDEOFLAG_SUPPORT_RESIZING);
 }
 
 void screen_adjust(int32_t width_out, int32_t height_out, int32_t* width, int32_t* height, int32_t* x, int32_t* y)

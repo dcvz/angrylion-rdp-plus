@@ -76,7 +76,7 @@ static m64p_handle configVideoAngrylionPlus = NULL;
 
 extern int32_t win_width;
 extern int32_t win_height;
-extern int32_t window_fullscreen;
+extern int32_t win_fullscreen;
 
 EXPORT m64p_error CALL PluginStartup(m64p_dynlib_handle _CoreLibHandle, void *Context,
                                      void (*DebugCallback)(void *, int, const char *))
@@ -190,7 +190,7 @@ EXPORT void CALL ProcessRDPList(void)
 
 EXPORT int CALL RomOpen (void)
 {
-    window_fullscreen = ConfigGetParamBool(configVideoGeneral, KEY_FULLSCREEN);
+    win_fullscreen = ConfigGetParamBool(configVideoGeneral, KEY_FULLSCREEN);
     win_width = ConfigGetParamInt(configVideoGeneral, KEY_SCREEN_WIDTH);
     win_height = ConfigGetParamInt(configVideoGeneral, KEY_SCREEN_HEIGHT);
 
