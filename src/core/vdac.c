@@ -167,6 +167,8 @@ static GLuint gl_shader_link(GLuint vert, GLuint frag)
 
 void vdac_init(struct n64video_config* config)
 {
+    screen_init(config);
+
 #ifndef GLES
     // load OpenGL function pointers
     ogl_LoadFunctions();
@@ -330,4 +332,6 @@ void vdac_close(void)
     glDeleteTextures(1, &texture);
     glDeleteVertexArrays(1, &vao);
     glDeleteProgram(program);
+
+    screen_close();
 }

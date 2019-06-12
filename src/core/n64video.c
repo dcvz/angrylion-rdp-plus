@@ -3,7 +3,6 @@
 #include "common.h"
 #include "plugin.h"
 #include "msg.h"
-#include "screen.h"
 #include "vdac.h"
 #include "parallel.h"
 
@@ -156,7 +155,6 @@ void n64video_init(struct n64video_config* _config)
     }
 
     // init externals
-    screen_init(&config);
     plugin_init();
 
     // init internals
@@ -264,7 +262,6 @@ void n64video_close(void)
     vi_close();
     parallel_close();
     plugin_close();
-    screen_close();
 
     if (rdp_states) {
         for (uint32_t i = 0; i < config.num_workers; i++) {
