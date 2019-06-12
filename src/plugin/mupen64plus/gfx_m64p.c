@@ -56,6 +56,7 @@ static ptr_ConfigSetDefaultInt    ConfigSetDefaultInt = NULL;
 static ptr_ConfigSetDefaultBool   ConfigSetDefaultBool = NULL;
 static ptr_ConfigGetParamInt      ConfigGetParamInt = NULL;
 static ptr_ConfigGetParamBool     ConfigGetParamBool = NULL;
+static ptr_PluginGetVersion       CoreGetVersion = NULL;
 
 static bool warn_hle;
 static bool plugin_initialized;
@@ -103,6 +104,8 @@ EXPORT m64p_error CALL PluginStartup(m64p_dynlib_handle _CoreLibHandle, void *Co
     ConfigSetDefaultBool(configVideoGeneral, KEY_FULLSCREEN, 0, "Use fullscreen mode if True, or windowed mode if False");
     ConfigSetDefaultInt(configVideoGeneral, KEY_SCREEN_WIDTH, 640, "Width of output window or fullscreen width");
     ConfigSetDefaultInt(configVideoGeneral, KEY_SCREEN_HEIGHT, 480, "Height of output window or fullscreen height");
+
+    CoreGetVersion = (ptr_PluginGetVersion)DLSYM(CoreLibHandle, "PluginGetVersion");
 
     n64video_config_init(&config);
 
@@ -200,7 +203,25 @@ EXPORT int CALL RomOpen (void)
 
     config.dp.compat = ConfigGetParamInt(configVideoAngrylionPlus, KEY_DP_COMPAT);
 
+    config.gfx.rdram = gfx.RDRAM;
+
+    int core_version;
+    CoreGetVersion(NULL, &core_version, NULL, NULL, NULL);
+    if (core_version >= 0x020501) {
+        config.gfx.rdram_size = *gfx.RDRAM_SIZE;
+    } else {
+        config.gfx.rdram_size = RDRAM_MAX_SIZE;
+    }
+
+    config.gfx.dmem = gfx.DMEM;
+    config.gfx.mi_intr_reg = (uint32_t*)gfx.MI_INTR_REG;
+    config.gfx.mi_intr_cb = gfx.CheckInterrupts;
+
+    config.gfx.vi_reg = (uint32_t**)&gfx.VI_STATUS_REG;
+    config.gfx.dp_reg = (uint32_t**)&gfx.DPC_START_REG;
+
     n64video_init(&config);
+
     return 1;
 }
 

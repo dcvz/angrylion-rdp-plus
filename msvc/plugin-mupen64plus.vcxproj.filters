@@ -40,9 +40,6 @@
     <ClCompile Include="..\src\plugin\mupen64plus\msg.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\plugin\mupen64plus\plugin.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\plugin\mupen64plus\screen.c">
       <Filter>Source Files</Filter>
     </ClCompile>

@@ -26,9 +26,6 @@
     <ClCompile Include="..\src\core\parallel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\core\plugin.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\core\n64video.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -104,9 +101,6 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="..\src\core\parallel.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\core\plugin.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="..\src\core\screen.h">

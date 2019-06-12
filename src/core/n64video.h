@@ -66,18 +66,27 @@ enum dp_compat_profile
 struct n64video_config
 {
     struct {
-        enum vi_mode mode;
-        enum vi_interp interp;
-        bool widescreen;
-        bool hide_overscan;
-        bool vsync;
-        bool exclusive;
+        uint8_t* rdram;             // RDRAM pointer
+        uint32_t rdram_size;        // size of RDRAM, typically 4 or 8 MiB
+        uint8_t* dmem;              // RSP data memory pointer
+        uint32_t** vi_reg;          // video interface registers
+        uint32_t** dp_reg;          // display processor registers
+        uint32_t* mi_intr_reg;      // MIPS interface interrupt register
+        void (*mi_intr_cb)(void);   // interrupt callback function
+    } gfx;
+    struct {
+        enum vi_mode mode;          // output mode
+        enum vi_interp interp;      // output interpolation method
+        bool widescreen;            // force 16:9 aspect ratio if true
+        bool hide_overscan;         // crop to visible area if true
+        bool vsync;                 // enable vsync if true
+        bool exclusive;             // run in exclusive mode when in fullscreen if true
     } vi;
     struct {
-        enum dp_compat_profile compat;
+        enum dp_compat_profile compat;  // multithreading compatibility mode
     } dp;
-    bool parallel;
-    uint32_t num_workers;
+    bool parallel;                  // use multithreaded renderer if true
+    uint32_t num_workers;           // number of rendering workers
 };
 
 void n64video_config_init(struct n64video_config* config);

@@ -618,7 +618,7 @@ void n64video_update_screen(void)
     }
 
     // parse and check some common registers
-    vi_reg_ptr = plugin_get_vi_registers();
+    vi_reg_ptr = config.gfx.vi_reg;
 
     v_start = (*vi_reg_ptr[VI_V_START] >> 16) & 0x3ff;
     h_start = (*vi_reg_ptr[VI_H_START] >> 16) & 0x3ff;

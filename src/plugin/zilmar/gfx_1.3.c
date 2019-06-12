@@ -2,20 +2,99 @@
 #include "config.h"
 #include "resource.h"
 
+#include "core/common.h"
 #include "core/n64video.h"
 #include "core/screen.h"
 #include "core/vdac.h"
 #include "core/version.h"
 #include "core/msg.h"
-#include "core/plugin.h"
 
 #include <stdio.h>
-
-static bool warn_hle;
-static HINSTANCE hinst;
-static char screenshot_path[MAX_PATH];
+#include <ctype.h>
 
 GFX_INFO gfx;
+static bool warn_hle;
+static char screenshot_path[MAX_PATH];
+
+static bool is_valid_ptr(void *ptr, uint32_t bytes)
+{
+    SIZE_T dwSize;
+    MEMORY_BASIC_INFORMATION meminfo;
+    if (!ptr) {
+        return false;
+    }
+    memset(&meminfo, 0x00, sizeof(meminfo));
+    dwSize = VirtualQuery(ptr, &meminfo, sizeof(meminfo));
+    if (!dwSize) {
+        return false;
+    }
+    if (MEM_COMMIT != meminfo.State) {
+        return false;
+    }
+    if (!(meminfo.Protect & (PAGE_READWRITE | PAGE_WRITECOPY | PAGE_EXECUTE_READWRITE | PAGE_EXECUTE_WRITECOPY))) {
+        return false;
+    }
+    if (bytes > meminfo.RegionSize) {
+        return false;
+    }
+    if ((uint64_t)((char*)ptr - (char*)meminfo.BaseAddress) > (uint64_t)(meminfo.RegionSize - bytes)) {
+        return false;
+    }
+    return true;
+}
+
+static char filter_char(char c)
+{
+    if (isalnum(c) || c == '_' || c == '-') {
+        return c;
+    } else {
+        return ' ';
+    }
+}
+
+static char* get_rom_name(void)
+{
+    static char rom_name[128];
+
+    // copy game name from ROM header, which is encoded in Shift_JIS.
+    // most games just use the ASCII subset, so filter out the rest.
+    // TODO: convert Shift_JIS string to UTF-16 for Win32 API?
+    int i = 0;
+    for (; i < 20; i++) {
+        rom_name[i] = filter_char(gfx.HEADER[(32 + i) ^ BYTE_ADDR_XOR]);
+    }
+
+    // make sure there's at least one whitespace that will terminate the string
+    // below
+    rom_name[i] = ' ';
+
+    // trim trailing whitespaces
+    for (; i > 0; i--) {
+        if (rom_name[i] != ' ') {
+            i++;
+            break;
+        }
+    }
+
+    if (i == 0) {
+        // game title is empty or invalid, use safe fallback using the
+        // four-character game ID
+        for (; i < 4; i++) {
+            rom_name[i] = filter_char(gfx.HEADER[(59 + i) ^ BYTE_ADDR_XOR]);
+        }
+    }
+
+    // terminate string
+    rom_name[i] = '\0';
+
+    return rom_name;
+}
+
+static void mi_intr(void)
+{
+    gfx.CheckInterrupts();
+    config_update();
+}
 
 static void write_screenshot(char* path)
 {
@@ -79,8 +158,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 
 EXPORT void CALL CaptureScreen(char* directory)
 {
-    char rom_name[128];
-    plugin_get_rom_name(rom_name, sizeof(rom_name));
+    char* rom_name = get_rom_name();
 
     for (int32_t i = 0; i < 10000; i++) {
         sprintf(screenshot_path, "%s\\%s_%04d.bmp", directory, rom_name, i);
@@ -168,7 +246,26 @@ EXPORT void CALL RomClosed(void)
 EXPORT void CALL RomOpen(void)
 {
     config_load();
-    n64video_init(config_get());
+    struct n64video_config* config = config_get();
+
+    config->gfx.rdram = gfx.RDRAM;
+    config->gfx.rdram_size = RDRAM_MAX_SIZE;
+
+    // Zilmar's API doesn't provide a way to check the amount of RDRAM available.
+    // It can only be 4 MiB or 8 MiB, so check if the last 16 bytes of the provided
+    // buffer in the 8 MiB range are valid. If not, it must be 4 MiB.
+    if (!is_valid_ptr(&gfx.RDRAM[0x7f0000], 16)) {
+        config->gfx.rdram_size /= 2;
+    }
+
+    config->gfx.dmem = gfx.DMEM;
+    config->gfx.mi_intr_reg = (uint32_t*)gfx.MI_INTR_REG;
+    config->gfx.mi_intr_cb = mi_intr;
+
+    config->gfx.vi_reg = (uint32_t**)&gfx.VI_STATUS_REG;
+    config->gfx.dp_reg = (uint32_t**)&gfx.DPC_START_REG;
+
+    n64video_init(config);
 }
 
 EXPORT void CALL ShowCFB(void)

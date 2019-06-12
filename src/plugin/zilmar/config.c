@@ -305,6 +305,7 @@ bool config_save(void)
     config_write_int32(fp, KEY_VI_HIDE_OVERSCAN, config.vi.hide_overscan);
     config_write_int32(fp, KEY_VI_EXCLUSIVE, config.vi.exclusive);
     config_write_int32(fp, KEY_VI_VSYNC, config.vi.vsync);
+    fputs("\n", fp);
 
     config_write_section(fp, SECTION_DISPLAY_PROCESSOR);
     config_write_int32(fp, KEY_DP_COMPAT, config.dp.compat);

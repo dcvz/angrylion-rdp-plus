@@ -1,7 +1,6 @@
 #include "n64video.h"
 #include "rdp.h"
 #include "common.h"
-#include "plugin.h"
 #include "msg.h"
 #include "vdac.h"
 #include "parallel.h"
@@ -109,13 +108,10 @@ static void cmd_init(void)
 
 void n64video_config_init(struct n64video_config* config)
 {
+    memset(config, 0, sizeof(*config));
+
+    // config defaults that aren't false or 0
     config->parallel = true;
-    config->num_workers = 0;
-    config->vi.interp = VI_INTERP_NEAREST;
-    config->vi.mode = VI_MODE_NORMAL;
-    config->vi.widescreen = false;
-    config->vi.hide_overscan = false;
-    config->vi.exclusive = false;
     config->vi.vsync = true;
     config->dp.compat = DP_COMPAT_MEDIUM;
 }
@@ -154,9 +150,6 @@ void n64video_init(struct n64video_config* _config)
             rdp_cmd_sync[CMD_ID_SYNC_FULL] = true;
     }
 
-    // init externals
-    plugin_init();
-
     // init internals
     rdram_init();
     vi_init();
@@ -177,7 +170,7 @@ void n64video_init(struct n64video_config* _config)
 
 void n64video_process_list(void)
 {
-    uint32_t** dp_reg = plugin_get_dp_registers();
+    uint32_t** dp_reg = config.gfx.dp_reg;
     uint32_t dp_current_al = (*dp_reg[DP_CURRENT] & ~7) >> 2;
     uint32_t dp_end_al = (*dp_reg[DP_END] & ~7) >> 2;
 
@@ -190,7 +183,7 @@ void n64video_process_list(void)
     while (dp_end_al - dp_current_al > 0) {
         uint32_t i, toload;
         bool xbus_dma = (*dp_reg[DP_STATUS] & DP_STATUS_XBUS_DMA) != 0;
-        uint32_t* dmem = (uint32_t*)plugin_get_dmem();
+        uint32_t* dmem = (uint32_t*)config.gfx.dmem;
         uint32_t* cmd_buf = rdp_cmd_buf[rdp_cmd_buf_pos];
 
         // when reading the first int, extract the command ID and update the buffer length
@@ -261,7 +254,6 @@ void n64video_close(void)
 {
     vi_close();
     parallel_close();
-    plugin_close();
 
     if (rdp_states) {
         for (uint32_t i = 0; i < config.num_workers; i++) {

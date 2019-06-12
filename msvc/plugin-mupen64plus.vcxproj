@@ -29,7 +29,6 @@
   <ItemGroup>
     <ClCompile Include="..\src\plugin\mupen64plus\gfx_m64p.c" />
     <ClCompile Include="..\src\plugin\mupen64plus\msg.c" />
-    <ClCompile Include="..\src\plugin\mupen64plus\plugin.c" />
     <ClCompile Include="..\src\plugin\mupen64plus\screen.c" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

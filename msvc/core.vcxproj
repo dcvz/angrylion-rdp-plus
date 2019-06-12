@@ -103,7 +103,6 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\src\core\parallel.cpp" />
-    <ClCompile Include="..\src\core\plugin.c" />
     <ClCompile Include="..\src\core\n64video.c" />
   </ItemGroup>
   <ItemGroup>
@@ -112,7 +111,6 @@
     <ClInclude Include="..\src\core\vdac.h" />
     <ClInclude Include="..\src\core\msg.h" />
     <ClInclude Include="..\src\core\parallel.h" />
-    <ClInclude Include="..\src\core\plugin.h" />
     <ClInclude Include="..\src\core\n64video.h" />
     <ClInclude Include="..\src\core\rdp.h" />
     <ClInclude Include="..\src\core\screen.h" />

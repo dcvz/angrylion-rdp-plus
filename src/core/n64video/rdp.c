@@ -50,6 +50,14 @@
 #define TEXEL_I16               0x12
 #define TEXEL_I32               0x13
 
+
+#define SP_INTERRUPT    0x1
+#define SI_INTERRUPT    0x2
+#define AI_INTERRUPT    0x4
+#define VI_INTERRUPT    0x8
+#define PI_INTERRUPT    0x10
+#define DP_INTERRUPT    0x20
+
 struct color
 {
     int32_t r, g, b, a;
@@ -557,8 +565,9 @@ void rdp_sync_tile(struct rdp_state* rdp, const uint32_t* args)
 
 void rdp_sync_full(struct rdp_state* rdp, const uint32_t* args)
 {
-    // signal plugin to handle interrupts
-    plugin_sync_dp();
+    // signal DP interrupt
+    *config.gfx.mi_intr_reg |= DP_INTERRUPT;
+    config.gfx.mi_intr_cb();
 }
 
 void rdp_set_other_modes(struct rdp_state* rdp, const uint32_t* args)
