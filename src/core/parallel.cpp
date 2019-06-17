@@ -12,12 +12,18 @@
 class Parallel
 {
 public:
-    Parallel(std::uint32_t num_workers) :
-        m_num_workers(std::min(num_workers, PARALLEL_MAX_WORKERS))
+    Parallel(std::uint32_t num_workers)
     {
+        if (num_workers == 0) {
+            // auto-select number of workers based on the number of cores
+            m_num_workers = std::thread::hardware_concurrency();
+        } else {
+            m_num_workers = std::min(num_workers, PARALLEL_MAX_WORKERS);
+        }
+
         // mask for m_tasks_done when all workers have finished their task
         // except for worker 0, which runs in the main thread
-        m_all_tasks_done = ((1LL << m_num_workers) - 1) & ~1;
+        m_all_tasks_done = (1LL << m_num_workers) - 2;
 
         // give workers an empty task
         m_task = [](std::uint32_t) {};
@@ -80,7 +86,7 @@ private:
     std::atomic<uint64_t> m_tasks_done;
     std::uint64_t m_all_tasks_done;
     std::atomic<bool> m_accept_work;
-    const std::uint32_t m_num_workers;
+    std::uint32_t m_num_workers;
 
     void start_work() {
         std::unique_lock<std::mutex> ul(m_signal_mutex);
@@ -133,11 +139,6 @@ static std::unique_ptr<Parallel> parallel;
 
 void parallel_init(uint32_t num)
 {
-    // auto-select number of workers based on the number of cores
-    if (num == 0) {
-        num = std::thread::hardware_concurrency();
-    }
-
     parallel = std::make_unique<Parallel>(num);
 }
 
