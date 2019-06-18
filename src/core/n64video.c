@@ -38,7 +38,7 @@
 // maximum number of commands to buffer for parallel processing
 #define CMD_BUFFER_SIZE 1024
 
-static struct rdp_state** rdp_states;
+static struct rdp_state* rdp_states[PARALLEL_MAX_WORKERS];
 static struct n64video_config config;
 
 static bool init_lut;
@@ -160,10 +160,8 @@ void n64video_init(struct n64video_config* _config)
 
     if (config.parallel) {
         parallel_init(config.num_workers);
-        rdp_states = calloc(parallel_num_workers(), sizeof(struct rdp_state*));
         parallel_run(rdp_init_worker);
     } else {
-        rdp_states = calloc(1, sizeof(struct rdp_state*));
         rdp_states[0] = rdp_create(0, 0);
     }
 }
@@ -255,12 +253,7 @@ void n64video_close(void)
     vi_close();
     parallel_close();
 
-    if (rdp_states) {
-        for (uint32_t i = 0; i < config.num_workers; i++) {
-            rdp_destroy(rdp_states[i]);
-        }
-
-        free(rdp_states);
-        rdp_states = NULL;
+    for (uint32_t i = 0; i < config.num_workers; i++) {
+        rdp_destroy(rdp_states[i]);
     }
 }
