@@ -1,6 +1,6 @@
 # Angrylion RDP Plus
 
-This is a conservative fork of angrylion's RDP plugin that aims to improve performance add new features while retaining the accuracy of the original plugin.
+This is a conservative fork of angrylion's RDP plugin that aims to improve performance and add new features while retaining the accuracy of the original plugin.
 
 ### Current features
 * More maintainable code base by dividing the huge n64video.cpp into smaller pieces.
