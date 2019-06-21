@@ -5,10 +5,9 @@ This is a conservative fork of angrylion's RDP plugin that aims to improve perfo
 ### Current features
 * More maintainable code base by dividing the huge n64video.cpp into smaller pieces.
 * Improved portability by separating the emulator plugin interface and window management from the RDP emulation core.
-* Multi-threaded rendering support, which increases performance on multi-core CPUs significantly.
+* Improved performance on multi-core CPUs by using multi-threaded rendering with scan line interleaving.
 * Replaced deprecated DirectDraw interface with a modern OpenGL 3.3 implementation.
-* Added manual window sizing.
-* Added fullscreen support.
+* Added fullscreen support and manual window sizing.
 * Added BMP screenshot support.
 * Added settings GUI.
 * Added Mupen64Plus support.
