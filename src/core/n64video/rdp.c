@@ -185,7 +185,7 @@ struct combiner_inputs
     int add_a1;
 };
 
-struct
+struct rdp_state
 {
     uint32_t stride;
     uint32_t offset;
@@ -336,7 +336,9 @@ struct
     // zbuffer
     uint32_t zb_address;
     int32_t pastrawdzmem;
-} state[PARALLEL_MAX_WORKERS];
+};
+
+struct rdp_state state[PARALLEL_MAX_WORKERS];
 
 static int32_t one_color = 0x100;
 static int32_t zero_color = 0x00;
@@ -565,11 +567,6 @@ void rdp_init(uint32_t wid, uint32_t num_workers)
 
     uint32_t tmp[2] = { 0 };
     rdp_set_other_modes(wid, tmp);
-
-    fb_init(wid);
-    combiner_init(wid);
-    tex_init(wid);
-    rasterizer_init(wid);
 }
 
 void rdp_invalid(uint32_t wid, const uint32_t* args)

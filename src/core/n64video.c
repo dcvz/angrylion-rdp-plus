@@ -86,8 +86,6 @@
 
 static struct n64video_config config;
 
-static bool init_lut;
-
 static struct
 {
     bool fillmbitcrashes, vbusclock, nolerp;
@@ -172,15 +170,21 @@ void n64video_init(struct n64video_config* _config)
         config = *_config;
     }
 
-    // initialize static lookup tables, once is enough
-    if (!init_lut) {
+    // initialize static lookup tables and RDP state, once is enough
+    static bool static_init;
+    if (!static_init) {
         blender_init_lut();
         coverage_init_lut();
         combiner_init_lut();
         tex_init_lut();
         z_init_lut();
 
-        init_lut = true;
+        fb_init(0);
+        combiner_init(0);
+        tex_init(0);
+        rasterizer_init(0);
+
+        static_init = true;
     }
 
     // enable sync switches depending on compatibility mode
@@ -204,7 +208,15 @@ void n64video_init(struct n64video_config* _config)
     memset(&onetimewarnings, 0, sizeof(onetimewarnings));
 
     if (config.parallel) {
+        // init worker system
         parallel_init(config.num_workers);
+
+        // sync states from main worker
+        for (uint32_t i = 1; i < parallel_num_workers(); i++) {
+            memcpy(&state[i], &state[0], sizeof(struct rdp_state));
+        }
+
+        // init workers
         parallel_run(rdp_init_worker);
     } else {
         rdp_init(0, 1);
