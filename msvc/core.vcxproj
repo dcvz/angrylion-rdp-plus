@@ -112,7 +112,6 @@
     <ClInclude Include="..\src\core\msg.h" />
     <ClInclude Include="..\src\core\parallel.h" />
     <ClInclude Include="..\src\core\n64video.h" />
-    <ClInclude Include="..\src\core\rdp.h" />
     <ClInclude Include="..\src\core\screen.h" />
   </ItemGroup>
   <ItemGroup>
