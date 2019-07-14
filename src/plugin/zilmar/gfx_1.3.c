@@ -45,11 +45,17 @@ static bool is_valid_ptr(void *ptr, uint32_t bytes)
 
 static char filter_char(char c)
 {
-    if (isalnum(c) || c == '_' || c == '-') {
-        return c;
-    } else {
+    // only allow valid ASCII chars
+    if (c & 0x80) {
         return ' ';
     }
+
+    // only allow certain ASCII chars
+    if (!isalnum(c) && c != '_' && c != '-') {
+        return ' ';
+    }
+
+    return c;
 }
 
 static char* get_rom_name(void)
