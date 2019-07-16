@@ -155,10 +155,8 @@ void screen_init(struct n64video_config* config)
         msg_warning("Can't create OpenGL 3.3 core context.");
     }
 
-    if (config->vi.vsync) {
-        // enable vsync
-        wglSwapIntervalEXT(1);
-    }
+    // enable or disable vsync
+    wglSwapIntervalEXT(config->vi.vsync ? 1 : 0);
 }
 
 void screen_adjust(int32_t width_out, int32_t height_out, int32_t* width, int32_t* height, int32_t* x, int32_t* y)
