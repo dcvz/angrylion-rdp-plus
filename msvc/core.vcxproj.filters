@@ -115,6 +115,7 @@
     <ClInclude Include="..\src\core\vdac.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\core\gl.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\src\core\version.h.in">

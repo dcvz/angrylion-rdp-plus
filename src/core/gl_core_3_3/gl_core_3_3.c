@@ -1,3 +1,5 @@
+#ifndef GLES
+
 #include "gl_core_3_3.h"
 #include <stdlib.h>
 #include <string.h>
@@ -1179,3 +1181,4 @@ int ogl_IsVersionGEQ(int majorVersion, int minorVersion)
 	return 0;
 }
 
+#endif // GLES

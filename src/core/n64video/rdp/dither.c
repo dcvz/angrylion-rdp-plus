@@ -1,3 +1,5 @@
+#ifdef N64VIDEO_C
+
 static const uint8_t bayer_matrix[16] =
 {
      0,  4,  1, 5,
@@ -148,3 +150,5 @@ static STRICTINLINE void get_dither_noise(uint32_t wid, int x, int y, int* cdith
         break;
     }
 }
+
+#endif // N64VIDEO_C

@@ -1,3 +1,5 @@
+#ifdef N64VIDEO_C
+
 static STRICTINLINE int32_t normalize_dzpix(int32_t sum)
 {
     int count;
@@ -2552,3 +2554,5 @@ void rdp_set_scissor(uint32_t wid, const uint32_t* args)
     state[wid].scfield = (args[1] >> 25) & 1;
     state[wid].sckeepodd = (args[1] >> 24) & 1;
 }
+
+#endif // N64VIDEO_C

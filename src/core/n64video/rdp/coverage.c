@@ -1,3 +1,5 @@
+#ifdef N64VIDEO_C
+
 #define CVG_CLAMP               0
 #define CVG_WRAP                1
 #define CVG_ZAP                 2
@@ -244,3 +246,5 @@ static void coverage_init_lut(void)
         cvarray[i].yoff = offy;
     }
 }
+
+#endif // N64VIDEO_C

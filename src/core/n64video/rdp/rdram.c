@@ -1,3 +1,5 @@
+#ifdef N64VIDEO_C
+
 //
 // rdram.c: RDRAM memory interface
 //
@@ -156,3 +158,5 @@ static STRICTINLINE void rdram_write_pair32(uint32_t in, uint32_t rval, uint8_t 
         rdram_hidden[(in << 1) + 1] = hval1;
     }
 }
+
+#endif // N64VIDEO_C
