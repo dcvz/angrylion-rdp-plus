@@ -178,7 +178,7 @@ EXPORT void CALL MoveScreen (int xpos, int ypos)
 EXPORT void CALL ProcessDList(void)
 {
     if (!warn_hle) {
-        msg_warning("Please disable 'Graphic HLE' in the plugin settings.");
+        msg_warning("HLE video emulation not supported, please use a LLE RSP plugin like mupen64plus-rsp-cxd4");
         warn_hle = true;
     }
 }
