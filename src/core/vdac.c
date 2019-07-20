@@ -10,7 +10,7 @@
 #include <GLES3/gl3.h>
 #define SHADER_HEADER "#version 300 es\nprecision lowp float;\n"
 #else
-#include "gl_core_3_3/gl_core_3_3.h"
+#include "gl_core_3_3.h"
 #define SHADER_HEADER "#version 330 core\n"
 #endif
 

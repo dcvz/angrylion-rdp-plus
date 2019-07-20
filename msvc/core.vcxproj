@@ -19,7 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\core\gl_core_3_3\gl_core_3_3.c" />
+    <ClCompile Include="..\src\core\gl_core_3_3.c" />
     <ClCompile Include="..\src\core\n64video\rdp.c">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
@@ -140,7 +140,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\core\common.h" />
-    <ClInclude Include="..\src\core\gl_core_3_3\gl_core_3_3.h" />
+    <ClInclude Include="..\src\core\gl_core_3_3.h" />
     <ClInclude Include="..\src\core\vdac.h" />
     <ClInclude Include="..\src\core\msg.h" />
     <ClInclude Include="..\src\core\parallel.h" />
