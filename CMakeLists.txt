@@ -59,6 +59,7 @@ add_custom_command(
     COMMENT "Generate Git version"
 )
 
+# static core library
 file(GLOB SOURCES_CORE "${PATH_CORE}/*.c" "${PATH_CORE}/*.cpp")
 
 add_library(alp-core STATIC ${SOURCES_CORE} ${PATH_VERSION})
@@ -101,4 +102,4 @@ add_library(${NAME_PLUGIN_M64P} SHARED ${SOURCES_PLUGIN_M64P})
 
 set_target_properties(${NAME_PLUGIN_M64P} PROPERTIES PREFIX "")
 
-target_link_libraries(${NAME_PLUGIN_M64P} alp-core ${OPENGL_LIBRARIES})
+target_link_libraries(${NAME_PLUGIN_M64P} alp-core ${CMAKE_THREAD_LIBS_INIT} ${OPENGL_LIBRARIES})
