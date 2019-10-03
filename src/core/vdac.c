@@ -9,9 +9,14 @@
 #ifdef GLES
 #include <GLES3/gl3.h>
 #define SHADER_HEADER "#version 300 es\nprecision lowp float;\n"
+#elsifdef OGLES
+#import <OpenGLES/ES3/gl.h>
+#define SHADER_HEADER "#version 300 es\nprecision lowp float;\n"
 #else
-#include "gl_core_3_3.h"
-#define SHADER_HEADER "#version 330 core\n"
+#import <OpenGLES/ES3/gl.h>
+#import <OpenGLES/ES3/glext.h>
+//#include "gl_core_3_3.h"
+#define SHADER_HEADER "precision lowp float;\n"
 #endif
 
 #define TEX_FORMAT GL_RGBA
@@ -171,7 +176,7 @@ void vdac_init(struct n64video_config* config)
 
 #ifndef GLES
     // load OpenGL function pointers
-    ogl_LoadFunctions();
+//    ogl_LoadFunctions();
 #endif
 
     msg_debug("%s: GL_VERSION='%s'", __FUNCTION__, glGetString(GL_VERSION));
@@ -179,30 +184,30 @@ void vdac_init(struct n64video_config* config)
     msg_debug("%s: GL_RENDERER='%s'", __FUNCTION__, glGetString(GL_RENDERER));
     msg_debug("%s: GL_SHADING_LANGUAGE_VERSION='%s'", __FUNCTION__, glGetString(GL_SHADING_LANGUAGE_VERSION));
 
-    // shader sources for drawing a clipped full-screen triangle. the geometry
-    // is defined by the vertex ID, so a VBO is not required.
-    const GLchar* vert_shader =
-        SHADER_HEADER
-        "out vec2 uv;\n"
-        "void main(void) {\n"
-        "    uv = vec2((gl_VertexID << 1) & 2, gl_VertexID & 2);\n"
-        "    gl_Position = vec4(uv * vec2(2.0, -2.0) + vec2(-1.0, 1.0), 0.0, 1.0);\n"
-        "}\n";
-
-    const GLchar* frag_shader =
-        SHADER_HEADER
-        "in vec2 uv;\n"
-        "layout(location = 0) out vec4 color;\n"
-        "uniform sampler2D tex0;\n"
-        "void main(void) {\n"
-        "    color = texture(tex0, uv);\n"
-        "}\n";
-
-    // compile and link OpenGL program
-    GLuint vert = gl_shader_compile(GL_VERTEX_SHADER, vert_shader, "alp_screen.vert");
-    GLuint frag = gl_shader_compile(GL_FRAGMENT_SHADER, frag_shader, "alp_screen.frag");
-    program = gl_shader_link(vert, frag);
-    glUseProgram(program);
+//    // shader sources for drawing a clipped full-screen triangle. the geometry
+//    // is defined by the vertex ID, so a VBO is not required.
+//    const GLchar* vert_shader =
+//        SHADER_HEADER
+//        "varying vec2 uv;\n"
+//        "void main(void) {\n"
+//        "    uv = vec2(1.0, 1.0);\n"
+//        "    gl_Position = vec4(uv * vec2(2.0, -2.0) + vec2(-1.0, 1.0), 0.0, 1.0);\n"
+//        "}\n";
+//
+//    const GLchar* frag_shader =
+//        SHADER_HEADER
+//        "attribute vec2 uv;\n"
+//        "layout(location = 0) varying vec4 color;\n"
+//        "uniform sampler2D tex0;\n"
+//        "void main(void) {\n"
+//        "    color = texture(tex0, uv);\n"
+//        "}\n";
+//
+//    // compile and link OpenGL program
+//    GLuint vert = gl_shader_compile(GL_VERTEX_SHADER, vert_shader, "alp_screen.vert");
+//    GLuint frag = gl_shader_compile(GL_FRAGMENT_SHADER, frag_shader, "alp_screen.frag");
+//    program = gl_shader_link(vert, frag);
+//    glUseProgram(program);
 
     // prepare dummy VAO
     glGenVertexArrays(1, &vao);
